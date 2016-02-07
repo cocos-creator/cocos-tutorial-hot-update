@@ -1,0 +1,19 @@
+{
+    "packageUrl" : "http://localhost:3003/tutorial-hot-update/remote-assets/",
+    "remoteManifestUrl" : "http://localhost:3003/tutorial-hot-update/remote-assets/project.manifest",
+    "remoteVersionUrl" : "http://localhost:3003/tutorial-hot-update/remote-assets/version.manifest",
+    "version" : "1.0.1",
+    "engineVersion" : "3.10",
+
+    "assets" : {
+        "res/import/0e/0ea9fb8e-b46b-4c18-b1cc-5e62da8c29ff.json" : {
+            "md5" : "922f9c0e8790f29855cd86e36ee5a79c"
+        },
+        "src/settings.js" : {
+            "md5" : "a18210a488afaaf8cb236be1e80a5c42"
+        }
+    },
+    
+    "searchPaths" : [
+    ]
+}
