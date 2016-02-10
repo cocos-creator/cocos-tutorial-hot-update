@@ -55,7 +55,7 @@ function readDir (dir, obj) {
     if (!stat.isDirectory()) {
         return;
     }
-    var subpaths = fs.readdirSync(dir), subpath, md5;
+    var subpaths = fs.readdirSync(dir), subpath, md5, relative;
     for (var i = 0; i < subpaths.length; ++i) {
         if (subpaths[i][0] === '.') {
             continue;
@@ -67,7 +67,8 @@ function readDir (dir, obj) {
         }
         else if (stat.isFile()) {
             md5 = crypto.createHash('md5').update(fs.readFileSync(subpath, 'utf8')).digest('hex');
-            obj[subpath] = {'md5' : md5};
+            relative = path.relative(src, subpath);
+            obj[relative] = {'md5' : md5};
         }
     }
 }
