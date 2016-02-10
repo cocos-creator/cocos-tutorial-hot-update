@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "BLACK JACK_17",
+    "texture": "b8268b1c-c5e6-4460-a48c-52667171d27d",
+    "rect": [
+      24,
+      29,
+      202,
+      193
+    ],
+    "offset": [
+      0,
+      -0.5
+    ],
+    "originalSize": [
+      250,
+      250
+    ],
+    "rotated": 0
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "rmb_sign",
+    "texture": "37031443-7c58-4763-ac0c-76897624f26f",
+    "rect": [
+      0,
+      0,
+      18,
+      19
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      18,
+      19
+    ],
+    "rotated": 0
+  }
+}

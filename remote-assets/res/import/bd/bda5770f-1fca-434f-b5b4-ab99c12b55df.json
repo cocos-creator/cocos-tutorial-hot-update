@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "heitao_big",
+    "texture": "5228ab68-de35-40f9-8d0e-0bbb788078a5",
+    "rect": [
+      1,
+      1,
+      52,
+      52
+    ],
+    "offset": [
+      -0.5,
+      -0.5
+    ],
+    "originalSize": [
+      55,
+      53
+    ],
+    "rotated": 0
+  }
+}

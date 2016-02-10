@@ -6,10 +6,6 @@ _CCSettings = {
         {
             "url": "db://assets/scenes/menu.fire",
             "uuid": "8a546935-70d4-42d2-a051-8d0e76f28008"
-        },
-        {
-            "url": "db://assets/scenes/table.fire",
-            "uuid": "0ea9fb8e-b46b-4c18-b1cc-5e62da8c29ff"
         }
     ],
     "rawAssets": {

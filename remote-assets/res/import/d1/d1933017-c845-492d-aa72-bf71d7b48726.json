@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "bg_gold",
+    "texture": "4e06c7f1-72ac-4e4e-90de-683e16905156",
+    "rect": [
+      0,
+      0,
+      59,
+      42
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      59,
+      42
+    ],
+    "rotated": 0,
+    "capInsets": [
+      20,
+      0,
+      20,
+      0
+    ]
+  }
+}

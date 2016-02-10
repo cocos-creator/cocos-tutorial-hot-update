@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "gift_bucket",
+    "texture": "cbe94441-4429-40c3-86b0-d4427df8c2e4",
+    "rect": [
+      0,
+      0,
+      64,
+      72
+    ],
+    "offset": [
+      -0.5,
+      0.5
+    ],
+    "originalSize": [
+      65,
+      73
+    ],
+    "rotated": 0
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "icon_message",
+    "texture": "ce7a25e7-1570-4baf-a30d-311655a15e1f",
+    "rect": [
+      0,
+      0,
+      50,
+      39
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      50,
+      39
+    ],
+    "rotated": 0
+  }
+}

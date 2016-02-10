@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "dealer",
+    "texture": "e8ad9c1a-2bd4-481d-bc97-4283cb738d7a",
+    "rect": [
+      2,
+      0,
+      277,
+      73
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      281,
+      73
+    ],
+    "rotated": 0
+  }
+}

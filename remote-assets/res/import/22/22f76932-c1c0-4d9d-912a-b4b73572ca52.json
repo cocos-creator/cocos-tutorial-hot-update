@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "txtCountdown",
+    "texture": "a8c21e40-9766-40e3-bd71-430764306eaf",
+    "rect": [
+      0,
+      0,
+      218,
+      29
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      218,
+      29
+    ],
+    "rotated": 0
+  }
+}

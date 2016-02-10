@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "icon_diamond",
+    "texture": "50da5486-dfa1-46d2-9d4f-686eb5527c1a",
+    "rect": [
+      1,
+      0,
+      60,
+      56
+    ],
+    "offset": [
+      0.5,
+      0
+    ],
+    "originalSize": [
+      61,
+      56
+    ],
+    "rotated": 0
+  }
+}

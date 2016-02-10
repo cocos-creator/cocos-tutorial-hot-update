@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "gb_back",
+    "texture": "a0a59931-2040-4e34-8eaa-89a66af83413",
+    "rect": [
+      0,
+      0,
+      84,
+      64
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      84,
+      64
+    ],
+    "rotated": 0
+  }
+}

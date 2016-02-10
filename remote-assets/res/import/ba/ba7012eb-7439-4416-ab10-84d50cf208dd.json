@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "comma",
+    "texture": "d22219f7-b7ad-4f26-b343-ed5369d660e8",
+    "rect": [
+      1,
+      11,
+      6,
+      9
+    ],
+    "offset": [
+      -3,
+      -5
+    ],
+    "originalSize": [
+      14,
+      21
+    ],
+    "rotated": 0
+  }
+}

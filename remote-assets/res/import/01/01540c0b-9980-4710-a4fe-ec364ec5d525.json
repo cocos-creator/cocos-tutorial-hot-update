@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "Stroke_photo_tanchuang",
+    "texture": "e54242de-428b-45c1-8e63-cb5d0c1e8904",
+    "rect": [
+      0,
+      0,
+      126,
+      126
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      126,
+      126
+    ],
+    "rotated": 0
+  }
+}

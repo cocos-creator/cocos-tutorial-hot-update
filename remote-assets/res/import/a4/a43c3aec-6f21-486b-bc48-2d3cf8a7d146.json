@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "circle_5",
+    "texture": "c4d371bf-1552-4c2f-92f2-f3baaf979dd3",
+    "rect": [
+      1,
+      0,
+      129,
+      130
+    ],
+    "offset": [
+      0.5,
+      0
+    ],
+    "originalSize": [
+      130,
+      130
+    ],
+    "rotated": 0
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "stand",
+    "texture": "f11150b0-c540-4ac0-ac6a-ed4055bfcae8",
+    "rect": [
+      2,
+      2,
+      98,
+      56
+    ],
+    "offset": [
+      0.5,
+      -0.5
+    ],
+    "originalSize": [
+      101,
+      59
+    ],
+    "rotated": 0
+  }
+}

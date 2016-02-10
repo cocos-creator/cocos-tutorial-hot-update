@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "bg_huaxin",
+    "texture": "631b9e63-d100-4c0c-acf5-70f7814f74f5",
+    "rect": [
+      0,
+      0,
+      82,
+      90
+    ],
+    "offset": [
+      -1,
+      0.5
+    ],
+    "originalSize": [
+      84,
+      91
+    ],
+    "rotated": 0
+  }
+}

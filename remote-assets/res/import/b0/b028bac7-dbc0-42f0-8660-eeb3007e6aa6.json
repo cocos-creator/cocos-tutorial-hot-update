@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "zhuozi",
+    "texture": "cc243c7f-e13e-4634-8b6f-75bffbdebd50",
+    "rect": [
+      0,
+      0,
+      667,
+      750
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      667,
+      750
+    ],
+    "rotated": 0
+  }
+}

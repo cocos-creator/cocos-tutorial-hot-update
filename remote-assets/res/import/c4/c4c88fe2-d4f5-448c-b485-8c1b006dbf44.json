@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "user-image7",
+    "texture": "16ebdb74-fe20-4118-8bec-f4efdf61abd9",
+    "rect": [
+      0,
+      0,
+      115,
+      115
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      115,
+      115
+    ],
+    "rotated": 0
+  }
+}

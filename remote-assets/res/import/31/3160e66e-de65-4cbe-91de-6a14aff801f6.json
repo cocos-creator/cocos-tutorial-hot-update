@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "screen_rotation",
+    "texture": "6475b072-e497-4fa2-bcce-7f77cae0393f",
+    "rect": [
+      0,
+      0,
+      700,
+      299
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      700,
+      299
+    ],
+    "rotated": 0
+  }
+}

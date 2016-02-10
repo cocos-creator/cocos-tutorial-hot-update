@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "rankinglist_1",
+    "texture": "fd07853d-f6bf-43fe-a720-360888a61691",
+    "rect": [
+      0,
+      0,
+      69,
+      66
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      69,
+      66
+    ],
+    "rotated": 0
+  }
+}

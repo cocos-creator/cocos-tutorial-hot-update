@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "bg_inputbox",
+    "texture": "9a5f5415-0edd-4742-abc0-c0b5d5b2aeaa",
+    "rect": [
+      0,
+      3,
+      176,
+      266
+    ],
+    "offset": [
+      -1.5,
+      -1.5
+    ],
+    "originalSize": [
+      179,
+      269
+    ],
+    "rotated": 0,
+    "capInsets": [
+      51,
+      54,
+      57,
+      152
+    ]
+  }
+}

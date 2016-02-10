@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "bg_photo",
+    "texture": "ce706c8b-773e-4795-b1ce-9db9955fb3d8",
+    "rect": [
+      0,
+      0,
+      40,
+      49
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      40,
+      49
+    ],
+    "rotated": 0
+  }
+}

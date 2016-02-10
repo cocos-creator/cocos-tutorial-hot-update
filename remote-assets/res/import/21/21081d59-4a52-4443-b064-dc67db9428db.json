@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "button_zbc",
+    "texture": "821e4b5c-b4e8-4d41-89c3-5ad4f591caec",
+    "rect": [
+      0,
+      1,
+      432,
+      150
+    ],
+    "offset": [
+      0,
+      1.5
+    ],
+    "originalSize": [
+      432,
+      155
+    ],
+    "rotated": 0
+  }
+}

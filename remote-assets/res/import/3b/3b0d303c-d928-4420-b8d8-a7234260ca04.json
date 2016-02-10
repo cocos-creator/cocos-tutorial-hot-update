@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "icon_qingkongtouzhu",
+    "texture": "abceeb90-09f9-4da7-85a9-b4e6c8c96787",
+    "rect": [
+      0,
+      0,
+      88,
+      93
+    ],
+    "offset": [
+      -0.5,
+      0
+    ],
+    "originalSize": [
+      89,
+      93
+    ],
+    "rotated": 0
+  }
+}

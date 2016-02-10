@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "BUST_3",
+    "texture": "318f81ee-94aa-4ce9-ba87-a54a43912b71",
+    "rect": [
+      3,
+      3,
+      142,
+      144
+    ],
+    "offset": [
+      -1,
+      0
+    ],
+    "originalSize": [
+      150,
+      150
+    ],
+    "rotated": 0
+  }
+}

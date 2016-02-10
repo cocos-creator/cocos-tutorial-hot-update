@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "trophy_1",
+    "texture": "ac11439d-3758-49f5-8728-81ed22c1ed96",
+    "rect": [
+      0,
+      0,
+      69,
+      66
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      69,
+      66
+    ],
+    "rotated": 0
+  }
+}

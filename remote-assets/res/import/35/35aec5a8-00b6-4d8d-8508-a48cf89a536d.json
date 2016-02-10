@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "5K",
+    "texture": "5b7cf41f-5179-4378-9f98-d47066334894",
+    "rect": [
+      0,
+      0,
+      37,
+      30
+    ],
+    "offset": [
+      -0.5,
+      0
+    ],
+    "originalSize": [
+      38,
+      30
+    ],
+    "rotated": 0
+  }
+}

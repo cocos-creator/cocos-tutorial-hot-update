@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "gift_kiss",
+    "texture": "fc9ebe69-8881-43a2-b7fa-412ae0f3a81a",
+    "rect": [
+      12,
+      2,
+      77,
+      85
+    ],
+    "offset": [
+      3,
+      1
+    ],
+    "originalSize": [
+      95,
+      91
+    ],
+    "rotated": 0
+  }
+}

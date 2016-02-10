@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "button_ksks",
+    "texture": "fccc4d85-6ad4-496d-9b33-ea76e69da132",
+    "rect": [
+      0,
+      1,
+      433,
+      150
+    ],
+    "offset": [
+      0,
+      1.5
+    ],
+    "originalSize": [
+      433,
+      155
+    ],
+    "rotated": 0
+  }
+}

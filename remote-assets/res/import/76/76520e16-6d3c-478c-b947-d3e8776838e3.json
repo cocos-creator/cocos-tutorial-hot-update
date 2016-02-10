@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "icon_touzhu",
+    "texture": "0c6fbbac-75d1-4184-a1f7-53673097343c",
+    "rect": [
+      1,
+      0,
+      171,
+      158
+    ],
+    "offset": [
+      0.5,
+      0
+    ],
+    "originalSize": [
+      172,
+      158
+    ],
+    "rotated": 0
+  }
+}

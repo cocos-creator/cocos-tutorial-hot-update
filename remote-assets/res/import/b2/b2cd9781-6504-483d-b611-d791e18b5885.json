@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "hit",
+    "texture": "f7dcbfe5-80b1-4e30-a54a-99bb4e9d0c7f",
+    "rect": [
+      2,
+      1,
+      94,
+      51
+    ],
+    "offset": [
+      0.5,
+      0.5
+    ],
+    "originalSize": [
+      97,
+      54
+    ],
+    "rotated": 0
+  }
+}

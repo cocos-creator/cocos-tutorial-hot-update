@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "king",
+    "texture": "7bfe8068-5bab-4f02-a007-52e98a9bebad",
+    "rect": [
+      0,
+      2,
+      64,
+      95
+    ],
+    "offset": [
+      0,
+      -1
+    ],
+    "originalSize": [
+      64,
+      97
+    ],
+    "rotated": 0
+  }
+}

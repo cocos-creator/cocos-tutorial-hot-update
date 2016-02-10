@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "poker_dipai",
+    "texture": "170cbd22-5b43-45d0-a5d7-d4d02b3494ec",
+    "rect": [
+      1,
+      0,
+      99,
+      130
+    ],
+    "offset": [
+      0.5,
+      0
+    ],
+    "originalSize": [
+      100,
+      130
+    ],
+    "rotated": 0
+  }
+}
