@@ -28,6 +28,11 @@ while ( i < process.argv.length) {
         manifest.remoteVersionUrl = path.join(url, 'version.manifest');
         i += 2;
         break;
+    case '--version' :
+    case '-v' :
+        manifest.version = process.argv[i+1];
+        i += 2;
+        break;
     case '--src' :
     case '-s' :
         src = process.argv[i+1];
