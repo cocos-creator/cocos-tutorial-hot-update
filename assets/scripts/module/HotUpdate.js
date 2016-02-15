@@ -117,7 +117,7 @@ cc.Class({
             cc.sys.localStorage.setItem('HotUpdateSearchPaths', JSON.stringify(searchPaths));
 
             jsb.fileUtils.setSearchPaths(searchPaths);
-            cc.director.loadScene('menu');
+            cc.game.restart();
         }
     },
 
