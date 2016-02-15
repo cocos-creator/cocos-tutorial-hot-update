@@ -91,7 +91,11 @@ if (cc.sys.isNative) {
         jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths));
     }
 }
+// 这是为了解决一个重启的 bug 而添加的
+cc.director.startAnimation();
 ```
+
+或者直接使用项目仓库根目录下的 `main.js` 覆盖原生打包文件夹内的 `main.js`。注意，每次使用 Cocos Creator 构建后，都需要重新修改 `main.js`。
 
 这一步是必须要做的原因是，热更新的本质是用远程下载的文件取代原始游戏包中的文件。Cocos2d-x 的搜索路径恰好满足这个需求，它可以用来指定远程包的下载地址作为默认的搜索路径，这样游戏运行过程中就会使用下载好的远程版本。另外，这里搜索路径是在上一次更新的过程中使用 `cc.sys.localStorage`（它符合 WEB 标准的 [Local Storage API](https://developer.mozilla.org/en/docs/Web/API/Window/localStorage)）固化保存在用户机器上，`HotUpdateSearchPaths` 这个键值是在 `HotUpdate.js` 中指定的，保存和读取过程使用的名字必须匹配。
 
@@ -99,9 +103,7 @@ if (cc.sys.isNative) {
 
 ### 运行范例工程
 
-如果一切正常，此时运行原生版本的范例工程，就会发现检测到新版本，提示更新，更新之后重新打开应用即可进入 table 场景。
-
-需要注意的是，部分版本的 Cocos2d-x 的重启功能有缺陷，所以目前还不能在更新完成后自动重启，这个缺陷将在下一个版本的 Cocos2d-x 中得到解决。
+如果一切正常，此时运行原生版本的范例工程，就会发现检测到新版本，提示更新，更新之后会自动重启游戏，此时可进入 table 场景。
 
 ## 结语
 
