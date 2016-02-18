@@ -60,7 +60,7 @@ cc.Class({
                 if (msg) {
                     cc.log(msg);
                 }
-                cc.log(percent + '%');
+                cc.log(percent.toFixed(2) + '%');
                 this.percent.string = percent + '%';
                 break;
             case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:

@@ -1372,7 +1372,7 @@
     "_fontSize": 25,
     "_lineHeight": 40,
     "_enableWrapText": true,
-    "_isSystemFontUsed": true,
+    "_isSystemFontUsed": false,
     "_N$string": "999999\n",
     "_N$horizontalAlign": 1,
     "_N$verticalAlign": 1,
@@ -4564,7 +4564,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 57.8125,
+      "width": 150,
       "height": 40
     },
     "_children": [],
@@ -4605,11 +4605,11 @@
     "_fontSize": 40,
     "_lineHeight": 40,
     "_enableWrapText": true,
-    "_isSystemFontUsed": true,
-    "_N$string": "0%",
+    "_isSystemFontUsed": false,
+    "_N$string": "40.12%",
     "_N$horizontalAlign": 1,
     "_N$verticalAlign": 1,
-    "_N$overflow": 0
+    "_N$overflow": 1
   },
   {
     "__type__": "cc.Sprite",
