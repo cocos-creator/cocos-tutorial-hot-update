@@ -8,10 +8,10 @@
       "md5": "ac8ada521e47634a9e3d3ede8479ba0b"
     },
     "src/project.dev.js": {
-      "md5": "db6a24c31cb933cde15be760941c6202"
+      "md5": "839ed7ee02bd4aed9fabb4a9fe20564e"
     },
     "src/settings.js": {
-      "md5": "597f13a6a26d910e44d5a52764a7d521"
+      "md5": "492505e90f24d4b0480c28fde8a1cd7e"
     },
     "res/import/00/0019472a-7077-47bb-8a0b-c3597a6a8017.json": {
       "md5": "ed1366262e35d7f0e3ebfe6c5188b19c"
@@ -715,70 +715,70 @@
     "res/raw-assets/textures/UI/user/circle_5.png": {
       "md5": "d21d056cc2d1a6593fdedaa8c92b1b86"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_1.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_1.png": {
       "md5": "2926fed5c6e450dde43e812a4094b272"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_10.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_10.png": {
       "md5": "8a32fc315d0c2cf84c3ac81dac8a3f12"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_11.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_11.png": {
       "md5": "f64aabc5c8ce9b421b67086ee56ef736"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_12.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_12.png": {
       "md5": "95a7bc645b423d4e4e2d1e660b6fc059"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_13.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_13.png": {
       "md5": "b047f5e10d50eaa6a14f315f801a9849"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_14.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_14.png": {
       "md5": "bd0c0e7e15f6c1b31b15aec3fba1e61f"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_15.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_15.png": {
       "md5": "d31e040f2f9564ff7ed5cce8f2ee32c0"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_16.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_16.png": {
       "md5": "b755151dc18dfd30c23ed5142a405ec5"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_17.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_17.png": {
       "md5": "ffc78ceda16bee6dc181aebef926294a"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_18.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_18.png": {
       "md5": "21f762f4e7c785c78a73b9cb0a149fe0"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_19.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_19.png": {
       "md5": "cc20f8e4e3d54ee017558e8c6921a4aa"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_2.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_2.png": {
       "md5": "531c6d69c12bc3c427ca7a8fe128af7b"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_20.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_20.png": {
       "md5": "58b08c40980ef792259ed2a3d45f052a"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_21.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_21.png": {
       "md5": "ac05d87c5080942f9ecb705bb58e1272"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_22.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_22.png": {
       "md5": "88ffd75f46c9421f722b46c3c2fb559e"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_3.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_3.png": {
       "md5": "93320ec00c3d11f19945197e9ee9a628"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_4.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_4.png": {
       "md5": "80a061c883214bc4c189817c7d99dcf9"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_5.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_5.png": {
       "md5": "f4bd720edaa9badb0cc29aa20630b3f5"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_6.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_6.png": {
       "md5": "4baa433dc42e84b503a045e892edfd6e"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_7.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_7.png": {
       "md5": "57444a22cbfdec9b1512e74aae3d2891"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_8.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_8.png": {
       "md5": "4c2366127449693622d384120b09b3b4"
     },
-    "res/raw-assets/textures/animation/blackjack/BLACK JACK_9.png": {
+    "res/raw-assets/textures/animation/blackjack/BLACK%20JACK_9.png": {
       "md5": "1b8cc2a4277fd4651cd6f7d20868752e"
     },
     "res/raw-assets/textures/animation/bust/BUST_1.png": {
