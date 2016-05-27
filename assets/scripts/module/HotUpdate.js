@@ -36,6 +36,7 @@ cc.Class({
             case jsb.EventAssetsManager.NEW_VERSION_FOUND:
                 this._needUpdate = true;
                 this.updatePanel.active = true;
+                this.percent.string = '00.00%';
                 cc.eventManager.removeListener(this._checkListener);
                 break;
             default:
