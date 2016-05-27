@@ -7,8 +7,6 @@
             jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths));
         }
     }
-    // 这是为了解决一个重启的 bug 而添加的
-    cc.director.startAnimation();
 
     function boot () {
 
