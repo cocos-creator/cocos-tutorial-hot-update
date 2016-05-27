@@ -400,28 +400,28 @@ _CCSettings = {
                 "project.manifest",
                 "cc.RawAsset"
             ],
-            "cc243c7f-e13e-4634-8b6f-75bffbdebd50": [
-                "textures/UI/new/zhuozi.jpg",
-                "cc.Texture2D"
-            ],
             "e8ad9c1a-2bd4-481d-bc97-4283cb738d7a": [
                 "textures/UI/new/dealer.png",
                 "cc.Texture2D"
             ],
-            "a8c21e40-9766-40e3-bd71-430764306eaf": [
-                "textures/UI/new/txtCountdown.png",
+            "cc243c7f-e13e-4634-8b6f-75bffbdebd50": [
+                "textures/UI/new/zhuozi.jpg",
                 "cc.Texture2D"
             ],
             "a8f291d1-7c7a-43e2-be85-915d06008918": [
                 "textures/UI/new/daojishi_up.png",
                 "cc.Texture2D"
             ],
-            "2edcc412-fa2e-4eb3-be60-2d006ea8bc92": [
-                "textures/animation/blackjack/BLACK JACK_1.png",
+            "a8c21e40-9766-40e3-bd71-430764306eaf": [
+                "textures/UI/new/txtCountdown.png",
                 "cc.Texture2D"
             ],
             "821b3735-a8ba-4728-ac1e-26fe97a38ba3": [
                 "textures/UI/new/daojishi_down.png",
+                "cc.Texture2D"
+            ],
+            "2edcc412-fa2e-4eb3-be60-2d006ea8bc92": [
+                "textures/animation/blackjack/BLACK JACK_1.png",
                 "cc.Texture2D"
             ],
             "4b231bb0-58ee-404b-8056-53d173cc50b8": [
@@ -664,12 +664,12 @@ _CCSettings = {
                 "textures/UI/new/input-box.png",
                 "cc.Texture2D"
             ],
-            "e99c16f3-0194-4ab2-ac9c-ac5149701851": [
-                "textures/UI/new/button_fasong.png",
-                "cc.Texture2D"
-            ],
             "29434794-9925-4525-a4a1-91a379a18af8": [
                 "textures/UI/chat/send.png",
+                "cc.Texture2D"
+            ],
+            "e99c16f3-0194-4ab2-ac9c-ac5149701851": [
+                "textures/UI/new/button_fasong.png",
                 "cc.Texture2D"
             ],
             "9a5f5415-0edd-4742-abc0-c0b5d5b2aeaa": [
@@ -696,12 +696,12 @@ _CCSettings = {
                 "textures/UI/new/icon_usercp.png",
                 "cc.Texture2D"
             ],
-            "756d9829-11c2-4f82-b766-63da887e860c": [
-                "textures/UI/new/icon_KO.png",
-                "cc.Texture2D"
-            ],
             "26e9a867-3d2f-4981-8a33-82d440de7aff": [
                 "textures/UI/lobby/icon_gold_big.png",
+                "cc.Texture2D"
+            ],
+            "756d9829-11c2-4f82-b766-63da887e860c": [
+                "textures/UI/new/icon_KO.png",
                 "cc.Texture2D"
             ],
             "94413242-2027-4841-9e31-a633601b38a7": [
@@ -809,24 +809,24 @@ _CCSettings = {
                 "textures/UI/new/paishu.png",
                 "cc.Texture2D"
             ],
-            "dfad891c-db4b-40e3-a8ae-19fbf2674bf9": [
-                "textures/UI/user/circle_1.png",
-                "cc.Texture2D"
-            ],
             "181aa58d-2090-4427-982b-f0a2e5cc19ae": [
                 "textures/UI/new/daojishi_photo.png",
+                "cc.Texture2D"
+            ],
+            "dfad891c-db4b-40e3-a8ae-19fbf2674bf9": [
+                "textures/UI/user/circle_1.png",
                 "cc.Texture2D"
             ],
             "ec244ee5-6f1f-4920-9b69-d4df0e78ec2d": [
                 "textures/UI/user/circle_2.png",
                 "cc.Texture2D"
             ],
-            "1e25acaa-b519-4c82-ad70-9c2af560041b": [
-                "textures/UI/user/circle_4.png",
-                "cc.Texture2D"
-            ],
             "2c59fc80-c596-4a60-9ad9-08c4b6001986": [
                 "textures/UI/user/circle_3.png",
+                "cc.Texture2D"
+            ],
+            "1e25acaa-b519-4c82-ad70-9c2af560041b": [
+                "textures/UI/user/circle_4.png",
                 "cc.Texture2D"
             ],
             "c4d371bf-1552-4c2f-92f2-f3baaf979dd3": [
@@ -863,24 +863,24 @@ _CCSettings = {
                 "textures/UI/lobby/bg_changjing.png",
                 "cc.Texture2D"
             ],
-            "afe329a6-e85e-46a0-98ed-8a34e128907b": [
-                "textures/UI/lobby/icon_back.png",
-                "cc.Texture2D"
-            ],
             "66a4e038-1449-4fcf-b195-578b123973e2": [
                 "textures/UI/chat/icon_message.png",
+                "cc.Texture2D"
+            ],
+            "afe329a6-e85e-46a0-98ed-8a34e128907b": [
+                "textures/UI/lobby/icon_back.png",
                 "cc.Texture2D"
             ],
             "83cc2086-d713-47a0-8d86-a8d6068b6258": [
                 "textures/UI/new/bg_xiamian.png",
                 "cc.Texture2D"
             ],
-            "15d5f3f0-f965-4c00-945b-d2c8faee78b6": [
-                "textures/UI/lobby/icon_rule.png",
-                "cc.Texture2D"
-            ],
             "0ed8cf6e-8c04-4569-8d17-626a26e1099f": [
                 "textures/UI/lobby/icon_set.png",
+                "cc.Texture2D"
+            ],
+            "15d5f3f0-f965-4c00-945b-d2c8faee78b6": [
+                "textures/UI/lobby/icon_rule.png",
                 "cc.Texture2D"
             ],
             "2d86a854-63c4-4b90-8b88-a4328b8526c2": [
@@ -971,10 +971,6 @@ _CCSettings = {
                 "textures/UI/chat/gb_inputbox.png",
                 "cc.Texture2D"
             ],
-            "13a7fbbe-d459-4ad1-b376-5695975dabe8": [
-                "textures/animation/blackjack/BLACK JACK_5.png",
-                "cc.Texture2D"
-            ],
             "ba5aebd4-e25f-43c0-a0a6-dd8df6a7c997": [
                 "textures/animation/blackjack/BLACK JACK_3.png",
                 "cc.Texture2D"
@@ -985,6 +981,10 @@ _CCSettings = {
             ],
             "08a26555-0754-4879-86c2-ae161c3e1974": [
                 "textures/animation/blackjack/BLACK JACK_4.png",
+                "cc.Texture2D"
+            ],
+            "13a7fbbe-d459-4ad1-b376-5695975dabe8": [
+                "textures/animation/blackjack/BLACK JACK_5.png",
                 "cc.Texture2D"
             ],
             "9c958fe4-c751-448f-84cf-b99ac556f538": [
@@ -1051,44 +1051,44 @@ _CCSettings = {
                 "textures/animation/blackjack/BLACK JACK_21.png",
                 "cc.Texture2D"
             ],
-            "3105fc41-e917-4b7a-bfe1-81b993fa0e1d": [
-                "textures/animation/bust/BUST_1.png",
-                "cc.Texture2D"
-            ],
             "f236e778-03e9-4863-b961-d3aed27307ec": [
                 "textures/animation/blackjack/BLACK JACK_22.png",
                 "cc.Texture2D"
             ],
-            "318f81ee-94aa-4ce9-ba87-a54a43912b71": [
-                "textures/animation/bust/BUST_3.png",
+            "3105fc41-e917-4b7a-bfe1-81b993fa0e1d": [
+                "textures/animation/bust/BUST_1.png",
                 "cc.Texture2D"
             ],
             "7ef50d83-071e-44e5-9bcb-a54143a90f92": [
                 "textures/animation/bust/BUST_2.png",
                 "cc.Texture2D"
             ],
-            "c85a902c-8d07-4791-8b9c-644ec534202f": [
-                "textures/animation/bust/BUST_5.png",
+            "318f81ee-94aa-4ce9-ba87-a54a43912b71": [
+                "textures/animation/bust/BUST_3.png",
                 "cc.Texture2D"
             ],
             "e7900377-b0b0-4c14-adc9-266fe085f22b": [
                 "textures/animation/bust/BUST_4.png",
                 "cc.Texture2D"
             ],
-            "3aefb482-7d1f-4b8f-b8c1-4fd1bbd159b1": [
-                "textures/animation/bust/BUST_7.png",
+            "c85a902c-8d07-4791-8b9c-644ec534202f": [
+                "textures/animation/bust/BUST_5.png",
                 "cc.Texture2D"
             ],
             "d3cc5115-4fd0-455b-b153-83525b73895f": [
                 "textures/animation/bust/BUST_6.png",
                 "cc.Texture2D"
             ],
-            "b1a2d3c3-e8c0-4407-aefa-b8216f381dcf": [
-                "textures/animation/bust/BUST_9.png",
+            "3aefb482-7d1f-4b8f-b8c1-4fd1bbd159b1": [
+                "textures/animation/bust/BUST_7.png",
                 "cc.Texture2D"
             ],
             "adaf9199-079f-46bc-b88c-b3366dabcca6": [
                 "textures/animation/bust/BUST_8.png",
+                "cc.Texture2D"
+            ],
+            "b1a2d3c3-e8c0-4407-aefa-b8216f381dcf": [
+                "textures/animation/bust/BUST_9.png",
                 "cc.Texture2D"
             ],
             "1423bcf5-0ac3-4237-a3b2-f744207d793b": [
@@ -1107,12 +1107,12 @@ _CCSettings = {
                 "textures/cards/poker_bg.png",
                 "cc.Texture2D"
             ],
-            "170cbd22-5b43-45d0-a5d7-d4d02b3494ec": [
-                "textures/cards/poker_dipai.png",
-                "cc.Texture2D"
-            ],
             "000f0b59-6e44-4085-94f9-df774dc4a2a0": [
                 "textures/cards/ranker.png",
+                "cc.Texture2D"
+            ],
+            "170cbd22-5b43-45d0-a5d7-d4d02b3494ec": [
+                "textures/cards/poker_dipai.png",
                 "cc.Texture2D"
             ],
             "a3a6507c-df24-4d77-b7ed-09419b6ab988": [
@@ -1143,12 +1143,12 @@ _CCSettings = {
                 "textures/cards/heitao_small.png",
                 "cc.Texture2D"
             ],
-            "871d9cfc-5635-4273-ae50-db0eb42ff363": [
-                "textures/cards/hongtao_small.png",
-                "cc.Texture2D"
-            ],
             "8bf291f1-09c7-41a6-823b-234699f8d0e2": [
                 "textures/cards/heimei_small.png",
+                "cc.Texture2D"
+            ],
+            "871d9cfc-5635-4273-ae50-db0eb42ff363": [
+                "textures/cards/hongtao_small.png",
                 "cc.Texture2D"
             ],
             "5245e25c-010c-45fb-84a3-f3bce95793e7": [
@@ -1179,28 +1179,28 @@ _CCSettings = {
                 "textures/UI/lobby/user-image5.png",
                 "cc.Texture2D"
             ],
-            "394bac82-54fb-472f-a27f-b5107821bfb8": [
-                "textures/UI/new/Stroke_photo.png",
+            "ac11439d-3758-49f5-8728-81ed22c1ed96": [
+                "textures/UI/lobby/trophy_1.png",
                 "cc.Texture2D"
             ],
             "ce6d2de9-7056-4ba8-a1b1-40b00bb6f469": [
                 "textures/UI/lobby/trophy_2.png",
                 "cc.Texture2D"
             ],
-            "ac11439d-3758-49f5-8728-81ed22c1ed96": [
-                "textures/UI/lobby/trophy_1.png",
+            "394bac82-54fb-472f-a27f-b5107821bfb8": [
+                "textures/UI/new/Stroke_photo.png",
                 "cc.Texture2D"
             ],
             "da3e556f-1bce-4c31-87dc-897ea2d788e2": [
                 "textures/UI/lobby/trophy_3.png",
                 "cc.Texture2D"
             ],
-            "d5dfe6a8-eb19-4aae-a74f-83b71eaa57dc": [
-                "textures/UI/lobby/user-image2.png",
-                "cc.Texture2D"
-            ],
             "6de06a23-d0de-4766-a9e1-a0314136d62e": [
                 "textures/UI/lobby/user-image3.png",
+                "cc.Texture2D"
+            ],
+            "d5dfe6a8-eb19-4aae-a74f-83b71eaa57dc": [
+                "textures/UI/lobby/user-image2.png",
                 "cc.Texture2D"
             ],
             "19509bb1-dc08-4cbf-ab8f-2460e207265c": [

@@ -1,1 +1,870 @@
-{"packageUrl":"http://localhost:3003/tutorial-hot-update/remote-assets/","remoteManifestUrl":"http://localhost:3003/tutorial-hot-update/remote-assets/project.manifest","remoteVersionUrl":"http://localhost:3003/tutorial-hot-update/remote-assets/version.manifest","version":"1.1.0","assets":{"src/jsb_polyfill.js":{"md5":"ac8ada521e47634a9e3d3ede8479ba0b"},"src/project.dev.js":{"md5":"08180ad0a9826b43ecea29e965f7c71f"},"src/settings.js":{"md5":"7e49b199adb13ea5e9c99b2d7b15f8a3"},"res/import/00/0019472a-7077-47bb-8a0b-c3597a6a8017.json":{"md5":"ed1366262e35d7f0e3ebfe6c5188b19c"},"res/import/01/01540c0b-9980-4710-a4fe-ec364ec5d525.json":{"md5":"59ddbebe5e9d27ab2ffda950f4e869d0"},"res/import/02/0298d0e9-32ea-4e61-8184-f7fcc552e256.json":{"md5":"8300f5b84478351476bd868bae904e78"},"res/import/06/06de80f3-cbe8-47d0-8128-ffc63bb0f074.json":{"md5":"3527aa16b1b021b37b86924fa43fe617"},"res/import/09/09d679a4-5ff7-43fb-b35e-6941f6123116.json":{"md5":"73ff150d97b5bf84388a58df7dc4fd3a"},"res/import/0b/0b00893b-1d86-4e2c-ab51-85a20a15633f.json":{"md5":"9cd732857084eedfbea1222334363c2f"},"res/import/0e/0ea9fb8e-b46b-4c18-b1cc-5e62da8c29ff.json":{"md5":"eea69bd0d05841dcb11c11b4948985aa"},"res/import/10/1098603e-a88d-403f-afef-2923af0ef362.json":{"md5":"cb43569d71d8df669d0c58dde963653d"},"res/import/11/1178ed33-cd30-4240-9097-2552d75fa57b.json":{"md5":"3897c1b8f960f9bb8d193078f7d85deb"},"res/import/11/11aec36f-4b32-4959-b432-9dd67342f43d.json":{"md5":"8212277ed150cdd9b2267597a106f35c"},"res/import/11/11c8b27e-29a0-4c2f-ac31-03a2e5793b7c.json":{"md5":"78c74eb2be3a20b7b67b1db189c7c8d5"},"res/import/16/16189c68-10cc-43d0-a6c0-91ebb2a29917.json":{"md5":"9e0f366453868dab63599acebcdb69ae"},"res/import/18/1809aa80-8e66-40e9-9ff5-a5e1d04d3d53.json":{"md5":"12a8c38b4a8103845f77f13787bdf741"},"res/import/1a/1a96f083-8e36-4e63-aa94-1056c0d22976.json":{"md5":"5721f0db902681048708db2bf0fe597a"},"res/import/1b/1bcf1895-5f48-44ac-8b93-9c9116f75f68.json":{"md5":"2ebeb4c149255d4eca35396102492ece"},"res/import/1b/1be1ace3-b9b3-4bf4-9c45-5c1d9eccac08.json":{"md5":"b4ada28a1a8c5a8a34dcd8dc9275586e"},"res/import/20/206a8269-b59b-4e03-9ae9-8bdc7f93a2c6.json":{"md5":"86d4819866dd713f55ed6159d6993877"},"res/import/22/22f76932-c1c0-4d9d-912a-b4b73572ca52.json":{"md5":"96939bb4577fb18840a7d217125a919b"},"res/import/25/25b2a633-f269-42d2-80f8-110e834238eb.json":{"md5":"5ec2ba2e98247b9c575dafeefce76868"},"res/import/26/26f1e1b9-a0c6-41a6-a8ff-3102f3cbc784.json":{"md5":"92249a05b7d0aadadf22fd65afcacc67"},"res/import/27/2770bfda-c750-4578-a350-94ccac0ada80.json":{"md5":"4500c1d236aebbe100636ad85c5a8451"},"res/import/27/27c9b918-f499-4c4d-8cd6-d5074416e0b0.json":{"md5":"0ce6333bf27e00875c2e2738116b884d"},"res/import/29/29158224-f8dd-4661-a796-1ffab537140e.json":{"md5":"321e6f519c8e6371949380648b18d5f0"},"res/import/2a/2a184fb3-9c90-48b3-9d1d-8453f8c6252c.json":{"md5":"808c23e6cec0438316d1ea016d239b03"},"res/import/2a/2aa7ddb7-cc86-4474-b867-ad5dc2707aae.json":{"md5":"bc61be90ed4e148a5228f34c61dda904"},"res/import/2e/2e9b2dc0-65b4-44e5-b624-d61da9ee1095.json":{"md5":"816d6c419f7d68d060ca817207afcde9"},"res/import/2f/2f7da647-cf15-4050-85a8-b6aadafa5934.json":{"md5":"b9e142e12444e2b91735eed257c3f21f"},"res/import/32/323fec25-3825-4be0-9ee7-2888ccf4f6ae.json":{"md5":"f71a2731c64b04d9feb830029b412f5e"},"res/import/35/3550229e-8de1-434f-9300-ab5707373b83.json":{"md5":"c77e107c81ce5d83f83115565da98fda"},"res/import/35/35aec5a8-00b6-4d8d-8508-a48cf89a536d.json":{"md5":"439e365eff72d6ce0a31b2c9251aaabf"},"res/import/39/39f12282-5c58-4f68-8f85-5ffbbf83b419.json":{"md5":"c1013d1a009c113b46a665ebdc9ee42b"},"res/import/3b/3b0d303c-d928-4420-b8d8-a7234260ca04.json":{"md5":"c8c94c4e6b2995a9d7e3ec5ebf0a1fc4"},"res/import/3e/3ecb908c-9c4a-4f02-a2cc-3e2a8838771b.json":{"md5":"16652347706a3eb0af92d66a4aa89846"},"res/import/3f/3f7d6f14-8e3f-432c-a537-09c8c7e03b76.json":{"md5":"9a103b8fc2a6597b5c963b2e203e0b89"},"res/import/41/41dc20a6-d60a-4f55-854e-860d2ad6348b.json":{"md5":"143a327b17d121e3aa5713ef2fc2ff8f"},"res/import/42/42b84506-55b4-4b98-8d2e-b3f8cfe7fbf8.json":{"md5":"f819ec05d786092e4ec37a1e685b7ea7"},"res/import/43/43b4fd24-52c5-4946-9174-4b0188b49923.json":{"md5":"6b89c80c827a7da761e9b2efa53fd43a"},"res/import/44/44883751-af5c-4ff3-a5c0-493cf5074e20.json":{"md5":"9a3dc865c95f65182e5e742283a37f83"},"res/import/45/45d0f893-f7b7-4c84-8bd9-dd6409ec6de9.json":{"md5":"6ea02bb58f533a5dd44aef0c15f46418"},"res/import/4b/4b231bb0-58ee-404b-8056-53d173cc50b8.json":{"md5":"2e346c0fcc68233d3b2c98b054738701"},"res/import/4b/4bd67355-7a5e-4354-acd8-4cd517eef985.json":{"md5":"363c6ab1d130942839631c982cb50887"},"res/import/4e/4e28e010-aec7-49bb-9add-42dd4dc0fc51.json":{"md5":"ae6d7cf4ea0d9963cbfd44edec91d058"},"res/import/55/55e0a94a-b236-4c6b-8e0d-322e198e24a3.json":{"md5":"7744303e8c89fe31c6c40cc59e0d5aa1"},"res/import/57/5717c77c-65de-4232-9714-b0c663df738d.json":{"md5":"3b4fe8448300b3db8204c16cb3ad2208"},"res/import/58/5818447f-9802-4c83-949e-6b23aa17229e.json":{"md5":"3ea3c5466cfbb33d8173db7695775976"},"res/import/5a/5a7ed901-bdc1-4823-8b0d-d2db8d4506ea.json":{"md5":"3d09fcadb8dd22d6f5be09f12ee675f4"},"res/import/5b/5bfc8b76-5eb6-4cf9-a83a-24a508103512.json":{"md5":"8c5055627a2364e1e7fbc4384f44c798"},"res/import/5c/5c390bbc-a6cf-49d6-b1ab-d9417b565edc.json":{"md5":"d2bf10a69b31265e4949a883f11ad8be"},"res/import/60/6035fac6-5208-4e0b-bea7-62ff9fb1338b.json":{"md5":"9ba69e76df5bcceb2530c14c2bcfad71"},"res/import/61/6181778a-ebce-4e14-9e57-3c9f472a8ed9.json":{"md5":"d93b5035997fb3318f56ff57453048c3"},"res/import/62/62c007e7-076e-4e44-a57d-33bd7e7cd350.json":{"md5":"b6ae1d04ba98d9f907017f86f35e9035"},"res/import/65/65ddcba7-1bd3-41aa-b642-5785fc4d5344.json":{"md5":"2a557556cbc2d9b0b9dae7aa52bb2921"},"res/import/65/65f8dd44-9c0c-481b-9b78-c219307a0525.json":{"md5":"a11bd42fb5de91b77e5cbcbefe7566f1"},"res/import/67/679e44ab-196f-4a53-9cfa-ca9ba7c8ba43.json":{"md5":"375f6a8d3ad4c7c17dfd7237f2828cbd"},"res/import/67/67c61cd3-6096-407d-8b1d-54909788b91e.json":{"md5":"d4bc9006f3e30addbf170f69f3d0478a"},"res/import/67/67d645ab-1f14-4c86-a929-e644ab31c2a3/poker_number.png":{"md5":"5dc839e4febcbe674ef00459c057a31e"},"res/import/67/67d645ab-1f14-4c86-a929-e644ab31c2a3/raw-bitmap-font.fnt":{"md5":"83a5be6b28aebca3e0663fd1e4e9b2a3"},"res/import/67/67d645ab-1f14-4c86-a929-e644ab31c2a3.json":{"md5":"1ffaf6f89f64510478a203f594fdec9d"},"res/import/67/67e68bc9-dad5-4ad9-a2d8-7e03d458e32f.json":{"md5":"536b330599d9053d608a3eaec97531b7"},"res/import/68/68b1604e-7c58-4e1b-af6e-7427f12171b3.json":{"md5":"a4fb311c0f6b70ca4a1d8c7dc67abc72"},"res/import/6f/6f6c9fe5-4065-4d41-abc4-026100f9ff4c.json":{"md5":"64054de409142b1925df5fd830658f89"},"res/import/71/71d34242-1ca6-4e9c-8258-9ef646e5e856.json":{"md5":"099e1806e6b5b30ef9a7f6100924b24f"},"res/import/72/72799fdc-2e41-4289-a0e0-2e13242ca6f7.json":{"md5":"c7c0ebc8dae5555719bc830dde916681"},"res/import/74/7459fc8e-3723-4d95-8594-ac8eea99f27e.json":{"md5":"4698aa20689f02f63ceea0ba6ea34623"},"res/import/7a/7a263741-7991-474c-95d0-f3ddec9477e5.json":{"md5":"d3191ba3ed6a1e27427724574ddd967f"},"res/import/7a/7a631c26-9ce6-4322-998e-c67957da6f80.json":{"md5":"549d3782925f262faa5f8865de6ae05a"},"res/import/7a/7aa1165f-2b15-42ee-ba39-a41f3b5900b2.json":{"md5":"c8840c4e468514f06b43ac5080fb8bc4"},"res/import/7a/7aee1866-01db-41aa-afe9-e4a791def6aa.json":{"md5":"3f9f4095e7cae5dc91e874300d0a3922"},"res/import/7d/7d1d4e60-aba2-48e8-85f8-8e328f34e7cc.json":{"md5":"6860d6b6442599be495011ee1d3e1304"},"res/import/7d/7de24e84-21bd-434b-8ca2-b031dcbb438e.json":{"md5":"7152804c6a86a0dc43f53a911c1e6c51"},"res/import/7e/7ebbc72d-40f8-414d-833c-46d245d95d93.json":{"md5":"e234fed75c5035e404d3298bbefd719e"},"res/import/7f/7f38d3ba-acb8-401c-aa9e-2609a601115a.json":{"md5":"ebb765ad51c2c1c868b3ecd8dc3fa109"},"res/import/81/810d3dcc-8b4b-4272-a133-2c91a6e76488.json":{"md5":"d0a4ef7e828fb79176fd5c5bf4323e90"},"res/import/84/84f185f7-d55f-41f6-9aa6-8675392b6567.json":{"md5":"045e9b8319144c85b5257e6d88987fb1"},"res/import/87/876e9bd8-25b8-48a2-8695-070bd61b96d3.json":{"md5":"0b77943d9eeab9319c4bbdea8fdf26ca"},"res/import/88/88e79fd5-96b4-4a77-a1f4-312467171014.json":{"md5":"d6b30af49554a4ef4442ec6ce744527f"},"res/import/8a/8a1e31ac-cc7e-4166-a6d2-8d4edc27d26a.json":{"md5":"1e87e72093326aefd3f6182881af6002"},"res/import/8a/8a546935-70d4-42d2-a051-8d0e76f28008.json":{"md5":"a23be75eaa42b1cf817ec0f16ba055c9"},"res/import/8a/8ad0e2e8-239a-4f11-be5d-641521c4ae8d.json":{"md5":"2fa9ed276cdacfe57a4b60e2bded92bf"},"res/import/8a/8af78d65-4b41-4d59-a683-2659ab6904cb.json":{"md5":"d0df7e4fb5fbad7a2d7b17d64d40229e"},"res/import/90/90c6c118-fce6-409e-9eed-2feddabdbfef.json":{"md5":"382d0bdad596d12d2f98108b489b74c0"},"res/import/91/913e121b-7770-4593-9a34-f8ca1b3e3b2f.json":{"md5":"22187ca903a109d1c6adeb02f6035972"},"res/import/92/92558dd6-9589-48d1-a26e-7673ceb3591a.json":{"md5":"11b52fbc8a51001ed7b6e0593c9e321d"},"res/import/93/93232bfc-cb55-475e-9474-229bd926a60e.json":{"md5":"227ccae84f549513c6dc02c2dd220ab0"},"res/import/93/935750ee-2a25-4d60-a10f-06b3000e28ab.json":{"md5":"0b579d0174d075a0368e81038fecbe86"},"res/import/94/944b1726-c679-48c6-987c-2abb49f9a11e.json":{"md5":"183dbd381da3382a1ac2f3adbb5aba2c"},"res/import/9d/9d5dbf86-8b1a-4324-9247-3cd71ba4b4ed.json":{"md5":"bae7e93f08483205f50da3653cf21641"},"res/import/a0/a0c52615-ef6e-4a90-825f-bddae68ae3d2.json":{"md5":"e8d20d386f628e327ffa1638984bb1c3"},"res/import/a1/a13c6eed-94dc-4e46-a7da-f69a2c352aed.json":{"md5":"852761608b33450455a55aaf4ab3ff77"},"res/import/a2/a2da79be-fe22-420a-83b5-e37878367b06.json":{"md5":"68d9cb158a55b174b3c3cb49fe1fba82"},"res/import/a4/a43c3aec-6f21-486b-bc48-2d3cf8a7d146.json":{"md5":"36f64bfac306d59e7a08636c8abcff07"},"res/import/a5/a5856afd-30ff-43e5-93f6-41e8be2d09d1.json":{"md5":"4c785aa9dd5bbe96560f060a71156f97"},"res/import/a7/a72c2615-97ba-4ca6-9f91-b974f85e35eb.json":{"md5":"c70cbae448856b701b4c58bbb79c03d4"},"res/import/a8/a8b07ccf-1327-4931-b21a-d327cd0e2cdc.json":{"md5":"75f5f8811d03070d81dff9bd139a78b5"},"res/import/aa/aa994068-f930-4e56-907c-3286f04c3a6d.json":{"md5":"e91ce4d6e3c87f3572da257c4db1eca1"},"res/import/b0/b028bac7-dbc0-42f0-8660-eeb3007e6aa6.json":{"md5":"e2738cb9797a6ed265f254e09cdc4be8"},"res/import/b2/b2cd9781-6504-483d-b611-d791e18b5885.json":{"md5":"fa1efe1f0a1cdbecfe64ecaae3d85c66"},"res/import/b5/b5e16d2d-db8b-4264-a50c-7b98121a9f42.json":{"md5":"538b5c980f72d73ad4445c43b779b087"},"res/import/b7/b7090b97-adf0-452c-af0c-14ab4b11ed06.json":{"md5":"20247a9f43585403624d78cf19d2f274"},"res/import/bb/bb07c6d5-c9e7-4830-8d25-6015d553b97c.json":{"md5":"d1dbe5b65b983326ae3ace0adf002ce4"},"res/import/bc/bc8753ba-23f5-45dc-ac87-0850140a05d0.json":{"md5":"90bf13bba9d167371c0c7dfe8742d727"},"res/import/bd/bda5770f-1fca-434f-b5b4-ab99c12b55df.json":{"md5":"eb6acc4a610f6a082b4673a10e374b15"},"res/import/c0/c01466ea-7283-4fce-b615-4ee78c774af0.json":{"md5":"4ad8fb4e32b2d2129e1121e9d3a15ba3"},"res/import/c0/c0aa5a2e-118d-47b0-8bcc-a200564a0ec2.json":{"md5":"faaa854bc7f971a7a5d7a49f9726e260"},"res/import/c2/c23e8ba3-5243-428a-89e0-9a0aaa1950d0.json":{"md5":"a293329a0e549cefd81be4fddd4f5b00"},"res/import/c2/c2d0f392-28fb-47a7-aaf9-af40e75f40d3.json":{"md5":"b50b5d97b6927c26cdf8ca31c4beb8a9"},"res/import/c6/c618d259-5fca-4f30-b07e-88db9882be91.json":{"md5":"7d79206c5e9df72170c00a8a75490667"},"res/import/ca/ca7dd73d-526a-4c85-9702-eb51e93b9d99.json":{"md5":"a78b0628aad6d9ab6792d6ee8322055f"},"res/import/ce/ceb1752c-96cf-4a3a-92e8-c7213b1394fd.json":{"md5":"2747ce040174a403081d8c465f94d8e9"},"res/import/d1/d1933017-c845-492d-aa72-bf71d7b48726.json":{"md5":"ff385bc93a011f217b4c6e0377a2f9bf"},"res/import/d3/d34ca99c-e88b-4dca-be0d-4ff69ab7b8a7.json":{"md5":"a37f2f7ec084cb0334ba6ab5e3896a5c"},"res/import/d4/d4808d42-561f-4954-b282-0d42efe6dc06.json":{"md5":"97860abea9c571540751213b2f8dcfbb"},"res/import/d5/d5188c19-f734-4c83-91b7-4f6e19de1e24.json":{"md5":"db560e6b66a329f743f604e30a3bf42e"},"res/import/d5/d58859db-6a64-489b-aa1c-683e5f9a646b.json":{"md5":"2804b0bb89a1ced8bb8eab7c508fedd0"},"res/import/d6/d63bb950-68fd-447d-a891-ede59ab23abc.json":{"md5":"bc6dc3f2d40680d20d584034307205de"},"res/import/d8/d80d3fa9-3ca7-4431-ab5f-88bf39b1068a/raw-bitmap-font.fnt":{"md5":"49fdd417eb4415222022291566ce70ab"},"res/import/d8/d80d3fa9-3ca7-4431-ab5f-88bf39b1068a/stake_number.png":{"md5":"2083dbe9548e497ed531d5b17c02a4ea"},"res/import/d8/d80d3fa9-3ca7-4431-ab5f-88bf39b1068a.json":{"md5":"17eb9ac00ca420f45def57872fa14def"},"res/import/db/db285bfe-a5fd-495c-b8ef-58e38c6133d9.json":{"md5":"b20626879c571d1d8cdd3625bf41116f"},"res/import/db/db83170b-5560-4053-be9d-ade1c594385d.json":{"md5":"b29e70e1bcd8d0d7e06ed6e9fe1158d5"},"res/import/db/dbe9ce6c-c362-433a-a6b5-59ad0c3352e2.json":{"md5":"67864fbccde0ec17ed2cdef5812e12f6"},"res/import/dc/dc0c03f6-1138-4b9f-ba96-e8376a5d83a1.json":{"md5":"a9d19db2ec114bb0bc7b78bd2487b0f5"},"res/import/dd/dd48b639-bf9d-46b2-b14c-74325543d296.json":{"md5":"4fcf664a235a4d79483d6f2280b6725a"},"res/import/df/df973d31-e6cb-420d-8157-88376eb24610.json":{"md5":"128a2c350502dba12402d99ebfce04c0"},"res/import/e1/e1facc40-00d0-4fac-85dd-051fe220a8e1.json":{"md5":"965e184e8a467efa4e8a04c505d96bce"},"res/import/e3/e32b062b-43c9-4f4c-bc55-08d924278886.json":{"md5":"b7c6b0307a22a67094268efffb59ff35"},"res/import/e4/e402984e-0e8f-4470-9f8e-d7eaa92544d1.json":{"md5":"818ffcd5f9d8d0b717e175e0e86364ff"},"res/import/e4/e4f21e55-ed4f-46f8-b9a1-7ee9775d710c.json":{"md5":"72f940eabf7a9cc957e7e0ab0a205aad"},"res/import/e7/e75629cf-d294-4a53-a75b-6a73f2a683aa.json":{"md5":"49f42e1a8a821b04c3f725ea4b0143d9"},"res/import/e7/e7b4811b-3fb0-4e2f-a31f-757a87273ca9.json":{"md5":"e2ff62b46d46195131ac57d638eef22f"},"res/import/e8/e8331335-0a2a-4732-a2fb-1c13e852ddeb.json":{"md5":"6d42e1f4616ad0403c2bdb79119e3fa6"},"res/import/e9/e9ec654c-97a2-4787-9325-e6a10375219a.json":{"md5":"140f529b491009e9d0b4e9e5b64ad3a3"},"res/import/eb/ebc06094-057f-4c1f-a055-9afc8780c3ae.json":{"md5":"f1fdaf2bc2df5e96b28369cb6c722742"},"res/import/ed/ede1495d-fc57-4c30-8e55-32402043ed4e.json":{"md5":"dd4bd7cbaed843b7567c8091353620fb"},"res/import/ef/ef0e92d8-6db3-4e01-a1f0-5988bf72b4ec.json":{"md5":"317b0c75aa059d3a5f382c190d1ffdb0"},"res/import/ef/ef287833-459f-4ff4-a43a-7a6ddc8c95a9.json":{"md5":"c8560de161cca9b30912ce458d3a12a2"},"res/import/ef/efe38028-6772-4b97-935c-1e941403af02.json":{"md5":"3e585ef0648a7eb13812d182cb2d442f"},"res/import/f0/f0048c10-f03e-4c97-b9d3-3506e1d58952.json":{"md5":"9cce7d772ea5910b267faad5656597cd"},"res/import/f2/f2358c8d-2743-4f35-ad99-e3a8966334b2.json":{"md5":"13ac89cbe99954780f534d9044bc0902"},"res/import/f3/f39332aa-8490-4803-99d9-831546a13a11.json":{"md5":"8cb4c2e5f64cb494c10201f101bbfd75"},"res/import/f4/f43ce0ab-058c-412d-af60-77d0834caf29.json":{"md5":"13415e153107094dae6119de30bb3023"},"res/import/fa/fa40a424-704a-43c2-97ac-fea4ece3b48e.json":{"md5":"191ee12a5ceb353793d9cdcfd1e41543"},"res/import/fe/fe8db373-f328-42b5-84cb-70407deaf581.json":{"md5":"b56248e511eb6cd0edc93fd324155e5b"},"res/import/fe/feb810ab-02f5-4f17-ac06-a23842d236a8.json":{"md5":"c9cb9f035059fb809c5f1e81399c5bd1"},"res/import/ff/ffb7159b-b041-48a2-bb58-9a9501d4d190.json":{"md5":"8aa524fdb9c1c2cd800070bd001955d2"},"res/raw-assets/font/poker_number.png":{"md5":"5dc839e4febcbe674ef00459c057a31e"},"res/raw-assets/font/stake_number.png":{"md5":"2083dbe9548e497ed531d5b17c02a4ea"},"res/raw-assets/project.manifest":{"md5":"8432f2112560b23517cc378e8773cf1f"},"res/raw-assets/sfx/achievement_won.mp3":{"md5":"d7c49851d2ed8083ea6eb8eaef94cca7"},"res/raw-assets/sfx/bgm2.mp3":{"md5":"b291235f22a5c3e66430a5c4c25c84df"},"res/raw-assets/sfx/button.mp3":{"md5":"91e69bb24ff6173032d04e232c275ad7"},"res/raw-assets/sfx/card_deal.mp3":{"md5":"b2317d34054b962a9c134d6a1d7b2621"},"res/raw-assets/sfx/chips_place.mp3":{"md5":"c72851f520339a8367fb4486a5f6d7fd"},"res/raw-assets/sfx/fail.mp3":{"md5":"b156c9e6853d3ec4aff9cc20c5e78f77"},"res/raw-assets/textures/UI/chat/button_orange.png":{"md5":"bba8716aeb72033d48cb2771e315cd32"},"res/raw-assets/textures/UI/chat/double.png":{"md5":"41006877049123c4ebabe6b39b0daa9b"},"res/raw-assets/textures/UI/chat/gb_inputbox.png":{"md5":"90ed2ca105ed0e4b6c5b1b11535344c7"},"res/raw-assets/textures/UI/chat/hit.png":{"md5":"f6a01ee4d3347798ffeefd9d74349bc9"},"res/raw-assets/textures/UI/chat/icon_message.png":{"md5":"77cb0cc6ea56b929691bc28079dffb07"},"res/raw-assets/textures/UI/chat/send.png":{"md5":"60663dca46da3997eba0d746c1cde862"},"res/raw-assets/textures/UI/chat/stand.png":{"md5":"8b5b6e4a479fe398f114b44a4c8a1461"},"res/raw-assets/textures/UI/lobby/bg_changjing.png":{"md5":"583bb4dbd4a4078aa306c4fcfb511f31"},"res/raw-assets/textures/UI/lobby/bg_gold.png":{"md5":"2aa8e02bad500178f40f5af802bcf9a1"},"res/raw-assets/textures/UI/lobby/button_jjc.png":{"md5":"17fb5c02c7470d95e84a97b264a54140"},"res/raw-assets/textures/UI/lobby/button_ksks.png":{"md5":"2bb161d732a84fee4af197c89883a94f"},"res/raw-assets/textures/UI/lobby/button_zbc.png":{"md5":"457f3d1bb5c1639a3f24be98e6420c1f"},"res/raw-assets/textures/UI/lobby/icon_back.png":{"md5":"dd6ef4efc8f05eb77a7cbd50b7f0e6c2"},"res/raw-assets/textures/UI/lobby/icon_diamond.png":{"md5":"7123a767755b66ffb65ca37818e35b99"},"res/raw-assets/textures/UI/lobby/icon_gold_big.png":{"md5":"931cda98808c79f0a744da6be0764460"},"res/raw-assets/textures/UI/lobby/icon_gold_small.png":{"md5":"d607637391fe90bd89057cf8b2d9f44f"},"res/raw-assets/textures/UI/lobby/icon_message.png":{"md5":"0aeb33839b3cf6f26d990a71e5d14669"},"res/raw-assets/textures/UI/lobby/icon_plus.png":{"md5":"99194ee176ac173f78a2a5e1a03dea3a"},"res/raw-assets/textures/UI/lobby/icon_rule.png":{"md5":"22ac7030c2348d7c08a444dddb7498ca"},"res/raw-assets/textures/UI/lobby/icon_set.png":{"md5":"671960aa83d654972f3c42daf1b9e429"},"res/raw-assets/textures/UI/lobby/trophy_1.png":{"md5":"9721c1c30e77661dd0e82888f8009fd5"},"res/raw-assets/textures/UI/lobby/trophy_2.png":{"md5":"fa59b66c80741d535aabc8ad51363cb3"},"res/raw-assets/textures/UI/lobby/trophy_3.png":{"md5":"4c073d3df7fb012f02b7b8636e9e5b04"},"res/raw-assets/textures/UI/lobby/user-image.png":{"md5":"a488f02e3722fe6108cb17d92f94ba47"},"res/raw-assets/textures/UI/lobby/user-image2.png":{"md5":"5e244875f0339e053b511be7f6757407"},"res/raw-assets/textures/UI/lobby/user-image3.png":{"md5":"f5d719456ba026b007b3c411d0671153"},"res/raw-assets/textures/UI/lobby/user-image4.png":{"md5":"6bed0fd7d1221112a99a6fb743a9d615"},"res/raw-assets/textures/UI/lobby/user-image5.png":{"md5":"bd05dd20b2a5d315486cdbde5ee9933c"},"res/raw-assets/textures/UI/lobby/user-image6.png":{"md5":"54120eb972495c03845eaf0d8f25405a"},"res/raw-assets/textures/UI/new/10K.png":{"md5":"6491e4517210f13a9c10eb661f30644b"},"res/raw-assets/textures/UI/new/1K.png":{"md5":"f2fbb21fa1bd975662a88f9cf01d5686"},"res/raw-assets/textures/UI/new/2K.png":{"md5":"14309281e71c71dde60022f8144954ca"},"res/raw-assets/textures/UI/new/5K.png":{"md5":"8d22c8b7f1b3c6a40e57352e51ca615b"},"res/raw-assets/textures/UI/new/Stroke_photo.png":{"md5":"e0c2c19a572a8a978a68afbd0e34069a"},"res/raw-assets/textures/UI/new/Stroke_photo_oneself.png":{"md5":"cfd3e73de6518b301de7dded4b5ce392"},"res/raw-assets/textures/UI/new/Stroke_photo_tanchuang.png":{"md5":"b56004f4f99b335729c75fc8866febe1"},"res/raw-assets/textures/UI/new/baopai.png":{"md5":"26eb9e34406f01b960ff876cadbe48ed"},"res/raw-assets/textures/UI/new/bg_gift.png":{"md5":"7b212f5d0dbe12831e43daba6bca1f9e"},"res/raw-assets/textures/UI/new/bg_gold(1).png":{"md5":"89b11586b293de193f49e571028ab827"},"res/raw-assets/textures/UI/new/bg_gold_touzhu.png":{"md5":"ed6a66ae282df4b52a6d38a55ca5302f"},"res/raw-assets/textures/UI/new/bg_gold_zhuozi.png":{"md5":"83617bbc2583abfa42d9bcbd5633f662"},"res/raw-assets/textures/UI/new/bg_huaxin.png":{"md5":"2001e6923f07445e36749c4ee42454d7"},"res/raw-assets/textures/UI/new/bg_icon.png":{"md5":"bfc16c6854c6e1e0e95130c16266612a"},"res/raw-assets/textures/UI/new/bg_inputbox.png":{"md5":"d9a7812b8ca6d530b17ce096e8b8e56a"},"res/raw-assets/textures/UI/new/bg_rankinglist.png":{"md5":"b07f8e27ba911157ac7090d82f394cbb"},"res/raw-assets/textures/UI/new/bg_stroke2.png":{"md5":"2b3136486e360c2c04195789073053d7"},"res/raw-assets/textures/UI/new/bg_tanchuang.png":{"md5":"2fe5c501d5a7037c25381d27891f7f37"},"res/raw-assets/textures/UI/new/bg_xiamian.png":{"md5":"81d98c57e21e5ebe15a7087660c82c61"},"res/raw-assets/textures/UI/new/biaoqing.png":{"md5":"bbf232a0e737d29dc54b55e4cb8bb034"},"res/raw-assets/textures/UI/new/button_blue.png":{"md5":"a4252eae8b1a08b7693a12706ee2d634"},"res/raw-assets/textures/UI/new/button_erji.png":{"md5":"8ddebcbf1e4e7c763c1e0d630d0b5cff"},"res/raw-assets/textures/UI/new/button_fasong.png":{"md5":"90997437ae4f26780b2e0c7931d117da"},"res/raw-assets/textures/UI/new/button_message.png":{"md5":"616e35ed0d1e131653ee174f740e67a8"},"res/raw-assets/textures/UI/new/daojishi_down.png":{"md5":"bd3691f9b764970aa4f0750219b0480e"},"res/raw-assets/textures/UI/new/daojishi_photo.png":{"md5":"6283c45450de47c7abd3ccc10c444a1b"},"res/raw-assets/textures/UI/new/daojishi_up.png":{"md5":"bbfcd7cd4d20bcb8d7cc179a9bfed1aa"},"res/raw-assets/textures/UI/new/dealer.png":{"md5":"b5886756ce967d164811107e73b966ad"},"res/raw-assets/textures/UI/new/fengexian.png":{"md5":"d2ea7c8c18b389b54fe538e9a64a553c"},"res/raw-assets/textures/UI/new/gift_bucket.png":{"md5":"e301d4f690e45cf41cc2add7f290d965"},"res/raw-assets/textures/UI/new/gift_kiss.png":{"md5":"16e66099bebc4eb97547e9ed67c13ed9"},"res/raw-assets/textures/UI/new/gift_rose.png":{"md5":"4a6f2a98ce051d1343b4182b5b96fe5e"},"res/raw-assets/textures/UI/new/gift_tomato.png":{"md5":"5ff8c1ac7153b87561eb09581302b18d"},"res/raw-assets/textures/UI/new/icon_KO.png":{"md5":"358b177fd4f9c2723529f1fdb23ce26e"},"res/raw-assets/textures/UI/new/icon_back.png":{"md5":"a96d8745a2878f0e1a26caebeaf55462"},"res/raw-assets/textures/UI/new/icon_girl.png":{"md5":"04653a96373b69d169fa009605bb7e89"},"res/raw-assets/textures/UI/new/icon_qingkongtouzhu.png":{"md5":"2e951f993c41f05643aa103a25bf4b4e"},"res/raw-assets/textures/UI/new/icon_touzhu-.png":{"md5":"c01e1ec574ef18eadb9f83f8fec28721"},"res/raw-assets/textures/UI/new/icon_usercp.png":{"md5":"a6713736b591fb29462695ffe86fc7d2"},"res/raw-assets/textures/UI/new/input-box.png":{"md5":"99fa50407d696dcb8341b62c6f1e6504"},"res/raw-assets/textures/UI/new/paishu.png":{"md5":"fc69940d6f1f9be77a6758cec2f7a61b"},"res/raw-assets/textures/UI/new/rankinglist_bg.png":{"md5":"f36f0460093a11eb58a76ffdfbdc6164"},"res/raw-assets/textures/UI/new/rankinglist_title.png":{"md5":"fe805c3ec15c0452179d341948952112"},"res/raw-assets/textures/UI/new/txtCountdown.png":{"md5":"c371301d305602931154c7149e48c232"},"res/raw-assets/textures/UI/new/user_image.png":{"md5":"d6fd35ee43810e919ac3eb115d8bea31"},"res/raw-assets/textures/UI/new/zhuozi.jpg":{"md5":"62292fbff5f9406d139caf2b22f74e72"},"res/raw-assets/textures/UI/user/circle_1.png":{"md5":"309f712b36418d2f23665e4d3b0d0204"},"res/raw-assets/textures/UI/user/circle_2.png":{"md5":"f213f46f342cecadb0fe2943b1245561"},"res/raw-assets/textures/UI/user/circle_3.png":{"md5":"02edddc55cd96f663da7f2539a8aa42a"},"res/raw-assets/textures/UI/user/circle_4.png":{"md5":"47190864a49fe8c1fdb715b9e5d9f3c7"},"res/raw-assets/textures/UI/user/circle_5.png":{"md5":"d21d056cc2d1a6593fdedaa8c92b1b86"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_1.png":{"md5":"2926fed5c6e450dde43e812a4094b272"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_10.png":{"md5":"8a32fc315d0c2cf84c3ac81dac8a3f12"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_11.png":{"md5":"f64aabc5c8ce9b421b67086ee56ef736"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_12.png":{"md5":"95a7bc645b423d4e4e2d1e660b6fc059"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_13.png":{"md5":"b047f5e10d50eaa6a14f315f801a9849"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_14.png":{"md5":"bd0c0e7e15f6c1b31b15aec3fba1e61f"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_15.png":{"md5":"d31e040f2f9564ff7ed5cce8f2ee32c0"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_16.png":{"md5":"b755151dc18dfd30c23ed5142a405ec5"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_17.png":{"md5":"ffc78ceda16bee6dc181aebef926294a"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_18.png":{"md5":"21f762f4e7c785c78a73b9cb0a149fe0"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_19.png":{"md5":"cc20f8e4e3d54ee017558e8c6921a4aa"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_2.png":{"md5":"531c6d69c12bc3c427ca7a8fe128af7b"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_20.png":{"md5":"58b08c40980ef792259ed2a3d45f052a"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_21.png":{"md5":"ac05d87c5080942f9ecb705bb58e1272"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_22.png":{"md5":"88ffd75f46c9421f722b46c3c2fb559e"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_3.png":{"md5":"93320ec00c3d11f19945197e9ee9a628"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_4.png":{"md5":"80a061c883214bc4c189817c7d99dcf9"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_5.png":{"md5":"f4bd720edaa9badb0cc29aa20630b3f5"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_6.png":{"md5":"4baa433dc42e84b503a045e892edfd6e"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_7.png":{"md5":"57444a22cbfdec9b1512e74aae3d2891"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_8.png":{"md5":"4c2366127449693622d384120b09b3b4"},"res/raw-assets/textures/animation/blackjack/BLACK JACK_9.png":{"md5":"1b8cc2a4277fd4651cd6f7d20868752e"},"res/raw-assets/textures/animation/bust/BUST_1.png":{"md5":"d71fcab9075a39924ccb34f79d6fad17"},"res/raw-assets/textures/animation/bust/BUST_10.png":{"md5":"ba1ce5b3a29d7df3cd58e88d4ce53d2d"},"res/raw-assets/textures/animation/bust/BUST_2.png":{"md5":"f9d97cc0aa32564d01414507549d76a3"},"res/raw-assets/textures/animation/bust/BUST_3.png":{"md5":"673aba130a4757a0f775b8cf72fff51b"},"res/raw-assets/textures/animation/bust/BUST_4.png":{"md5":"2350734e6951a06e9120dc533fe41995"},"res/raw-assets/textures/animation/bust/BUST_5.png":{"md5":"253565dad240a4ffb6295f64866cee7c"},"res/raw-assets/textures/animation/bust/BUST_6.png":{"md5":"bfd928ab78bb4ed30e1be4c43271857c"},"res/raw-assets/textures/animation/bust/BUST_7.png":{"md5":"1538740f8faea58baa7ceb2a75d33f40"},"res/raw-assets/textures/animation/bust/BUST_8.png":{"md5":"c99f3a70af21a5d8df739e18d5e64997"},"res/raw-assets/textures/animation/bust/BUST_9.png":{"md5":"46fb59b95d10ec6754515f2d3e2aa903"},"res/raw-assets/textures/cards/fangkuai_big.png":{"md5":"e68e6ed9636fcd094ae15f6e071ab59e"},"res/raw-assets/textures/cards/fangkuai_small.png":{"md5":"a1cb211a3941591442bd71b5f103a87e"},"res/raw-assets/textures/cards/heimei_big.png":{"md5":"ff1825387e26ccd2676176391d7299c7"},"res/raw-assets/textures/cards/heimei_small.png":{"md5":"1fd7f13fa845fdd7536fa164bbc90911"},"res/raw-assets/textures/cards/heitao_big.png":{"md5":"97a58a5e2fb57767be59a7333020f89e"},"res/raw-assets/textures/cards/heitao_small.png":{"md5":"1967f7dafd1e9f7dee3f878f40f4affa"},"res/raw-assets/textures/cards/hongtao_big.png":{"md5":"b8f4d1853630833b92709fc2653bc2da"},"res/raw-assets/textures/cards/hongtao_small.png":{"md5":"603129945d357c934c71b51b92e86388"},"res/raw-assets/textures/cards/king.png":{"md5":"d30f5bf7b44dba834e7b65687e5d6105"},"res/raw-assets/textures/cards/kueen.png":{"md5":"87bb643c0580ff5896540f5b1c209127"},"res/raw-assets/textures/cards/poker_bg.png":{"md5":"09d4ba374199282f1be7484c7c5a8be1"},"res/raw-assets/textures/cards/poker_dipai.png":{"md5":"88b1e1f81594963fb7e443911363a058"},"res/raw-assets/textures/cards/ranker.png":{"md5":"d0c4777e003711a9bcb3293cfd9d81b1"},"res/raw-internal/image/default_btn_disabled.png":{"md5":"ccbd56c4f14890bbc94d17004e501e9f"},"res/raw-internal/image/default_btn_normal.png":{"md5":"ffdc9657918740e0f5d088acaaada3af"},"res/raw-internal/image/default_btn_pressed.png":{"md5":"c1daa456037cc3884aabad81bb91b5cc"},"res/raw-internal/image/default_progressbar.png":{"md5":"67b4a8eb285b47bbcd7144512611c0a1"},"res/raw-internal/image/default_progressbar_bg.png":{"md5":"feadf32efa5c4557c81045711e5e6211"}},"searchPaths":[]}
+{
+  "packageUrl": "http://localhost:3003/tutorial-hot-update/remote-assets/",
+  "remoteManifestUrl": "http://localhost:3003/tutorial-hot-update/remote-assets/project.manifest",
+  "remoteVersionUrl": "http://localhost:3003/tutorial-hot-update/remote-assets/version.manifest",
+  "version": "1.2.0",
+  "assets": {
+    "src/jsb_polyfill.js": {
+      "md5": "ac8ada521e47634a9e3d3ede8479ba0b"
+    },
+    "src/project.dev.js": {
+      "md5": "db6a24c31cb933cde15be760941c6202"
+    },
+    "src/settings.js": {
+      "md5": "597f13a6a26d910e44d5a52764a7d521"
+    },
+    "res/import/00/0019472a-7077-47bb-8a0b-c3597a6a8017.json": {
+      "md5": "ed1366262e35d7f0e3ebfe6c5188b19c"
+    },
+    "res/import/01/01540c0b-9980-4710-a4fe-ec364ec5d525.json": {
+      "md5": "59ddbebe5e9d27ab2ffda950f4e869d0"
+    },
+    "res/import/02/0298d0e9-32ea-4e61-8184-f7fcc552e256.json": {
+      "md5": "8300f5b84478351476bd868bae904e78"
+    },
+    "res/import/06/06de80f3-cbe8-47d0-8128-ffc63bb0f074.json": {
+      "md5": "3527aa16b1b021b37b86924fa43fe617"
+    },
+    "res/import/09/09d679a4-5ff7-43fb-b35e-6941f6123116.json": {
+      "md5": "73ff150d97b5bf84388a58df7dc4fd3a"
+    },
+    "res/import/0b/0b00893b-1d86-4e2c-ab51-85a20a15633f.json": {
+      "md5": "9cd732857084eedfbea1222334363c2f"
+    },
+    "res/import/0e/0ea9fb8e-b46b-4c18-b1cc-5e62da8c29ff.json": {
+      "md5": "eea69bd0d05841dcb11c11b4948985aa"
+    },
+    "res/import/10/1098603e-a88d-403f-afef-2923af0ef362.json": {
+      "md5": "cb43569d71d8df669d0c58dde963653d"
+    },
+    "res/import/11/1178ed33-cd30-4240-9097-2552d75fa57b.json": {
+      "md5": "3897c1b8f960f9bb8d193078f7d85deb"
+    },
+    "res/import/11/11aec36f-4b32-4959-b432-9dd67342f43d.json": {
+      "md5": "8212277ed150cdd9b2267597a106f35c"
+    },
+    "res/import/11/11c8b27e-29a0-4c2f-ac31-03a2e5793b7c.json": {
+      "md5": "78c74eb2be3a20b7b67b1db189c7c8d5"
+    },
+    "res/import/16/16189c68-10cc-43d0-a6c0-91ebb2a29917.json": {
+      "md5": "9e0f366453868dab63599acebcdb69ae"
+    },
+    "res/import/18/1809aa80-8e66-40e9-9ff5-a5e1d04d3d53.json": {
+      "md5": "12a8c38b4a8103845f77f13787bdf741"
+    },
+    "res/import/1a/1a96f083-8e36-4e63-aa94-1056c0d22976.json": {
+      "md5": "5721f0db902681048708db2bf0fe597a"
+    },
+    "res/import/1b/1bcf1895-5f48-44ac-8b93-9c9116f75f68.json": {
+      "md5": "2ebeb4c149255d4eca35396102492ece"
+    },
+    "res/import/1b/1be1ace3-b9b3-4bf4-9c45-5c1d9eccac08.json": {
+      "md5": "b4ada28a1a8c5a8a34dcd8dc9275586e"
+    },
+    "res/import/20/206a8269-b59b-4e03-9ae9-8bdc7f93a2c6.json": {
+      "md5": "86d4819866dd713f55ed6159d6993877"
+    },
+    "res/import/22/22f76932-c1c0-4d9d-912a-b4b73572ca52.json": {
+      "md5": "96939bb4577fb18840a7d217125a919b"
+    },
+    "res/import/25/25b2a633-f269-42d2-80f8-110e834238eb.json": {
+      "md5": "5ec2ba2e98247b9c575dafeefce76868"
+    },
+    "res/import/26/26f1e1b9-a0c6-41a6-a8ff-3102f3cbc784.json": {
+      "md5": "92249a05b7d0aadadf22fd65afcacc67"
+    },
+    "res/import/27/2770bfda-c750-4578-a350-94ccac0ada80.json": {
+      "md5": "4500c1d236aebbe100636ad85c5a8451"
+    },
+    "res/import/27/27c9b918-f499-4c4d-8cd6-d5074416e0b0.json": {
+      "md5": "0ce6333bf27e00875c2e2738116b884d"
+    },
+    "res/import/29/29158224-f8dd-4661-a796-1ffab537140e.json": {
+      "md5": "321e6f519c8e6371949380648b18d5f0"
+    },
+    "res/import/2a/2a184fb3-9c90-48b3-9d1d-8453f8c6252c.json": {
+      "md5": "808c23e6cec0438316d1ea016d239b03"
+    },
+    "res/import/2a/2aa7ddb7-cc86-4474-b867-ad5dc2707aae.json": {
+      "md5": "bc61be90ed4e148a5228f34c61dda904"
+    },
+    "res/import/2e/2e9b2dc0-65b4-44e5-b624-d61da9ee1095.json": {
+      "md5": "816d6c419f7d68d060ca817207afcde9"
+    },
+    "res/import/2f/2f7da647-cf15-4050-85a8-b6aadafa5934.json": {
+      "md5": "b9e142e12444e2b91735eed257c3f21f"
+    },
+    "res/import/32/323fec25-3825-4be0-9ee7-2888ccf4f6ae.json": {
+      "md5": "f71a2731c64b04d9feb830029b412f5e"
+    },
+    "res/import/35/3550229e-8de1-434f-9300-ab5707373b83.json": {
+      "md5": "c77e107c81ce5d83f83115565da98fda"
+    },
+    "res/import/35/35aec5a8-00b6-4d8d-8508-a48cf89a536d.json": {
+      "md5": "439e365eff72d6ce0a31b2c9251aaabf"
+    },
+    "res/import/39/39f12282-5c58-4f68-8f85-5ffbbf83b419.json": {
+      "md5": "c1013d1a009c113b46a665ebdc9ee42b"
+    },
+    "res/import/3b/3b0d303c-d928-4420-b8d8-a7234260ca04.json": {
+      "md5": "c8c94c4e6b2995a9d7e3ec5ebf0a1fc4"
+    },
+    "res/import/3e/3ecb908c-9c4a-4f02-a2cc-3e2a8838771b.json": {
+      "md5": "16652347706a3eb0af92d66a4aa89846"
+    },
+    "res/import/3f/3f7d6f14-8e3f-432c-a537-09c8c7e03b76.json": {
+      "md5": "9a103b8fc2a6597b5c963b2e203e0b89"
+    },
+    "res/import/41/41dc20a6-d60a-4f55-854e-860d2ad6348b.json": {
+      "md5": "143a327b17d121e3aa5713ef2fc2ff8f"
+    },
+    "res/import/42/42b84506-55b4-4b98-8d2e-b3f8cfe7fbf8.json": {
+      "md5": "f819ec05d786092e4ec37a1e685b7ea7"
+    },
+    "res/import/43/43b4fd24-52c5-4946-9174-4b0188b49923.json": {
+      "md5": "6b89c80c827a7da761e9b2efa53fd43a"
+    },
+    "res/import/44/44883751-af5c-4ff3-a5c0-493cf5074e20.json": {
+      "md5": "9a3dc865c95f65182e5e742283a37f83"
+    },
+    "res/import/45/45d0f893-f7b7-4c84-8bd9-dd6409ec6de9.json": {
+      "md5": "6ea02bb58f533a5dd44aef0c15f46418"
+    },
+    "res/import/4b/4b231bb0-58ee-404b-8056-53d173cc50b8.json": {
+      "md5": "2e346c0fcc68233d3b2c98b054738701"
+    },
+    "res/import/4b/4bd67355-7a5e-4354-acd8-4cd517eef985.json": {
+      "md5": "363c6ab1d130942839631c982cb50887"
+    },
+    "res/import/4e/4e28e010-aec7-49bb-9add-42dd4dc0fc51.json": {
+      "md5": "ae6d7cf4ea0d9963cbfd44edec91d058"
+    },
+    "res/import/55/55e0a94a-b236-4c6b-8e0d-322e198e24a3.json": {
+      "md5": "7744303e8c89fe31c6c40cc59e0d5aa1"
+    },
+    "res/import/57/5717c77c-65de-4232-9714-b0c663df738d.json": {
+      "md5": "3b4fe8448300b3db8204c16cb3ad2208"
+    },
+    "res/import/58/5818447f-9802-4c83-949e-6b23aa17229e.json": {
+      "md5": "3ea3c5466cfbb33d8173db7695775976"
+    },
+    "res/import/5a/5a7ed901-bdc1-4823-8b0d-d2db8d4506ea.json": {
+      "md5": "3d09fcadb8dd22d6f5be09f12ee675f4"
+    },
+    "res/import/5b/5bfc8b76-5eb6-4cf9-a83a-24a508103512.json": {
+      "md5": "8c5055627a2364e1e7fbc4384f44c798"
+    },
+    "res/import/5c/5c390bbc-a6cf-49d6-b1ab-d9417b565edc.json": {
+      "md5": "d2bf10a69b31265e4949a883f11ad8be"
+    },
+    "res/import/60/6035fac6-5208-4e0b-bea7-62ff9fb1338b.json": {
+      "md5": "9ba69e76df5bcceb2530c14c2bcfad71"
+    },
+    "res/import/61/6181778a-ebce-4e14-9e57-3c9f472a8ed9.json": {
+      "md5": "d93b5035997fb3318f56ff57453048c3"
+    },
+    "res/import/62/62c007e7-076e-4e44-a57d-33bd7e7cd350.json": {
+      "md5": "b6ae1d04ba98d9f907017f86f35e9035"
+    },
+    "res/import/65/65ddcba7-1bd3-41aa-b642-5785fc4d5344.json": {
+      "md5": "2a557556cbc2d9b0b9dae7aa52bb2921"
+    },
+    "res/import/65/65f8dd44-9c0c-481b-9b78-c219307a0525.json": {
+      "md5": "a11bd42fb5de91b77e5cbcbefe7566f1"
+    },
+    "res/import/67/679e44ab-196f-4a53-9cfa-ca9ba7c8ba43.json": {
+      "md5": "375f6a8d3ad4c7c17dfd7237f2828cbd"
+    },
+    "res/import/67/67c61cd3-6096-407d-8b1d-54909788b91e.json": {
+      "md5": "d4bc9006f3e30addbf170f69f3d0478a"
+    },
+    "res/import/67/67d645ab-1f14-4c86-a929-e644ab31c2a3/poker_number.png": {
+      "md5": "5dc839e4febcbe674ef00459c057a31e"
+    },
+    "res/import/67/67d645ab-1f14-4c86-a929-e644ab31c2a3/raw-bitmap-font.fnt": {
+      "md5": "83a5be6b28aebca3e0663fd1e4e9b2a3"
+    },
+    "res/import/67/67d645ab-1f14-4c86-a929-e644ab31c2a3.json": {
+      "md5": "1ffaf6f89f64510478a203f594fdec9d"
+    },
+    "res/import/67/67e68bc9-dad5-4ad9-a2d8-7e03d458e32f.json": {
+      "md5": "536b330599d9053d608a3eaec97531b7"
+    },
+    "res/import/68/68b1604e-7c58-4e1b-af6e-7427f12171b3.json": {
+      "md5": "a4fb311c0f6b70ca4a1d8c7dc67abc72"
+    },
+    "res/import/6f/6f6c9fe5-4065-4d41-abc4-026100f9ff4c.json": {
+      "md5": "64054de409142b1925df5fd830658f89"
+    },
+    "res/import/71/71d34242-1ca6-4e9c-8258-9ef646e5e856.json": {
+      "md5": "099e1806e6b5b30ef9a7f6100924b24f"
+    },
+    "res/import/72/72799fdc-2e41-4289-a0e0-2e13242ca6f7.json": {
+      "md5": "c7c0ebc8dae5555719bc830dde916681"
+    },
+    "res/import/74/7459fc8e-3723-4d95-8594-ac8eea99f27e.json": {
+      "md5": "4698aa20689f02f63ceea0ba6ea34623"
+    },
+    "res/import/7a/7a263741-7991-474c-95d0-f3ddec9477e5.json": {
+      "md5": "d3191ba3ed6a1e27427724574ddd967f"
+    },
+    "res/import/7a/7a631c26-9ce6-4322-998e-c67957da6f80.json": {
+      "md5": "549d3782925f262faa5f8865de6ae05a"
+    },
+    "res/import/7a/7aa1165f-2b15-42ee-ba39-a41f3b5900b2.json": {
+      "md5": "c8840c4e468514f06b43ac5080fb8bc4"
+    },
+    "res/import/7a/7aee1866-01db-41aa-afe9-e4a791def6aa.json": {
+      "md5": "3f9f4095e7cae5dc91e874300d0a3922"
+    },
+    "res/import/7d/7d1d4e60-aba2-48e8-85f8-8e328f34e7cc.json": {
+      "md5": "6860d6b6442599be495011ee1d3e1304"
+    },
+    "res/import/7d/7de24e84-21bd-434b-8ca2-b031dcbb438e.json": {
+      "md5": "7152804c6a86a0dc43f53a911c1e6c51"
+    },
+    "res/import/7e/7ebbc72d-40f8-414d-833c-46d245d95d93.json": {
+      "md5": "e234fed75c5035e404d3298bbefd719e"
+    },
+    "res/import/7f/7f38d3ba-acb8-401c-aa9e-2609a601115a.json": {
+      "md5": "ebb765ad51c2c1c868b3ecd8dc3fa109"
+    },
+    "res/import/81/810d3dcc-8b4b-4272-a133-2c91a6e76488.json": {
+      "md5": "d0a4ef7e828fb79176fd5c5bf4323e90"
+    },
+    "res/import/84/84f185f7-d55f-41f6-9aa6-8675392b6567.json": {
+      "md5": "045e9b8319144c85b5257e6d88987fb1"
+    },
+    "res/import/87/876e9bd8-25b8-48a2-8695-070bd61b96d3.json": {
+      "md5": "0b77943d9eeab9319c4bbdea8fdf26ca"
+    },
+    "res/import/88/88e79fd5-96b4-4a77-a1f4-312467171014.json": {
+      "md5": "d6b30af49554a4ef4442ec6ce744527f"
+    },
+    "res/import/8a/8a1e31ac-cc7e-4166-a6d2-8d4edc27d26a.json": {
+      "md5": "1e87e72093326aefd3f6182881af6002"
+    },
+    "res/import/8a/8a546935-70d4-42d2-a051-8d0e76f28008.json": {
+      "md5": "a23be75eaa42b1cf817ec0f16ba055c9"
+    },
+    "res/import/8a/8ad0e2e8-239a-4f11-be5d-641521c4ae8d.json": {
+      "md5": "2fa9ed276cdacfe57a4b60e2bded92bf"
+    },
+    "res/import/8a/8af78d65-4b41-4d59-a683-2659ab6904cb.json": {
+      "md5": "d0df7e4fb5fbad7a2d7b17d64d40229e"
+    },
+    "res/import/90/90c6c118-fce6-409e-9eed-2feddabdbfef.json": {
+      "md5": "382d0bdad596d12d2f98108b489b74c0"
+    },
+    "res/import/91/913e121b-7770-4593-9a34-f8ca1b3e3b2f.json": {
+      "md5": "22187ca903a109d1c6adeb02f6035972"
+    },
+    "res/import/92/92558dd6-9589-48d1-a26e-7673ceb3591a.json": {
+      "md5": "11b52fbc8a51001ed7b6e0593c9e321d"
+    },
+    "res/import/93/93232bfc-cb55-475e-9474-229bd926a60e.json": {
+      "md5": "227ccae84f549513c6dc02c2dd220ab0"
+    },
+    "res/import/93/935750ee-2a25-4d60-a10f-06b3000e28ab.json": {
+      "md5": "0b579d0174d075a0368e81038fecbe86"
+    },
+    "res/import/94/944b1726-c679-48c6-987c-2abb49f9a11e.json": {
+      "md5": "183dbd381da3382a1ac2f3adbb5aba2c"
+    },
+    "res/import/9d/9d5dbf86-8b1a-4324-9247-3cd71ba4b4ed.json": {
+      "md5": "bae7e93f08483205f50da3653cf21641"
+    },
+    "res/import/a0/a0c52615-ef6e-4a90-825f-bddae68ae3d2.json": {
+      "md5": "e8d20d386f628e327ffa1638984bb1c3"
+    },
+    "res/import/a1/a13c6eed-94dc-4e46-a7da-f69a2c352aed.json": {
+      "md5": "852761608b33450455a55aaf4ab3ff77"
+    },
+    "res/import/a2/a2da79be-fe22-420a-83b5-e37878367b06.json": {
+      "md5": "68d9cb158a55b174b3c3cb49fe1fba82"
+    },
+    "res/import/a4/a43c3aec-6f21-486b-bc48-2d3cf8a7d146.json": {
+      "md5": "36f64bfac306d59e7a08636c8abcff07"
+    },
+    "res/import/a5/a5856afd-30ff-43e5-93f6-41e8be2d09d1.json": {
+      "md5": "4c785aa9dd5bbe96560f060a71156f97"
+    },
+    "res/import/a7/a72c2615-97ba-4ca6-9f91-b974f85e35eb.json": {
+      "md5": "c70cbae448856b701b4c58bbb79c03d4"
+    },
+    "res/import/a8/a8b07ccf-1327-4931-b21a-d327cd0e2cdc.json": {
+      "md5": "75f5f8811d03070d81dff9bd139a78b5"
+    },
+    "res/import/aa/aa994068-f930-4e56-907c-3286f04c3a6d.json": {
+      "md5": "e91ce4d6e3c87f3572da257c4db1eca1"
+    },
+    "res/import/b0/b028bac7-dbc0-42f0-8660-eeb3007e6aa6.json": {
+      "md5": "e2738cb9797a6ed265f254e09cdc4be8"
+    },
+    "res/import/b2/b2cd9781-6504-483d-b611-d791e18b5885.json": {
+      "md5": "fa1efe1f0a1cdbecfe64ecaae3d85c66"
+    },
+    "res/import/b5/b5e16d2d-db8b-4264-a50c-7b98121a9f42.json": {
+      "md5": "538b5c980f72d73ad4445c43b779b087"
+    },
+    "res/import/b7/b7090b97-adf0-452c-af0c-14ab4b11ed06.json": {
+      "md5": "20247a9f43585403624d78cf19d2f274"
+    },
+    "res/import/bb/bb07c6d5-c9e7-4830-8d25-6015d553b97c.json": {
+      "md5": "d1dbe5b65b983326ae3ace0adf002ce4"
+    },
+    "res/import/bc/bc8753ba-23f5-45dc-ac87-0850140a05d0.json": {
+      "md5": "90bf13bba9d167371c0c7dfe8742d727"
+    },
+    "res/import/bd/bda5770f-1fca-434f-b5b4-ab99c12b55df.json": {
+      "md5": "eb6acc4a610f6a082b4673a10e374b15"
+    },
+    "res/import/c0/c01466ea-7283-4fce-b615-4ee78c774af0.json": {
+      "md5": "4ad8fb4e32b2d2129e1121e9d3a15ba3"
+    },
+    "res/import/c0/c0aa5a2e-118d-47b0-8bcc-a200564a0ec2.json": {
+      "md5": "faaa854bc7f971a7a5d7a49f9726e260"
+    },
+    "res/import/c2/c23e8ba3-5243-428a-89e0-9a0aaa1950d0.json": {
+      "md5": "a293329a0e549cefd81be4fddd4f5b00"
+    },
+    "res/import/c2/c2d0f392-28fb-47a7-aaf9-af40e75f40d3.json": {
+      "md5": "b50b5d97b6927c26cdf8ca31c4beb8a9"
+    },
+    "res/import/c6/c618d259-5fca-4f30-b07e-88db9882be91.json": {
+      "md5": "7d79206c5e9df72170c00a8a75490667"
+    },
+    "res/import/ca/ca7dd73d-526a-4c85-9702-eb51e93b9d99.json": {
+      "md5": "a78b0628aad6d9ab6792d6ee8322055f"
+    },
+    "res/import/ce/ceb1752c-96cf-4a3a-92e8-c7213b1394fd.json": {
+      "md5": "2747ce040174a403081d8c465f94d8e9"
+    },
+    "res/import/d1/d1933017-c845-492d-aa72-bf71d7b48726.json": {
+      "md5": "ff385bc93a011f217b4c6e0377a2f9bf"
+    },
+    "res/import/d3/d34ca99c-e88b-4dca-be0d-4ff69ab7b8a7.json": {
+      "md5": "a37f2f7ec084cb0334ba6ab5e3896a5c"
+    },
+    "res/import/d4/d4808d42-561f-4954-b282-0d42efe6dc06.json": {
+      "md5": "97860abea9c571540751213b2f8dcfbb"
+    },
+    "res/import/d5/d5188c19-f734-4c83-91b7-4f6e19de1e24.json": {
+      "md5": "db560e6b66a329f743f604e30a3bf42e"
+    },
+    "res/import/d5/d58859db-6a64-489b-aa1c-683e5f9a646b.json": {
+      "md5": "2804b0bb89a1ced8bb8eab7c508fedd0"
+    },
+    "res/import/d6/d63bb950-68fd-447d-a891-ede59ab23abc.json": {
+      "md5": "bc6dc3f2d40680d20d584034307205de"
+    },
+    "res/import/d8/d80d3fa9-3ca7-4431-ab5f-88bf39b1068a/raw-bitmap-font.fnt": {
+      "md5": "49fdd417eb4415222022291566ce70ab"
+    },
+    "res/import/d8/d80d3fa9-3ca7-4431-ab5f-88bf39b1068a/stake_number.png": {
+      "md5": "2083dbe9548e497ed531d5b17c02a4ea"
+    },
+    "res/import/d8/d80d3fa9-3ca7-4431-ab5f-88bf39b1068a.json": {
+      "md5": "17eb9ac00ca420f45def57872fa14def"
+    },
+    "res/import/db/db285bfe-a5fd-495c-b8ef-58e38c6133d9.json": {
+      "md5": "b20626879c571d1d8cdd3625bf41116f"
+    },
+    "res/import/db/db83170b-5560-4053-be9d-ade1c594385d.json": {
+      "md5": "b29e70e1bcd8d0d7e06ed6e9fe1158d5"
+    },
+    "res/import/db/dbe9ce6c-c362-433a-a6b5-59ad0c3352e2.json": {
+      "md5": "67864fbccde0ec17ed2cdef5812e12f6"
+    },
+    "res/import/dc/dc0c03f6-1138-4b9f-ba96-e8376a5d83a1.json": {
+      "md5": "a9d19db2ec114bb0bc7b78bd2487b0f5"
+    },
+    "res/import/dd/dd48b639-bf9d-46b2-b14c-74325543d296.json": {
+      "md5": "4fcf664a235a4d79483d6f2280b6725a"
+    },
+    "res/import/df/df973d31-e6cb-420d-8157-88376eb24610.json": {
+      "md5": "128a2c350502dba12402d99ebfce04c0"
+    },
+    "res/import/e1/e1facc40-00d0-4fac-85dd-051fe220a8e1.json": {
+      "md5": "965e184e8a467efa4e8a04c505d96bce"
+    },
+    "res/import/e3/e32b062b-43c9-4f4c-bc55-08d924278886.json": {
+      "md5": "b7c6b0307a22a67094268efffb59ff35"
+    },
+    "res/import/e4/e402984e-0e8f-4470-9f8e-d7eaa92544d1.json": {
+      "md5": "818ffcd5f9d8d0b717e175e0e86364ff"
+    },
+    "res/import/e4/e4f21e55-ed4f-46f8-b9a1-7ee9775d710c.json": {
+      "md5": "72f940eabf7a9cc957e7e0ab0a205aad"
+    },
+    "res/import/e7/e75629cf-d294-4a53-a75b-6a73f2a683aa.json": {
+      "md5": "49f42e1a8a821b04c3f725ea4b0143d9"
+    },
+    "res/import/e7/e7b4811b-3fb0-4e2f-a31f-757a87273ca9.json": {
+      "md5": "e2ff62b46d46195131ac57d638eef22f"
+    },
+    "res/import/e8/e8331335-0a2a-4732-a2fb-1c13e852ddeb.json": {
+      "md5": "6d42e1f4616ad0403c2bdb79119e3fa6"
+    },
+    "res/import/e9/e9ec654c-97a2-4787-9325-e6a10375219a.json": {
+      "md5": "140f529b491009e9d0b4e9e5b64ad3a3"
+    },
+    "res/import/eb/ebc06094-057f-4c1f-a055-9afc8780c3ae.json": {
+      "md5": "f1fdaf2bc2df5e96b28369cb6c722742"
+    },
+    "res/import/ed/ede1495d-fc57-4c30-8e55-32402043ed4e.json": {
+      "md5": "dd4bd7cbaed843b7567c8091353620fb"
+    },
+    "res/import/ef/ef0e92d8-6db3-4e01-a1f0-5988bf72b4ec.json": {
+      "md5": "317b0c75aa059d3a5f382c190d1ffdb0"
+    },
+    "res/import/ef/ef287833-459f-4ff4-a43a-7a6ddc8c95a9.json": {
+      "md5": "c8560de161cca9b30912ce458d3a12a2"
+    },
+    "res/import/ef/efe38028-6772-4b97-935c-1e941403af02.json": {
+      "md5": "3e585ef0648a7eb13812d182cb2d442f"
+    },
+    "res/import/f0/f0048c10-f03e-4c97-b9d3-3506e1d58952.json": {
+      "md5": "9cce7d772ea5910b267faad5656597cd"
+    },
+    "res/import/f2/f2358c8d-2743-4f35-ad99-e3a8966334b2.json": {
+      "md5": "13ac89cbe99954780f534d9044bc0902"
+    },
+    "res/import/f3/f39332aa-8490-4803-99d9-831546a13a11.json": {
+      "md5": "8cb4c2e5f64cb494c10201f101bbfd75"
+    },
+    "res/import/f4/f43ce0ab-058c-412d-af60-77d0834caf29.json": {
+      "md5": "13415e153107094dae6119de30bb3023"
+    },
+    "res/import/fa/fa40a424-704a-43c2-97ac-fea4ece3b48e.json": {
+      "md5": "191ee12a5ceb353793d9cdcfd1e41543"
+    },
+    "res/import/fe/fe8db373-f328-42b5-84cb-70407deaf581.json": {
+      "md5": "b56248e511eb6cd0edc93fd324155e5b"
+    },
+    "res/import/fe/feb810ab-02f5-4f17-ac06-a23842d236a8.json": {
+      "md5": "c9cb9f035059fb809c5f1e81399c5bd1"
+    },
+    "res/import/ff/ffb7159b-b041-48a2-bb58-9a9501d4d190.json": {
+      "md5": "8aa524fdb9c1c2cd800070bd001955d2"
+    },
+    "res/raw-assets/font/poker_number.png": {
+      "md5": "5dc839e4febcbe674ef00459c057a31e"
+    },
+    "res/raw-assets/font/stake_number.png": {
+      "md5": "2083dbe9548e497ed531d5b17c02a4ea"
+    },
+    "res/raw-assets/project.manifest": {
+      "md5": "8432f2112560b23517cc378e8773cf1f"
+    },
+    "res/raw-assets/sfx/achievement_won.mp3": {
+      "md5": "d7c49851d2ed8083ea6eb8eaef94cca7"
+    },
+    "res/raw-assets/sfx/bgm2.mp3": {
+      "md5": "b291235f22a5c3e66430a5c4c25c84df"
+    },
+    "res/raw-assets/sfx/button.mp3": {
+      "md5": "91e69bb24ff6173032d04e232c275ad7"
+    },
+    "res/raw-assets/sfx/card_deal.mp3": {
+      "md5": "b2317d34054b962a9c134d6a1d7b2621"
+    },
+    "res/raw-assets/sfx/chips_place.mp3": {
+      "md5": "c72851f520339a8367fb4486a5f6d7fd"
+    },
+    "res/raw-assets/sfx/fail.mp3": {
+      "md5": "b156c9e6853d3ec4aff9cc20c5e78f77"
+    },
+    "res/raw-assets/textures/UI/chat/button_orange.png": {
+      "md5": "bba8716aeb72033d48cb2771e315cd32"
+    },
+    "res/raw-assets/textures/UI/chat/double.png": {
+      "md5": "41006877049123c4ebabe6b39b0daa9b"
+    },
+    "res/raw-assets/textures/UI/chat/gb_inputbox.png": {
+      "md5": "90ed2ca105ed0e4b6c5b1b11535344c7"
+    },
+    "res/raw-assets/textures/UI/chat/hit.png": {
+      "md5": "f6a01ee4d3347798ffeefd9d74349bc9"
+    },
+    "res/raw-assets/textures/UI/chat/icon_message.png": {
+      "md5": "77cb0cc6ea56b929691bc28079dffb07"
+    },
+    "res/raw-assets/textures/UI/chat/send.png": {
+      "md5": "60663dca46da3997eba0d746c1cde862"
+    },
+    "res/raw-assets/textures/UI/chat/stand.png": {
+      "md5": "8b5b6e4a479fe398f114b44a4c8a1461"
+    },
+    "res/raw-assets/textures/UI/lobby/bg_changjing.png": {
+      "md5": "583bb4dbd4a4078aa306c4fcfb511f31"
+    },
+    "res/raw-assets/textures/UI/lobby/bg_gold.png": {
+      "md5": "2aa8e02bad500178f40f5af802bcf9a1"
+    },
+    "res/raw-assets/textures/UI/lobby/button_jjc.png": {
+      "md5": "17fb5c02c7470d95e84a97b264a54140"
+    },
+    "res/raw-assets/textures/UI/lobby/button_ksks.png": {
+      "md5": "2bb161d732a84fee4af197c89883a94f"
+    },
+    "res/raw-assets/textures/UI/lobby/button_zbc.png": {
+      "md5": "457f3d1bb5c1639a3f24be98e6420c1f"
+    },
+    "res/raw-assets/textures/UI/lobby/icon_back.png": {
+      "md5": "dd6ef4efc8f05eb77a7cbd50b7f0e6c2"
+    },
+    "res/raw-assets/textures/UI/lobby/icon_diamond.png": {
+      "md5": "7123a767755b66ffb65ca37818e35b99"
+    },
+    "res/raw-assets/textures/UI/lobby/icon_gold_big.png": {
+      "md5": "931cda98808c79f0a744da6be0764460"
+    },
+    "res/raw-assets/textures/UI/lobby/icon_gold_small.png": {
+      "md5": "d607637391fe90bd89057cf8b2d9f44f"
+    },
+    "res/raw-assets/textures/UI/lobby/icon_message.png": {
+      "md5": "0aeb33839b3cf6f26d990a71e5d14669"
+    },
+    "res/raw-assets/textures/UI/lobby/icon_plus.png": {
+      "md5": "99194ee176ac173f78a2a5e1a03dea3a"
+    },
+    "res/raw-assets/textures/UI/lobby/icon_rule.png": {
+      "md5": "22ac7030c2348d7c08a444dddb7498ca"
+    },
+    "res/raw-assets/textures/UI/lobby/icon_set.png": {
+      "md5": "671960aa83d654972f3c42daf1b9e429"
+    },
+    "res/raw-assets/textures/UI/lobby/trophy_1.png": {
+      "md5": "9721c1c30e77661dd0e82888f8009fd5"
+    },
+    "res/raw-assets/textures/UI/lobby/trophy_2.png": {
+      "md5": "fa59b66c80741d535aabc8ad51363cb3"
+    },
+    "res/raw-assets/textures/UI/lobby/trophy_3.png": {
+      "md5": "4c073d3df7fb012f02b7b8636e9e5b04"
+    },
+    "res/raw-assets/textures/UI/lobby/user-image.png": {
+      "md5": "a488f02e3722fe6108cb17d92f94ba47"
+    },
+    "res/raw-assets/textures/UI/lobby/user-image2.png": {
+      "md5": "5e244875f0339e053b511be7f6757407"
+    },
+    "res/raw-assets/textures/UI/lobby/user-image3.png": {
+      "md5": "f5d719456ba026b007b3c411d0671153"
+    },
+    "res/raw-assets/textures/UI/lobby/user-image4.png": {
+      "md5": "6bed0fd7d1221112a99a6fb743a9d615"
+    },
+    "res/raw-assets/textures/UI/lobby/user-image5.png": {
+      "md5": "bd05dd20b2a5d315486cdbde5ee9933c"
+    },
+    "res/raw-assets/textures/UI/lobby/user-image6.png": {
+      "md5": "54120eb972495c03845eaf0d8f25405a"
+    },
+    "res/raw-assets/textures/UI/new/10K.png": {
+      "md5": "6491e4517210f13a9c10eb661f30644b"
+    },
+    "res/raw-assets/textures/UI/new/1K.png": {
+      "md5": "f2fbb21fa1bd975662a88f9cf01d5686"
+    },
+    "res/raw-assets/textures/UI/new/2K.png": {
+      "md5": "14309281e71c71dde60022f8144954ca"
+    },
+    "res/raw-assets/textures/UI/new/5K.png": {
+      "md5": "8d22c8b7f1b3c6a40e57352e51ca615b"
+    },
+    "res/raw-assets/textures/UI/new/Stroke_photo.png": {
+      "md5": "e0c2c19a572a8a978a68afbd0e34069a"
+    },
+    "res/raw-assets/textures/UI/new/Stroke_photo_oneself.png": {
+      "md5": "cfd3e73de6518b301de7dded4b5ce392"
+    },
+    "res/raw-assets/textures/UI/new/Stroke_photo_tanchuang.png": {
+      "md5": "b56004f4f99b335729c75fc8866febe1"
+    },
+    "res/raw-assets/textures/UI/new/baopai.png": {
+      "md5": "26eb9e34406f01b960ff876cadbe48ed"
+    },
+    "res/raw-assets/textures/UI/new/bg_gift.png": {
+      "md5": "7b212f5d0dbe12831e43daba6bca1f9e"
+    },
+    "res/raw-assets/textures/UI/new/bg_gold(1).png": {
+      "md5": "89b11586b293de193f49e571028ab827"
+    },
+    "res/raw-assets/textures/UI/new/bg_gold_touzhu.png": {
+      "md5": "ed6a66ae282df4b52a6d38a55ca5302f"
+    },
+    "res/raw-assets/textures/UI/new/bg_gold_zhuozi.png": {
+      "md5": "83617bbc2583abfa42d9bcbd5633f662"
+    },
+    "res/raw-assets/textures/UI/new/bg_huaxin.png": {
+      "md5": "2001e6923f07445e36749c4ee42454d7"
+    },
+    "res/raw-assets/textures/UI/new/bg_icon.png": {
+      "md5": "bfc16c6854c6e1e0e95130c16266612a"
+    },
+    "res/raw-assets/textures/UI/new/bg_inputbox.png": {
+      "md5": "d9a7812b8ca6d530b17ce096e8b8e56a"
+    },
+    "res/raw-assets/textures/UI/new/bg_rankinglist.png": {
+      "md5": "b07f8e27ba911157ac7090d82f394cbb"
+    },
+    "res/raw-assets/textures/UI/new/bg_stroke2.png": {
+      "md5": "2b3136486e360c2c04195789073053d7"
+    },
+    "res/raw-assets/textures/UI/new/bg_tanchuang.png": {
+      "md5": "2fe5c501d5a7037c25381d27891f7f37"
+    },
+    "res/raw-assets/textures/UI/new/bg_xiamian.png": {
+      "md5": "81d98c57e21e5ebe15a7087660c82c61"
+    },
+    "res/raw-assets/textures/UI/new/biaoqing.png": {
+      "md5": "bbf232a0e737d29dc54b55e4cb8bb034"
+    },
+    "res/raw-assets/textures/UI/new/button_blue.png": {
+      "md5": "a4252eae8b1a08b7693a12706ee2d634"
+    },
+    "res/raw-assets/textures/UI/new/button_erji.png": {
+      "md5": "8ddebcbf1e4e7c763c1e0d630d0b5cff"
+    },
+    "res/raw-assets/textures/UI/new/button_fasong.png": {
+      "md5": "90997437ae4f26780b2e0c7931d117da"
+    },
+    "res/raw-assets/textures/UI/new/button_message.png": {
+      "md5": "616e35ed0d1e131653ee174f740e67a8"
+    },
+    "res/raw-assets/textures/UI/new/daojishi_down.png": {
+      "md5": "bd3691f9b764970aa4f0750219b0480e"
+    },
+    "res/raw-assets/textures/UI/new/daojishi_photo.png": {
+      "md5": "6283c45450de47c7abd3ccc10c444a1b"
+    },
+    "res/raw-assets/textures/UI/new/daojishi_up.png": {
+      "md5": "bbfcd7cd4d20bcb8d7cc179a9bfed1aa"
+    },
+    "res/raw-assets/textures/UI/new/dealer.png": {
+      "md5": "b5886756ce967d164811107e73b966ad"
+    },
+    "res/raw-assets/textures/UI/new/fengexian.png": {
+      "md5": "d2ea7c8c18b389b54fe538e9a64a553c"
+    },
+    "res/raw-assets/textures/UI/new/gift_bucket.png": {
+      "md5": "e301d4f690e45cf41cc2add7f290d965"
+    },
+    "res/raw-assets/textures/UI/new/gift_kiss.png": {
+      "md5": "16e66099bebc4eb97547e9ed67c13ed9"
+    },
+    "res/raw-assets/textures/UI/new/gift_rose.png": {
+      "md5": "4a6f2a98ce051d1343b4182b5b96fe5e"
+    },
+    "res/raw-assets/textures/UI/new/gift_tomato.png": {
+      "md5": "5ff8c1ac7153b87561eb09581302b18d"
+    },
+    "res/raw-assets/textures/UI/new/icon_KO.png": {
+      "md5": "358b177fd4f9c2723529f1fdb23ce26e"
+    },
+    "res/raw-assets/textures/UI/new/icon_back.png": {
+      "md5": "a96d8745a2878f0e1a26caebeaf55462"
+    },
+    "res/raw-assets/textures/UI/new/icon_girl.png": {
+      "md5": "04653a96373b69d169fa009605bb7e89"
+    },
+    "res/raw-assets/textures/UI/new/icon_qingkongtouzhu.png": {
+      "md5": "2e951f993c41f05643aa103a25bf4b4e"
+    },
+    "res/raw-assets/textures/UI/new/icon_touzhu-.png": {
+      "md5": "c01e1ec574ef18eadb9f83f8fec28721"
+    },
+    "res/raw-assets/textures/UI/new/icon_usercp.png": {
+      "md5": "a6713736b591fb29462695ffe86fc7d2"
+    },
+    "res/raw-assets/textures/UI/new/input-box.png": {
+      "md5": "99fa50407d696dcb8341b62c6f1e6504"
+    },
+    "res/raw-assets/textures/UI/new/paishu.png": {
+      "md5": "fc69940d6f1f9be77a6758cec2f7a61b"
+    },
+    "res/raw-assets/textures/UI/new/rankinglist_bg.png": {
+      "md5": "f36f0460093a11eb58a76ffdfbdc6164"
+    },
+    "res/raw-assets/textures/UI/new/rankinglist_title.png": {
+      "md5": "fe805c3ec15c0452179d341948952112"
+    },
+    "res/raw-assets/textures/UI/new/txtCountdown.png": {
+      "md5": "c371301d305602931154c7149e48c232"
+    },
+    "res/raw-assets/textures/UI/new/user_image.png": {
+      "md5": "d6fd35ee43810e919ac3eb115d8bea31"
+    },
+    "res/raw-assets/textures/UI/new/zhuozi.jpg": {
+      "md5": "62292fbff5f9406d139caf2b22f74e72"
+    },
+    "res/raw-assets/textures/UI/user/circle_1.png": {
+      "md5": "309f712b36418d2f23665e4d3b0d0204"
+    },
+    "res/raw-assets/textures/UI/user/circle_2.png": {
+      "md5": "f213f46f342cecadb0fe2943b1245561"
+    },
+    "res/raw-assets/textures/UI/user/circle_3.png": {
+      "md5": "02edddc55cd96f663da7f2539a8aa42a"
+    },
+    "res/raw-assets/textures/UI/user/circle_4.png": {
+      "md5": "47190864a49fe8c1fdb715b9e5d9f3c7"
+    },
+    "res/raw-assets/textures/UI/user/circle_5.png": {
+      "md5": "d21d056cc2d1a6593fdedaa8c92b1b86"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_1.png": {
+      "md5": "2926fed5c6e450dde43e812a4094b272"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_10.png": {
+      "md5": "8a32fc315d0c2cf84c3ac81dac8a3f12"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_11.png": {
+      "md5": "f64aabc5c8ce9b421b67086ee56ef736"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_12.png": {
+      "md5": "95a7bc645b423d4e4e2d1e660b6fc059"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_13.png": {
+      "md5": "b047f5e10d50eaa6a14f315f801a9849"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_14.png": {
+      "md5": "bd0c0e7e15f6c1b31b15aec3fba1e61f"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_15.png": {
+      "md5": "d31e040f2f9564ff7ed5cce8f2ee32c0"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_16.png": {
+      "md5": "b755151dc18dfd30c23ed5142a405ec5"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_17.png": {
+      "md5": "ffc78ceda16bee6dc181aebef926294a"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_18.png": {
+      "md5": "21f762f4e7c785c78a73b9cb0a149fe0"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_19.png": {
+      "md5": "cc20f8e4e3d54ee017558e8c6921a4aa"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_2.png": {
+      "md5": "531c6d69c12bc3c427ca7a8fe128af7b"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_20.png": {
+      "md5": "58b08c40980ef792259ed2a3d45f052a"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_21.png": {
+      "md5": "ac05d87c5080942f9ecb705bb58e1272"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_22.png": {
+      "md5": "88ffd75f46c9421f722b46c3c2fb559e"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_3.png": {
+      "md5": "93320ec00c3d11f19945197e9ee9a628"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_4.png": {
+      "md5": "80a061c883214bc4c189817c7d99dcf9"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_5.png": {
+      "md5": "f4bd720edaa9badb0cc29aa20630b3f5"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_6.png": {
+      "md5": "4baa433dc42e84b503a045e892edfd6e"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_7.png": {
+      "md5": "57444a22cbfdec9b1512e74aae3d2891"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_8.png": {
+      "md5": "4c2366127449693622d384120b09b3b4"
+    },
+    "res/raw-assets/textures/animation/blackjack/BLACK JACK_9.png": {
+      "md5": "1b8cc2a4277fd4651cd6f7d20868752e"
+    },
+    "res/raw-assets/textures/animation/bust/BUST_1.png": {
+      "md5": "d71fcab9075a39924ccb34f79d6fad17"
+    },
+    "res/raw-assets/textures/animation/bust/BUST_10.png": {
+      "md5": "ba1ce5b3a29d7df3cd58e88d4ce53d2d"
+    },
+    "res/raw-assets/textures/animation/bust/BUST_2.png": {
+      "md5": "f9d97cc0aa32564d01414507549d76a3"
+    },
+    "res/raw-assets/textures/animation/bust/BUST_3.png": {
+      "md5": "673aba130a4757a0f775b8cf72fff51b"
+    },
+    "res/raw-assets/textures/animation/bust/BUST_4.png": {
+      "md5": "2350734e6951a06e9120dc533fe41995"
+    },
+    "res/raw-assets/textures/animation/bust/BUST_5.png": {
+      "md5": "253565dad240a4ffb6295f64866cee7c"
+    },
+    "res/raw-assets/textures/animation/bust/BUST_6.png": {
+      "md5": "bfd928ab78bb4ed30e1be4c43271857c"
+    },
+    "res/raw-assets/textures/animation/bust/BUST_7.png": {
+      "md5": "1538740f8faea58baa7ceb2a75d33f40"
+    },
+    "res/raw-assets/textures/animation/bust/BUST_8.png": {
+      "md5": "c99f3a70af21a5d8df739e18d5e64997"
+    },
+    "res/raw-assets/textures/animation/bust/BUST_9.png": {
+      "md5": "46fb59b95d10ec6754515f2d3e2aa903"
+    },
+    "res/raw-assets/textures/cards/fangkuai_big.png": {
+      "md5": "e68e6ed9636fcd094ae15f6e071ab59e"
+    },
+    "res/raw-assets/textures/cards/fangkuai_small.png": {
+      "md5": "a1cb211a3941591442bd71b5f103a87e"
+    },
+    "res/raw-assets/textures/cards/heimei_big.png": {
+      "md5": "ff1825387e26ccd2676176391d7299c7"
+    },
+    "res/raw-assets/textures/cards/heimei_small.png": {
+      "md5": "1fd7f13fa845fdd7536fa164bbc90911"
+    },
+    "res/raw-assets/textures/cards/heitao_big.png": {
+      "md5": "97a58a5e2fb57767be59a7333020f89e"
+    },
+    "res/raw-assets/textures/cards/heitao_small.png": {
+      "md5": "1967f7dafd1e9f7dee3f878f40f4affa"
+    },
+    "res/raw-assets/textures/cards/hongtao_big.png": {
+      "md5": "b8f4d1853630833b92709fc2653bc2da"
+    },
+    "res/raw-assets/textures/cards/hongtao_small.png": {
+      "md5": "603129945d357c934c71b51b92e86388"
+    },
+    "res/raw-assets/textures/cards/king.png": {
+      "md5": "d30f5bf7b44dba834e7b65687e5d6105"
+    },
+    "res/raw-assets/textures/cards/kueen.png": {
+      "md5": "87bb643c0580ff5896540f5b1c209127"
+    },
+    "res/raw-assets/textures/cards/poker_bg.png": {
+      "md5": "09d4ba374199282f1be7484c7c5a8be1"
+    },
+    "res/raw-assets/textures/cards/poker_dipai.png": {
+      "md5": "88b1e1f81594963fb7e443911363a058"
+    },
+    "res/raw-assets/textures/cards/ranker.png": {
+      "md5": "d0c4777e003711a9bcb3293cfd9d81b1"
+    },
+    "res/raw-internal/image/default_btn_disabled.png": {
+      "md5": "ccbd56c4f14890bbc94d17004e501e9f"
+    },
+    "res/raw-internal/image/default_btn_normal.png": {
+      "md5": "ffdc9657918740e0f5d088acaaada3af"
+    },
+    "res/raw-internal/image/default_btn_pressed.png": {
+      "md5": "c1daa456037cc3884aabad81bb91b5cc"
+    },
+    "res/raw-internal/image/default_progressbar.png": {
+      "md5": "67b4a8eb285b47bbcd7144512611c0a1"
+    },
+    "res/raw-internal/image/default_progressbar_bg.png": {
+      "md5": "feadf32efa5c4557c81045711e5e6211"
+    }
+  },
+  "searchPaths": []
+}
