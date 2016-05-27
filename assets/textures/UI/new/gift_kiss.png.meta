@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "gift_kiss": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "65ddcba7-1bd3-41aa-b642-5785fc4d5344",
       "rawTextureUuid": "fc9ebe69-8881-43a2-b7fa-412ae0f3a81a",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 2,
       "width": 77,
       "height": 85,
+      "rawWidth": 95,
+      "rawHeight": 91,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

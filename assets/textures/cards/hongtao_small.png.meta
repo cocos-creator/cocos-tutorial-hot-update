@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "hongtao_small": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "bc8753ba-23f5-45dc-ac87-0850140a05d0",
       "rawTextureUuid": "871d9cfc-5635-4273-ae50-db0eb42ff363",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 1,
       "width": 16,
       "height": 15,
+      "rawWidth": 16,
+      "rawHeight": 16,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "kueen": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "6f6c9fe5-4065-4d41-abc4-026100f9ff4c",
       "rawTextureUuid": "0b702a3d-407c-45f3-b435-397bab7297cb",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 0,
       "width": 63,
       "height": 97,
+      "rawWidth": 64,
+      "rawHeight": 97,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

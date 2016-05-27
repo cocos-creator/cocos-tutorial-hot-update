@@ -2,7 +2,7 @@
   "packageUrl": "http://localhost:3003/tutorial-hot-update/remote-assets/",
   "remoteManifestUrl": "http://localhost:3003/tutorial-hot-update/remote-assets/project.manifest",
   "remoteVersionUrl": "http://localhost:3003/tutorial-hot-update/remote-assets/version.manifest",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "assets": {
     "src/jsb_polyfill.js": {
       "md5": "13451d32fda81ec187a6ef127e2bf045"

@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "heitao_big": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "bda5770f-1fca-434f-b5b4-ab99c12b55df",
       "rawTextureUuid": "5228ab68-de35-40f9-8d0e-0bbb788078a5",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 1,
       "width": 52,
       "height": 52,
+      "rawWidth": 55,
+      "rawHeight": 53,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

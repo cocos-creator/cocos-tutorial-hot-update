@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "BLACK JACK_10": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "2f7da647-cf15-4050-85a8-b6aadafa5934",
       "rawTextureUuid": "6081ba50-374e-40cb-8a4d-d584b9996c89",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 37,
       "width": 202,
       "height": 179,
+      "rawWidth": 250,
+      "rawHeight": 250,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

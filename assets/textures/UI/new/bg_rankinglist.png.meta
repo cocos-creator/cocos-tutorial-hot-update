@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "bg_rankinglist": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "ca7dd73d-526a-4c85-9702-eb51e93b9d99",
       "rawTextureUuid": "700faa17-11a6-46cd-aeb5-d6900bc264f8",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 0,
       "width": 504,
       "height": 144,
+      "rawWidth": 504,
+      "rawHeight": 144,
       "borderTop": 69,
       "borderBottom": 36,
       "borderLeft": 36,

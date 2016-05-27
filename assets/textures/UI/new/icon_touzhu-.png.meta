@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "icon_touzhu-": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "e402984e-0e8f-4470-9f8e-d7eaa92544d1",
       "rawTextureUuid": "ae12855f-4dca-468b-9e54-9b7f6cd2055d",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 0,
       "width": 228,
       "height": 216,
+      "rawWidth": 230,
+      "rawHeight": 218,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

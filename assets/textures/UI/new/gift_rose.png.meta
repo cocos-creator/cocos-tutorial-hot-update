@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "gift_rose": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "06de80f3-cbe8-47d0-8128-ffc63bb0f074",
       "rawTextureUuid": "2994d06f-635e-45f2-afba-88e685023581",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 0,
       "width": 87,
       "height": 86,
+      "rawWidth": 88,
+      "rawHeight": 94,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

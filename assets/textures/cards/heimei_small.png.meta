@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "heimei_small": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "09d679a4-5ff7-43fb-b35e-6941f6123116",
       "rawTextureUuid": "8bf291f1-09c7-41a6-823b-234699f8d0e2",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 1,
       "width": 16,
       "height": 15,
+      "rawWidth": 16,
+      "rawHeight": 16,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,
