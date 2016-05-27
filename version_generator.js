@@ -68,6 +68,7 @@ function readDir (dir, obj) {
         else if (stat.isFile()) {
             md5 = crypto.createHash('md5').update(fs.readFileSync(subpath, 'utf8')).digest('hex');
             relative = path.relative(src, subpath);
+            relative = encodeURI(relative);
             obj[relative] = {'md5' : md5};
         }
     }
