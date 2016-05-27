@@ -1,27 +1,29 @@
 (function () {
- 
-    if (cc.sys.localStorage) {
-        var hotUpdateSearchPaths = cc.sys.localStorage.getItem("HotUpdateSearchPaths");
+
+    // 在 main.js 的开头添加如下代码
+    if (cc.sys.isNative) {
+        var hotUpdateSearchPaths = cc.sys.localStorage.getItem('HotUpdateSearchPaths');
         if (hotUpdateSearchPaths) {
             jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths));
         }
     }
+    // 这是为了解决一个重启的 bug 而添加的
     cc.director.startAnimation();
 
     function boot () {
-        // retrieve minified raw assets
-        var rawAssets = _CCSettings.rawAssets;
-        for (var mount in rawAssets) {
-            var entries = rawAssets[mount];
-            for (var uuid in entries) {
-                var entry = entries[uuid];
-                if (typeof entry === 'object') {
-                    if (Array.isArray(entry)) {
-                        entries[uuid] = { url: entry[0], raw: false };
+
+        if ( !_CCSettings.debug ) {
+            // retrieve minified raw assets
+            var rawAssets = _CCSettings.rawAssets;
+            var assetTypes = _CCSettings.assetTypes;
+            for (var mount in rawAssets) {
+                var entries = rawAssets[mount];
+                for (var uuid in entries) {
+                    var entry = entries[uuid];
+                    var type = entry[1];
+                    if (typeof type === 'number') {
+                        entry[1] = assetTypes[type];
                     }
-                }
-                else {
-                    entries[uuid] = { url: entry, raw: true };
                 }
             }
         }
@@ -38,11 +40,42 @@
             //height = div.clientHeight;
         }
 
+        function setLoadingDisplay () {
+            // Loading splash scene
+            var splash = document.getElementById('splash');
+            var progressBar = splash.querySelector('.progress-bar span');
+            var currentResCount = cc.loader.getResCount();
+            cc.loader.onProgress = function (completedCount, totalCount, item) {
+                var percent = 100 * (completedCount - currentResCount) / (totalCount - currentResCount);
+                if (progressBar) {
+                    progressBar.style.width = percent.toFixed(2) + '%';
+                }
+            };
+            splash.style.display = 'block';
+
+            cc.director.once(cc.Director.EVENT_AFTER_SCENE_LAUNCH, function () {
+                splash.style.display = 'none';
+            });
+        }
+
         var onStart = function () {
             cc.view.resizeWithBrowserSize(true);
+            // UC browser on many android devices have performance issue with retina display
+            if (cc.sys.os !== cc.sys.OS_ANDROID || cc.sys.browserType !== cc.sys.BROWSER_TYPE_UC) {
+                cc.view.enableRetina(true);
+            }
             //cc.view.setDesignResolutionSize(_CCSettings.designWidth, _CCSettings.designHeight, cc.ResolutionPolicy.SHOW_ALL);
+        
+            if (cc.sys.isBrowser) {
+                setLoadingDisplay();
+            }
 
-            // cc.game.pause();
+            if (_CCSettings.orientation === 'landscape') {
+                cc.view.setOrientation(cc.macro.ORIENTATION_LANDSCAPE);
+            }
+            else if (_CCSettings.orientation === 'portrait') {
+                cc.view.setOrientation(cc.macro.ORIENTATION_PORTRAIT);
+            }
 
             // init assets
             cc.AssetLibrary.init({
@@ -57,9 +90,6 @@
             cc.director.loadScene(launchScene, null,
                 function () {
                     if (cc.sys.isBrowser) {
-                        var splash = document.getElementById('splash');
-                        splash.style.display = 'none';
-
                         // show canvas
                         canvas.style.visibility = '';
                         var div = document.getElementById('GameDiv');
@@ -80,29 +110,18 @@
             _CCSettings = undefined;
         };
 
-        var option;
-
-        if (cc.sys.isNative) {
-            var txt = jsb.fileUtils.getStringFromFile("project.json");
-            if (!txt) txt = jsb.fileUtils.getStringFromFile("project-runtime.json");
-            if (!txt) {
-                console.log('Can\'t find project.json');
-                option = {};
-            }
-            else {
-                option = JSON.parse(txt);
-            }
-
-            option.scenes = _CCSettings.scenes;
-        }
-        else {
-            option = {
-                //width: width,
-                //height: height,
-                id: 'GameCanvas',
-                scenes: _CCSettings.scenes
-            };
-        }
+        var option = {
+            id: 'GameCanvas',
+            scenes: _CCSettings.scenes,
+            debugMode: _CCSettings.debug ? cc.DebugMode.INFO : cc.DebugMode.ERROR,
+            showFPS: _CCSettings.debug,
+            frameRate: 60,
+            jsList: [
+                _CCSettings.debug ? 'src/project.dev.js' : 'src/project.js'
+            ],
+            groupList: _CCSettings.groupList,
+            collisionMatrix: _CCSettings.collisionMatrix
+        };
 
         cc.game.run(option, onStart);
     }

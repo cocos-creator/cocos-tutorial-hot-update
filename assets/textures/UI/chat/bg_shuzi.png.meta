@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "bg_shuzi": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "fc35d235-d83e-40c8-8c65-8e035f553692",
       "rawTextureUuid": "0c96c41c-cdaf-4d23-b9bf-40730c162d0f",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 0,
       "width": 40,
       "height": 37,
+      "rawWidth": 40,
+      "rawHeight": 37,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

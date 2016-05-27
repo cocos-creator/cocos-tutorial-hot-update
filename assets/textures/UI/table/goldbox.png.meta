@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "goldbox": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "3e2be1a1-f2d9-4952-a69c-c7e4071b29ce",
       "rawTextureUuid": "e2262304-4d8b-496b-8488-a1a9b88cad06",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 0,
       "width": 277,
       "height": 74,
+      "rawWidth": 281,
+      "rawHeight": 76,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

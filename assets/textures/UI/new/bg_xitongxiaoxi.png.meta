@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "bg_xitongxiaoxi": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "dd16e55f-e6d0-43ed-bb1b-cb930ad18d44",
       "rawTextureUuid": "5cb12a01-28cd-4d14-b409-482e4f948a98",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 0,
       "width": 99,
       "height": 62,
+      "rawWidth": 99,
+      "rawHeight": 62,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

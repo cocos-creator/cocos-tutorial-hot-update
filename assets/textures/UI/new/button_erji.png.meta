@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "button_erji": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "67c61cd3-6096-407d-8b1d-54909788b91e",
       "rawTextureUuid": "6a551f2b-ded4-4817-bc5f-2d88b047b0d7",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 0,
       "width": 201,
       "height": 66,
+      "rawWidth": 201,
+      "rawHeight": 66,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

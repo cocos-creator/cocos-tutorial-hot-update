@@ -1,0 +1,12 @@
+{
+  "__type__": "cc.BitmapFont",
+  "_name": "stake_number",
+  "_rawFiles": [
+    "raw-bitmap-font.fnt",
+    "stake_number.png"
+  ],
+  "texture": {
+    "__uuid__": "34f64527-4c9f-4fe3-8ea1-1f539a48f16f"
+  },
+  "fontSize": 26
+}

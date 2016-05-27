@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "button_ksks": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "d58859db-6a64-489b-aa1c-683e5f9a646b",
       "rawTextureUuid": "fccc4d85-6ad4-496d-9b33-ea76e69da132",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 1,
       "width": 433,
       "height": 150,
+      "rawWidth": 433,
+      "rawHeight": 155,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

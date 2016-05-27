@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "gift_bucket": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "fe8db373-f328-42b5-84cb-70407deaf581",
       "rawTextureUuid": "cbe94441-4429-40c3-86b0-d4427df8c2e4",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 0,
       "width": 64,
       "height": 72,
+      "rawWidth": 65,
+      "rawHeight": 73,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

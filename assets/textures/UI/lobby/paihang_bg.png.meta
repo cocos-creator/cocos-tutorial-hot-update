@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "paihang_bg": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "18bba6b0-c690-4989-802a-77886bdad552",
       "rawTextureUuid": "1ca798e6-9268-45b5-a662-b63593dc200a",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 0,
       "width": 118,
       "height": 108,
+      "rawWidth": 118,
+      "rawHeight": 108,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,

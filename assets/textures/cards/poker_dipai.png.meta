@@ -6,7 +6,7 @@
   "filterMode": "bilinear",
   "subMetas": {
     "poker_dipai": {
-      "ver": "1.0.2",
+      "ver": "1.0.3",
       "uuid": "7ebbc72d-40f8-414d-833c-46d245d95d93",
       "rawTextureUuid": "170cbd22-5b43-45d0-a5d7-d4d02b3494ec",
       "trimType": "auto",
@@ -18,6 +18,8 @@
       "trimY": 0,
       "width": 99,
       "height": 130,
+      "rawWidth": 100,
+      "rawHeight": 130,
       "borderTop": 0,
       "borderBottom": 0,
       "borderLeft": 0,
