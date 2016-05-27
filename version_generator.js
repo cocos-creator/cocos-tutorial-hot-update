@@ -24,8 +24,8 @@ while ( i < process.argv.length) {
     case '-u' :
         var url = process.argv[i+1];
         manifest.packageUrl = url;
-        manifest.remoteManifestUrl = path.join(url, 'project.manifest');
-        manifest.remoteVersionUrl = path.join(url, 'version.manifest');
+        manifest.remoteManifestUrl = url + 'project.manifest';
+        manifest.remoteVersionUrl = url + 'version.manifest';
         i += 2;
         break;
     case '--version' :
@@ -73,12 +73,22 @@ function readDir (dir, obj) {
     }
 }
 
+var mkdirSync = function (path) {
+    try {
+        fs.mkdirSync(path);
+    } catch(e) {
+        if ( e.code != 'EEXIST' ) throw e;
+    }
+}
+
 // Iterate res and src folder
 readDir(path.join(src, 'src'), manifest.assets);
 readDir(path.join(src, 'res'), manifest.assets);
 
 var destManifest = path.join(dest, 'project.manifest');
 var destVersion = path.join(dest, 'version.manifest');
+
+mkdirSync(dest);
 
 fs.writeFile(destManifest, JSON.stringify(manifest), (err) => {
   if (err) throw err;
