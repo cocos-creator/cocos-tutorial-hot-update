@@ -48,6 +48,8 @@ Manifest 文件中包含以下几个重要信息：
 
 教程所使用的范例工程是基于 21 点范例修改而来的，为了展示热更新的过程，将工程中的 table 场景（牌桌场景）删除，设为 1.0.0 版本。并在 `remote-assets` 目录中保存带有 table 场景的完整版本，设为 1.1.0 版本。游戏开始时会检查远程是否有版本更新，如果发现远程版本则提示用户更新，更新完成后，用户重新进入游戏即可进入牌桌场景。
 
+**注意**，项目中包含的 `remove-assets` 为 debug 模式，开发者在测试的时候必须使用 debug 模式构建项目才有效，否则 release 模式的 jsc 文件优先级会高于 `remove-assets` 中的资源而导致脚本失效。
+
 ### 使用 Version Generator 来生成 Manifest 文件
 
 在范例工程中，我们提供了一个 [version_generator.js 文件](https://github.com/cocos-creator/tutorial-hot-update/blob/master/version_generator.js)，这是一个用于生成 Manfiest 文件的 NodeJS 脚本。使用方式如下：
@@ -91,8 +93,6 @@ if (cc.sys.isNative) {
         jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths));
     }
 }
-// 这是为了解决一个重启的 bug 而添加的
-cc.director.startAnimation();
 ```
 
 或者直接使用项目仓库根目录下的 `main.js` 覆盖原生打包文件夹内的 `main.js`。注意，每次使用 Cocos Creator 构建后，都需要重新修改 `main.js`。
