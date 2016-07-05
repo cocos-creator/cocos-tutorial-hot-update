@@ -1,0 +1,7 @@
+{
+  "name": "hot-update",
+  "version": "0.0.1",
+  "description": "用于热更新插件",
+  "author": "Cocos Creator",
+  "main": "main.js"
+}
