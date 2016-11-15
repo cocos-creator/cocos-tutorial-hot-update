@@ -9,5 +9,9 @@
   "packageName": "org.cocos2d.tutorialhotupdate",
   "startScene": "8a546935-70d4-42d2-a051-8d0e76f28008",
   "title": "tutorialhotupdate",
-  "webOrientation": "auto"
+  "webOrientation": "auto",
+  "includeSdk": [
+    "anysdk"
+  ],
+  "includeAnySDK": false
 }
