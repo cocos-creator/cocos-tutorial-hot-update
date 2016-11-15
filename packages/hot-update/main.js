@@ -15,7 +15,7 @@ module.exports = {
     messages: {
         'editor:build-finished': function (event, target) {
             var root = Path.normalize(target.dest);
-            var url = Path.join(root, "jsb-" + target.template, "main.js");
+            var url = Path.join(root, "main.js");
             Fs.readFile(url, "utf8", function (err, data) {
                 if (err) {
                     throw err;
