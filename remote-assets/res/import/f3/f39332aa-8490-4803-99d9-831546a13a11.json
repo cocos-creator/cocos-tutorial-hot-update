@@ -4,13 +4,13 @@
     "name": "BLACK JACK_22",
     "texture": "f236e778-03e9-4863-b961-d3aed27307ec",
     "rect": [
+      22,
       25,
-      35,
-      200,
-      180
+      205,
+      200
     ],
     "offset": [
-      0,
+      -0.5,
       0
     ],
     "originalSize": [

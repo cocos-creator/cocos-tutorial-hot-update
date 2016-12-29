@@ -4,13 +4,13 @@
     "name": "BLACK JACK_20",
     "texture": "31aff176-3fa6-4225-aa02-55988215e0bc",
     "rect": [
+      21,
       23,
-      27,
-      203,
-      197
+      206,
+      205
     ],
     "offset": [
-      -0.5,
+      -1,
       -0.5
     ],
     "originalSize": [

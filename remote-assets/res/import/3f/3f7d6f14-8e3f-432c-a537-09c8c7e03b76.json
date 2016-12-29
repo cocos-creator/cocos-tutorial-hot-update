@@ -22,13 +22,13 @@
         "__id__": 6
       },
       {
-        "__id__": 9
+        "__id__": 7
       },
       {
-        "__id__": 13
+        "__id__": 10
       },
       {
-        "__id__": 16
+        "__id__": 12
       }
     ],
     "_position": {
@@ -38,12 +38,78 @@
     },
     "_components": [
       {
-        "__id__": 20
+        "__type__": "cc.Widget",
+        "node": {
+          "__id__": 1
+        },
+        "_alignFlags": 40,
+        "_left": 20.476011994003,
+        "_right": 19.523988005997,
+        "_originalWidth": 200
       },
       {
-        "__id__": 21
+        "__type__": "1657ewfijBOXLq5zGqr6PvE",
+        "node": {
+          "__id__": 1
+        },
+        "spRankBG": {
+          "__id__": 5
+        },
+        "labelRank": {
+          "__id__": 4
+        },
+        "labelPlayerName": {
+          "__id__": 11
+        },
+        "labelGold": {
+          "__id__": 14
+        },
+        "spPlayerPhoto": {
+          "__id__": 9
+        },
+        "texRankBG": [
+          {
+            "__uuid__": "ef287833-459f-4ff4-a43a-7a6ddc8c95a9"
+          },
+          {
+            "__uuid__": "8af78d65-4b41-4d59-a683-2659ab6904cb"
+          },
+          {
+            "__uuid__": "913e121b-7770-4593-9a34-f8ca1b3e3b2f"
+          },
+          {
+            "__uuid__": "42b84506-55b4-4b98-8d2e-b3f8cfe7fbf8"
+          }
+        ],
+        "texPlayerPhoto": [
+          {
+            "__uuid__": "26f1e1b9-a0c6-41a6-a8ff-3102f3cbc784"
+          },
+          {
+            "__uuid__": "e4f21e55-ed4f-46f8-b9a1-7ee9775d710c"
+          },
+          {
+            "__uuid__": "25b2a633-f269-42d2-80f8-110e834238eb"
+          },
+          {
+            "__uuid__": "55e0a94a-b236-4c6b-8e0d-322e198e24a3"
+          },
+          {
+            "__uuid__": "a5856afd-30ff-43e5-93f6-41e8be2d09d1"
+          },
+          {
+            "__uuid__": "5bfc8b76-5eb6-4cf9-a83a-24a508103512"
+          }
+        ]
       }
-    ]
+    ],
+    "_prefab": {
+      "__type__": "cc.PrefabInfo",
+      "root": {
+        "__id__": 1
+      },
+      "fileId": "de483yOXNNAsZaZAZwA8CR/"
+    }
   },
   {
     "__type__": "cc.Node",
@@ -69,7 +135,14 @@
       {
         "__id__": 5
       }
-    ]
+    ],
+    "_prefab": {
+      "__type__": "cc.PrefabInfo",
+      "root": {
+        "__id__": 1
+      },
+      "fileId": "c7c66OkAf9E14qX8d9zV9ha"
+    }
   },
   {
     "__type__": "cc.Node",
@@ -86,7 +159,14 @@
       {
         "__id__": 4
       }
-    ]
+    ],
+    "_prefab": {
+      "__type__": "cc.PrefabInfo",
+      "root": {
+        "__id__": 1
+      },
+      "fileId": "a7e36xW04BGw7YGmvGSg+0h"
+    }
   },
   {
     "__type__": "cc.Label",
@@ -125,29 +205,30 @@
     },
     "_components": [
       {
-        "__id__": 7
+        "__type__": "cc.Sprite",
+        "node": {
+          "__id__": 6
+        },
+        "_spriteFrame": {
+          "__uuid__": "65f8dd44-9c0c-481b-9b78-c219307a0525"
+        }
       },
       {
-        "__id__": 8
+        "__type__": "cc.Widget",
+        "node": {
+          "__id__": 6
+        },
+        "_alignFlags": 4,
+        "_bottom": 1
       }
-    ]
-  },
-  {
-    "__type__": "cc.Sprite",
-    "node": {
-      "__id__": 6
-    },
-    "_spriteFrame": {
-      "__uuid__": "65f8dd44-9c0c-481b-9b78-c219307a0525"
+    ],
+    "_prefab": {
+      "__type__": "cc.PrefabInfo",
+      "root": {
+        "__id__": 1
+      },
+      "fileId": "cf1a46kH7lJ9pZscZQzbHfy"
     }
-  },
-  {
-    "__type__": "cc.Widget",
-    "node": {
-      "__id__": 6
-    },
-    "_alignFlags": 4,
-    "_bottom": 1
   },
   {
     "__type__": "cc.Node",
@@ -162,7 +243,7 @@
     },
     "_children": [
       {
-        "__id__": 10
+        "__id__": 8
       }
     ],
     "_position": {
@@ -171,15 +252,28 @@
     },
     "_components": [
       {
-        "__id__": 12
+        "__type__": "cc.Sprite",
+        "node": {
+          "__id__": 7
+        },
+        "_spriteFrame": {
+          "__uuid__": "944b1726-c679-48c6-987c-2abb49f9a11e"
+        }
       }
-    ]
+    ],
+    "_prefab": {
+      "__type__": "cc.PrefabInfo",
+      "root": {
+        "__id__": 1
+      },
+      "fileId": "504efjh2VtEK67oY22tTnEe"
+    }
   },
   {
     "__type__": "cc.Node",
     "_name": "playerPhoto",
     "_parent": {
-      "__id__": 9
+      "__id__": 7
     },
     "_contentSize": {
       "__type__": "cc.Size",
@@ -188,26 +282,24 @@
     },
     "_components": [
       {
-        "__id__": 11
+        "__id__": 9
       }
-    ]
-  },
-  {
-    "__type__": "cc.Sprite",
-    "node": {
-      "__id__": 10
-    },
-    "_spriteFrame": {
-      "__uuid__": "55e0a94a-b236-4c6b-8e0d-322e198e24a3"
+    ],
+    "_prefab": {
+      "__type__": "cc.PrefabInfo",
+      "root": {
+        "__id__": 1
+      },
+      "fileId": "ee17aYYAN1EA7+yINbBIsTC"
     }
   },
   {
     "__type__": "cc.Sprite",
     "node": {
-      "__id__": 9
+      "__id__": 8
     },
     "_spriteFrame": {
-      "__uuid__": "944b1726-c679-48c6-987c-2abb49f9a11e"
+      "__uuid__": "55e0a94a-b236-4c6b-8e0d-322e198e24a3"
     }
   },
   {
@@ -232,32 +324,36 @@
     },
     "_components": [
       {
-        "__id__": 14
+        "__id__": 11
       },
       {
-        "__id__": 15
+        "__type__": "cc.Widget",
+        "node": {
+          "__id__": 10
+        },
+        "_alignFlags": 40,
+        "_left": 200.00443948418842,
+        "_right": 19.99556051581162,
+        "_originalWidth": 128
       }
-    ]
+    ],
+    "_prefab": {
+      "__type__": "cc.PrefabInfo",
+      "root": {
+        "__id__": 1
+      },
+      "fileId": "da352CDBcpFTa3KmZyqyAQ1"
+    }
   },
   {
     "__type__": "cc.Label",
     "node": {
-      "__id__": 13
+      "__id__": 10
     },
     "_useOriginalSize": false,
     "_fontSize": 26,
     "_N$string": "疲惫的驴肉火烧",
     "_N$verticalAlign": 1
-  },
-  {
-    "__type__": "cc.Widget",
-    "node": {
-      "__id__": 13
-    },
-    "_alignFlags": 40,
-    "_left": 200.00443948418842,
-    "_right": 19.99556051581162,
-    "_originalWidth": 128
   },
   {
     "__type__": "cc.Node",
@@ -272,7 +368,7 @@
     },
     "_children": [
       {
-        "__id__": 17
+        "__id__": 13
       }
     ],
     "_position": {
@@ -282,9 +378,22 @@
     },
     "_components": [
       {
-        "__id__": 19
+        "__type__": "cc.Sprite",
+        "node": {
+          "__id__": 12
+        },
+        "_spriteFrame": {
+          "__uuid__": "7459fc8e-3723-4d95-8594-ac8eea99f27e"
+        }
       }
-    ]
+    ],
+    "_prefab": {
+      "__type__": "cc.PrefabInfo",
+      "root": {
+        "__id__": 1
+      },
+      "fileId": "ea5fc0KLGhMwKew4NTCakHt"
+    }
   },
   {
     "__type__": "cc.Node",
@@ -296,7 +405,7 @@
       "b": 26
     },
     "_parent": {
-      "__id__": 16
+      "__id__": 12
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -314,14 +423,21 @@
     },
     "_components": [
       {
-        "__id__": 18
+        "__id__": 14
       }
-    ]
+    ],
+    "_prefab": {
+      "__type__": "cc.PrefabInfo",
+      "root": {
+        "__id__": 1
+      },
+      "fileId": "f04c77yqcpJ57da1Gdhl8LU"
+    }
   },
   {
     "__type__": "cc.Label",
     "node": {
-      "__id__": 17
+      "__id__": 13
     },
     "_useOriginalSize": false,
     "_fontSize": 30,
@@ -331,79 +447,5 @@
     "_isSystemFontUsed": false,
     "_N$string": "9995",
     "_N$verticalAlign": 1
-  },
-  {
-    "__type__": "cc.Sprite",
-    "node": {
-      "__id__": 16
-    },
-    "_spriteFrame": {
-      "__uuid__": "7459fc8e-3723-4d95-8594-ac8eea99f27e"
-    }
-  },
-  {
-    "__type__": "cc.Widget",
-    "node": {
-      "__id__": 1
-    },
-    "_alignFlags": 40,
-    "_left": 20.476011994003,
-    "_right": 19.523988005997,
-    "_originalWidth": 200
-  },
-  {
-    "__type__": "1657ewfijBOXLq5zGqr6PvE",
-    "node": {
-      "__id__": 1
-    },
-    "spRankBG": {
-      "__id__": 5
-    },
-    "labelRank": {
-      "__id__": 4
-    },
-    "labelPlayerName": {
-      "__id__": 14
-    },
-    "labelGold": {
-      "__id__": 18
-    },
-    "spPlayerPhoto": {
-      "__id__": 11
-    },
-    "texRankBG": [
-      {
-        "__uuid__": "ef287833-459f-4ff4-a43a-7a6ddc8c95a9"
-      },
-      {
-        "__uuid__": "8af78d65-4b41-4d59-a683-2659ab6904cb"
-      },
-      {
-        "__uuid__": "913e121b-7770-4593-9a34-f8ca1b3e3b2f"
-      },
-      {
-        "__uuid__": "42b84506-55b4-4b98-8d2e-b3f8cfe7fbf8"
-      }
-    ],
-    "texPlayerPhoto": [
-      {
-        "__uuid__": "26f1e1b9-a0c6-41a6-a8ff-3102f3cbc784"
-      },
-      {
-        "__uuid__": "e4f21e55-ed4f-46f8-b9a1-7ee9775d710c"
-      },
-      {
-        "__uuid__": "25b2a633-f269-42d2-80f8-110e834238eb"
-      },
-      {
-        "__uuid__": "55e0a94a-b236-4c6b-8e0d-322e198e24a3"
-      },
-      {
-        "__uuid__": "a5856afd-30ff-43e5-93f6-41e8be2d09d1"
-      },
-      {
-        "__uuid__": "5bfc8b76-5eb6-4cf9-a83a-24a508103512"
-      }
-    ]
   }
 ]

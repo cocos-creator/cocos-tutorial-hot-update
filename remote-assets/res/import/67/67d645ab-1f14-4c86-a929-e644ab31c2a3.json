@@ -5,8 +5,5 @@
     "raw-bitmap-font.fnt",
     "poker_number.png"
   ],
-  "texture": {
-    "__uuid__": "a3a6507c-df24-4d77-b7ed-09419b6ab988"
-  },
   "fontSize": 50
 }

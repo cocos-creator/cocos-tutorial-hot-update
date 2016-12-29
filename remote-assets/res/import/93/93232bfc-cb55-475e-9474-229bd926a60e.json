@@ -4,14 +4,14 @@
     "name": "BUST_3",
     "texture": "318f81ee-94aa-4ce9-ba87-a54a43912b71",
     "rect": [
-      3,
-      3,
-      142,
-      144
+      2,
+      2,
+      144,
+      147
     ],
     "offset": [
       -1,
-      0
+      -0.5
     ],
     "originalSize": [
       150,
