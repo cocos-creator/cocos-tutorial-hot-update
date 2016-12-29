@@ -4,14 +4,14 @@
     "name": "BLACK JACK_8",
     "texture": "47299e69-5713-4e97-b8f5-d2dda06df6e5",
     "rect": [
-      24,
-      39,
-      202,
-      175
+      23,
+      35,
+      204,
+      182
     ],
     "offset": [
       0,
-      -1.5
+      -1
     ],
     "originalSize": [
       250,

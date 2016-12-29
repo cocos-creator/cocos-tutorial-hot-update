@@ -4,9 +4,9 @@
     "name": "2K",
     "texture": "bfcdfc09-0808-4c35-983f-67e8a07f0e15",
     "rect": [
-      1,
       0,
-      37,
+      0,
+      39,
       30
     ],
     "offset": [

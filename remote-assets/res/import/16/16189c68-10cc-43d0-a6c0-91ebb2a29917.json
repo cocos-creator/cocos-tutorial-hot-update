@@ -4,14 +4,14 @@
     "name": "icon_usercp",
     "texture": "bf3d4179-0a3a-45f9-af90-81b6c40213f6",
     "rect": [
-      1,
-      2,
-      54,
-      50
+      0,
+      0,
+      55,
+      52
     ],
     "offset": [
-      0.5,
-      -1
+      0,
+      0
     ],
     "originalSize": [
       55,

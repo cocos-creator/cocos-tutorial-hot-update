@@ -4,14 +4,14 @@
     "name": "icon_touzhu-",
     "texture": "ae12855f-4dca-468b-9e54-9b7f6cd2055d",
     "rect": [
-      1,
       0,
-      228,
-      216
+      0,
+      230,
+      218
     ],
     "offset": [
       0,
-      1
+      0
     ],
     "originalSize": [
       230,

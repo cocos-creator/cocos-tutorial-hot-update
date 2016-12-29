@@ -1,1 +1,1 @@
-{"packageUrl":"http://localhost:3003/tutorial-hot-update/remote-assets/","remoteManifestUrl":"http://localhost:3003/tutorial-hot-update/remote-assets/project.manifest","remoteVersionUrl":"http://localhost:3003/tutorial-hot-update/remote-assets/version.manifest","version":"1.2.0"}
+{"packageUrl":"http://192.168.54.57:5555/tutorial-hot-update/remote-assets/","remoteManifestUrl":"http://192.168.54.57:5555/tutorial-hot-update/remote-assets/project.manifest","remoteVersionUrl":"http://192.168.54.57:5555/tutorial-hot-update/remote-assets/version.manifest","version":"1.4.0"}

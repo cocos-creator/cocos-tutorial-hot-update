@@ -4,14 +4,14 @@
     "name": "bg_stroke2",
     "texture": "85cec4b6-3411-4648-94c2-7c34a8324989",
     "rect": [
-      1,
       0,
-      139,
-      77
+      0,
+      141,
+      78
     ],
     "offset": [
       0,
-      0.5
+      0
     ],
     "originalSize": [
       141,

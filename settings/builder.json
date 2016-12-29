@@ -13,5 +13,10 @@
   "includeSdk": [
     "anysdk"
   ],
-  "includeAnySDK": false
+  "includeAnySDK": false,
+  "oauthLoginServer": "",
+  "appKey": "",
+  "appSecret": "",
+  "privateKey": "",
+  "renderMode": "0"
 }

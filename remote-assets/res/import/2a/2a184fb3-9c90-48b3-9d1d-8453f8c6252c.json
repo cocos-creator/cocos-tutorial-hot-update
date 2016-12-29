@@ -4,9 +4,9 @@
     "name": "dealer",
     "texture": "e8ad9c1a-2bd4-481d-bc97-4283cb738d7a",
     "rect": [
-      2,
       0,
-      277,
+      0,
+      281,
       73
     ],
     "offset": [
