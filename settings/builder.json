@@ -18,5 +18,7 @@
   "appKey": "",
   "appSecret": "",
   "privateKey": "",
-  "renderMode": "0"
+  "renderMode": "0",
+  "inlineSpriteFrames": true,
+  "mergeStartScene": false
 }

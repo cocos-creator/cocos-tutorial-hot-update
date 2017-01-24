@@ -3301,7 +3301,7 @@
             },
             startWithTarget: function(target) {
                 cc.ActionInterval.prototype.startWithTarget.call(this, target);
-                this._animation.getRestoreOriginalFrame() && (this._origFrame = target.displayFrame());
+                this._animation.getRestoreOriginalFrame() && (this._origFrame = target.getSpriteFrame());
                 this._nextFrame = 0;
                 this._executedLoops = 0;
             },
@@ -5722,8 +5722,6 @@
                     return;
                 }
                 cc.assertID(action, 1618);
-                this._retainAction(action);
-                this._sgNode._owner = this;
                 cc.director.getActionManager().addAction(action, this, false);
                 return action;
             },
@@ -5956,9 +5954,7 @@
                     serializable: false
                 }
             },
-            createNode: function(cb) {
-                var node;
-            },
+            createNode: false,
             compileCreateFunction: function() {
                 var jit = require("../platform/instantiate-jit");
                 this._createFunction = jit.compile(this.data);
@@ -5977,7 +5973,7 @@
         cc.Prefab = module.exports = Prefab;
         cc.js.obsolete(cc, "cc._Prefab", "Prefab");
     }, {
-        "../platform/instantiate-jit": 118
+        "../platform/instantiate-jit": 119
     } ],
     31: [ function(require, module, exports) {
         var CCObject = require("../platform/CCObject");
@@ -6001,7 +5997,7 @@
         });
         module.exports = cc.RawAsset;
     }, {
-        "../platform/CCObject": 109
+        "../platform/CCObject": 110
     } ],
     32: [ function(require, module, exports) {
         var Scene = cc.Class({
@@ -6087,8 +6083,8 @@
         require("./CCBitmapFont");
         require("./CCLabelAtlas");
     }, {
-        "../sprites/CCSpriteFrame": 190,
-        "../textures/CCTexture2D": 190,
+        "../sprites/CCSpriteFrame": 189,
+        "../textures/CCTexture2D": 189,
         "./CCAsset": 25,
         "./CCAudioClip": 26,
         "./CCBitmapFont": 27,
@@ -7289,6 +7285,7 @@
                         return this._volume;
                     },
                     set: function(value) {
+                        value = cc.clamp01(value);
                         this._volume = value;
                         var audio = this.audio;
                         if (audio && !this._mute) {
@@ -7336,7 +7333,8 @@
                 }
             },
             _pausedCallback: function() {
-                if (!this.audio || this.audio.paused) {
+                var audio = this.audio;
+                if (!audio || audio.paused) {
                     return;
                 }
                 this.audio.pause();
@@ -7758,6 +7756,7 @@
             name: "cc.Canvas",
             "extends": require("./CCComponent"),
             editor: false,
+            resetInEditor: false,
             statics: {
                 instance: null
             },
@@ -8137,8 +8136,8 @@
         cc.Component = module.exports = Component;
     }, {
         "../CCNode": 23,
-        "../platform/CCObject": 109,
-        "../platform/id-generater": 116,
+        "../platform/CCObject": 110,
+        "../platform/id-generater": 117,
         "../utils/misc": 130
     } ],
     51: [ function(require, module, exports) {
@@ -10563,6 +10562,10 @@
                     lineCount === nextLineIndex && (nextTokenX += labelSize.width);
                 }
             },
+            _convertLiteralColorValue: function(color) {
+                var colorValue = color.toUpperCase();
+                return cc.Color[colorValue] ? cc.Color[colorValue] : cc.hexToColor(color);
+            },
             _applyTextAttribute: function(label) {
                 if (label instanceof cc.Scale9Sprite) {
                     return;
@@ -10570,28 +10573,29 @@
                 var index = label._styleIndex;
                 label.setLineHeight(this.lineHeight);
                 label.setVerticalAlign(VerticalAlign.CENTER);
-                label.enableBold(false);
-                label.enableItalics(false);
-                label.enableUnderline(false);
                 var textStyle = null;
                 this._textArray[index] && (textStyle = this._textArray[index].style);
-                if (textStyle && textStyle.color) {
-                    var colorValue = textStyle.color.toUpperCase();
-                    cc.Color[colorValue] ? label.setColor(cc.Color[colorValue]) : label.setColor(cc.hexToColor(textStyle.color));
+                textStyle && textStyle.color ? label.setColor(this._convertLiteralColorValue(textStyle.color)) : label.setColor(this.node.color);
+                textStyle && textStyle.bold ? label.enableBold(true) : label.enableBold(false);
+                textStyle && textStyle.italic ? label.enableItalics(true) : label.enableItalics(false);
+                textStyle && textStyle.underline ? label.enableUnderline(true) : label.enableUnderline(false);
+                if (textStyle && textStyle.outline) {
+                    label.setOutlined(true);
+                    label.setOutlineColor(this._convertLiteralColorValue(textStyle.outline.color));
+                    label.setOutlineWidth(textStyle.outline.width);
+                    label.setMargin(textStyle.outline.width);
                 } else {
-                    label.setColor(this.node.color);
+                    label.setOutlined(false);
+                    label.setMargin(0);
                 }
-                textStyle && textStyle.bold && label.enableBold(true);
-                textStyle && textStyle.italic && label.enableItalics(true);
-                textStyle && textStyle.underline && label.enableUnderline(true);
                 textStyle && textStyle.size ? label.setFontSize(textStyle.size) : label.setFontSize(this.fontSize);
                 textStyle && textStyle.event && textStyle.event.click && (label._clickHandler = textStyle.event.click);
             }
         });
         cc.RichText = module.exports = RichText;
     }, {
-        "../label/CCHtmlTextParser.js": 91,
-        "../label/CCTextUtils.js": 92
+        "../label/CCHtmlTextParser.js": 92,
+        "../label/CCTextUtils.js": 93
     } ],
     63: [ function(require, module, exports) {
         var SceneGraphHelper = require("../utils/scene-graph-helper");
@@ -10688,6 +10692,7 @@
                     if (content) {
                         var contentSize = content.getContentSize();
                         var scrollViewSize = this._scrollView.node.getContentSize();
+                        var handleNodeSize = this.node.getContentSize();
                         if (this._conditionalDisableScrollBar(contentSize, scrollViewSize)) {
                             return;
                         }
@@ -10699,21 +10704,24 @@
                         var scrollViewMeasure = 0;
                         var outOfBoundaryValue = 0;
                         var contentPosition = 0;
+                        var handleNodeMeasure = 0;
                         if (this.direction === Direction.HORIZONTAL) {
                             contentMeasure = contentSize.width;
                             scrollViewMeasure = scrollViewSize.width;
+                            handleNodeMeasure = handleNodeSize.width;
                             outOfBoundaryValue = outOfBoundary.x;
                             contentPosition = -this._convertToScrollViewSpace(content).x;
                         } else {
                             if (this.direction === Direction.VERTICAL) {
                                 contentMeasure = contentSize.height;
                                 scrollViewMeasure = scrollViewSize.height;
+                                handleNodeMeasure = handleNodeSize.height;
                                 outOfBoundaryValue = outOfBoundary.y;
                                 contentPosition = -this._convertToScrollViewSpace(content).y;
                             }
                         }
-                        var length = this._calculateLength(contentMeasure, scrollViewMeasure, outOfBoundaryValue);
-                        var position = this._calculatePosition(contentMeasure, scrollViewMeasure, contentPosition, outOfBoundaryValue, length);
+                        var length = this._calculateLength(contentMeasure, scrollViewMeasure, handleNodeMeasure, outOfBoundaryValue);
+                        var position = this._calculatePosition(contentMeasure, scrollViewMeasure, handleNodeMeasure, contentPosition, outOfBoundaryValue, length);
                         this._updateLength(length);
                         this._updateHanlderPosition(position);
                     }
@@ -10728,18 +10736,11 @@
             _fixupHandlerPosition: function() {
                 var barSize = this.node.getContentSize();
                 var barAnchor = this.node.getAnchorPoint();
-                var barPosition = this.node.getPosition();
-                var fixupPosition;
+                var handleSize = this.handle.node.getContentSize();
                 var handleParent = this.handle.node.parent;
-                if (this.direction === Direction.HORIZONTAL) {
-                    var leftSideWorldPosition = this.node.convertToWorldSpaceAR(cc.p(-barSize.width * barAnchor.x, -barSize.height * barAnchor.y));
-                    fixupPosition = handleParent.convertToNodeSpaceAR(leftSideWorldPosition);
-                } else {
-                    if (this.direction === Direction.VERTICAL) {
-                        var bottomSideWorldPosition = this.node.convertToWorldSpaceAR(cc.p(-barSize.width * barAnchor.x, -barSize.height * barAnchor.y));
-                        fixupPosition = handleParent.convertToNodeSpaceAR(bottomSideWorldPosition);
-                    }
-                }
+                var leftBottomWorldPosition = this.node.convertToWorldSpaceAR(cc.p(-barSize.width * barAnchor.x, -barSize.height * barAnchor.y));
+                var fixupPosition = handleParent.convertToNodeSpaceAR(leftBottomWorldPosition);
+                this.direction === Direction.HORIZONTAL ? fixupPosition = cc.pAdd(fixupPosition, cc.p(0, (barSize.height - handleSize.height) / 2)) : this.direction === Direction.VERTICAL && (fixupPosition = cc.pAdd(fixupPosition, cc.p((barSize.width - handleSize.width) / 2, 0)));
                 this.handle.node.setPosition(fixupPosition);
                 return fixupPosition;
             },
@@ -10778,13 +10779,13 @@
                 }
                 this._autoHideRemainingTime = this.autoHideTime;
             },
-            _calculateLength: function(contentMeasure, scrollViewMeasure, outOfBoundary) {
+            _calculateLength: function(contentMeasure, scrollViewMeasure, handleNodeMeasure, outOfBoundary) {
                 var denominatorValue = contentMeasure;
                 outOfBoundary && (denominatorValue += (outOfBoundary > 0 ? outOfBoundary : -outOfBoundary) * GETTINGSHORTERFACTOR);
                 var lengthRation = scrollViewMeasure / denominatorValue;
-                return scrollViewMeasure * lengthRation;
+                return handleNodeMeasure * lengthRation;
             },
-            _calculatePosition: function(contentMeasure, scrollViewMeasure, contentPosition, outOfBoundary, actualLenth) {
+            _calculatePosition: function(contentMeasure, scrollViewMeasure, handleNodeMeasure, contentPosition, outOfBoundary, actualLenth) {
                 var denominatorValue = contentMeasure - scrollViewMeasure;
                 outOfBoundary && (denominatorValue += Math.abs(outOfBoundary));
                 var positionRatio = 0;
@@ -10792,13 +10793,13 @@
                     positionRatio = contentPosition / denominatorValue;
                     positionRatio = cc.clamp01(positionRatio);
                 }
-                var position = (scrollViewMeasure - actualLenth) * positionRatio;
+                var position = (handleNodeMeasure - actualLenth) * positionRatio;
                 return this.direction === Direction.VERTICAL ? cc.p(0, position) : cc.p(position, 0);
             },
             _updateLength: function(length) {
                 if (this.handle) {
                     var handleNode = this.handle.node;
-                    var handleNodeSize = this.node.getContentSize();
+                    var handleNodeSize = handleNode.getContentSize();
                     handleNode.setAnchorPoint(cc.p(0, 0));
                     this.direction === Direction.HORIZONTAL ? handleNode.setContentSize(length, handleNodeSize.height) : handleNode.setContentSize(handleNodeSize.width, length);
                 }
@@ -11634,7 +11635,7 @@
         });
         cc.ScrollView = module.exports = ScrollView;
     }, {
-        "./CCViewGroup": 72
+        "./CCViewGroup": 73
     } ],
     66: [ function(require, module, exports) {
         var Direction = cc.Enum({
@@ -12099,6 +12100,43 @@
         "./CCComponent": 50
     } ],
     69: [ function(require, module, exports) {
+        var ComponentType = cc.Enum({
+            NONE: 0,
+            CHECKBOX: 1,
+            TEXT_ATLAS: 2,
+            SLIDER_BAR: 3,
+            LIST_VIEW: 4,
+            PAGE_VIEW: 5
+        });
+        var ListDirection = cc.Enum({
+            VERTICAL: 0,
+            HORIZONTAL: 1
+        });
+        var VerticalAlign = cc.Enum({
+            TOP: 0,
+            CENTER: 1,
+            BOTTOM: 2
+        });
+        var HorizontalAlign = cc.Enum({
+            LEFT: 0,
+            CENTER: 1,
+            RIGHT: 2
+        });
+        var StudioComponent = cc.Class({
+            name: "cc.StudioComponent",
+            "extends": cc.Component,
+            editor: false,
+            properties: false,
+            statics: {
+                ComponentType: ComponentType,
+                ListDirection: ListDirection,
+                VerticalAlign: VerticalAlign,
+                HorizontalAlign: HorizontalAlign
+            }
+        });
+        cc.StudioComponent = module.exports = StudioComponent;
+    }, {} ],
+    70: [ function(require, module, exports) {
         var Toggle = cc.Class({
             name: "cc.Toggle",
             "extends": require("./CCButton.js"),
@@ -12177,7 +12215,7 @@
                     return;
                 }
                 this.isChecked = true;
-                this.node.emit("toggle", this);
+                this._emitToggleEvents();
                 this.toggleGroup && this.toggleGroup.updateToggles(this);
             },
             uncheck: function() {
@@ -12185,14 +12223,14 @@
                     return;
                 }
                 this.isChecked = false;
-                this.node.emit("toggle", this);
+                this._emitToggleEvents();
             }
         });
         cc.Toggle = module.exports = Toggle;
     }, {
         "./CCButton.js": 48
     } ],
-    70: [ function(require, module, exports) {
+    71: [ function(require, module, exports) {
         var ToggleGroup = cc.Class({
             name: "cc.ToggleGroup",
             "extends": cc.Component,
@@ -12242,7 +12280,7 @@
         });
         cc.ToggleGroup = module.exports = ToggleGroup;
     }, {} ],
-    71: [ function(require, module, exports) {
+    72: [ function(require, module, exports) {
         var EventType = _ccsg.VideoPlayer.EventType;
         var ResourceType = cc.Enum({
             REMOTE: 0,
@@ -12418,7 +12456,7 @@
         });
         cc.VideoPlayer = module.exports = VideoPlayer;
     }, {} ],
-    72: [ function(require, module, exports) {
+    73: [ function(require, module, exports) {
         var ViewGroup = cc.Class({
             name: "cc.ViewGroup",
             "extends": require("./CCComponent")
@@ -12427,7 +12465,7 @@
     }, {
         "./CCComponent": 50
     } ],
-    73: [ function(require, module, exports) {
+    74: [ function(require, module, exports) {
         var EventType = _ccsg.WebView.EventType;
         var WebView = cc.Class({
             name: "cc.WebView",
@@ -12493,7 +12531,7 @@
         });
         cc.WebView = module.exports = WebView;
     }, {} ],
-    74: [ function(require, module, exports) {
+    75: [ function(require, module, exports) {
         var WidgetManager = require("../base-ui/CCWidgetManager");
         var AlignFlags = WidgetManager._AlignFlags;
         var TOP = AlignFlags.TOP;
@@ -12768,7 +12806,7 @@
         "../base-ui/CCWidgetManager": 37,
         "./CCComponent": 50
     } ],
-    75: [ function(require, module, exports) {
+    76: [ function(require, module, exports) {
         require("./CCComponent");
         require("./CCRendererInSG");
         require("./CCRendererUnderSG");
@@ -12798,14 +12836,14 @@
         "./CCSlider": 66,
         "./CCSprite": 67,
         "./CCSpriteDistortion": 68,
-        "./CCToggle": 69,
-        "./CCToggleGroup": 70,
-        "./CCVideoPlayer": 71,
-        "./CCWebView": 73,
-        "./CCWidget": 74,
-        "./missing-script": 76
+        "./CCToggle": 70,
+        "./CCToggleGroup": 71,
+        "./CCVideoPlayer": 72,
+        "./CCWebView": 74,
+        "./CCWidget": 75,
+        "./missing-script": 77
     } ],
-    76: [ function(require, module, exports) {
+    77: [ function(require, module, exports) {
         var JS = cc.js;
         var MissingClass = cc.Class({
             name: "cc.MissingClass",
@@ -12843,9 +12881,12 @@
                     }
                     if (id) {
                         cc.deserialize.reportMissingClass(id);
-                        return data.node && false ? MissingScript : MissingClass;
+                        return MissingScript.getMissingWrapper(id, data);
                     }
                     return null;
+                },
+                getMissingWrapper: function(id, data) {
+                    return data.node && /^[0-9a-zA-Z+\/]{23}$/.test(id) ? MissingScript : MissingClass;
                 }
             },
             onLoad: function() {
@@ -12854,7 +12895,7 @@
         });
         cc._MissingScript = module.exports = MissingScript;
     }, {} ],
-    77: [ function(require, module, exports) {
+    78: [ function(require, module, exports) {
         var EventTarget = require("../event/event-target");
         var EventType = cc.Enum({
             KEY_DOWN: "keydown",
@@ -12914,9 +12955,9 @@
         cc.SystemEvent = module.exports = SystemEvent;
         cc.systemEvent = new cc.SystemEvent();
     }, {
-        "../event/event-target": 79
+        "../event/event-target": 80
     } ],
-    78: [ function(require, module, exports) {
+    79: [ function(require, module, exports) {
         var JS = cc.js;
         var CallbacksHandler = require("../platform/callbacks-invoker").CallbacksHandler;
         var REMOVE_PLACEHOLDER = CallbacksHandler.REMOVE_PLACEHOLDER;
@@ -12966,9 +13007,9 @@
         };
         module.exports = EventListeners;
     }, {
-        "../platform/callbacks-invoker": 114
+        "../platform/callbacks-invoker": 115
     } ],
-    79: [ function(require, module, exports) {
+    80: [ function(require, module, exports) {
         var EventListeners = require("./event-listeners");
         require("./event");
         var JS = cc.js;
@@ -13119,19 +13160,19 @@
         EventTarget.prototype._EventTargetTargetOff = EventTarget.prototype.targetOff;
         cc.EventTarget = module.exports = EventTarget;
     }, {
-        "./event": 190,
-        "./event-listeners": 78
+        "./event": 189,
+        "./event-listeners": 79
     } ],
-    80: [ function(require, module, exports) {
+    81: [ function(require, module, exports) {
         require("./event.js");
         require("./event-listeners.js");
         require("./event-target.js");
     }, {
-        "./event-listeners.js": 78,
-        "./event-target.js": 79,
-        "./event.js": 190
+        "./event-listeners.js": 79,
+        "./event-target.js": 80,
+        "./event.js": 189
     } ],
-    81: [ function(require, module, exports) {
+    82: [ function(require, module, exports) {
         "use strict";
         module.exports = earcut;
         function earcut(data, holeIndices, dim) {
@@ -13581,13 +13622,13 @@
             return result;
         };
     }, {} ],
-    82: [ function(require, module, exports) {
+    83: [ function(require, module, exports) {
         var Js = cc.js;
         var LineCap = require("./types").LineCap;
         var LineJoin = require("./types").LineJoin;
         var Helper = require("./helper");
         var CanvasRenderCmd = function(renderable) {
-            _ccsg.Node.CanvasRenderCmd.call(this, renderable);
+            this._rootCtor(renderable);
             this._needDraw = true;
             this.cmds = [];
             this.style = {
@@ -13665,16 +13706,16 @@
             },
             beginPath: function() {},
             moveTo: function(x, y) {
-                this.cmds.push([ "moveTo", arguments ]);
+                this.cmds.push([ "moveTo", [ x, y ] ]);
             },
-            lineTo: function() {
-                this.cmds.push([ "lineTo", arguments ]);
+            lineTo: function(x, y) {
+                this.cmds.push([ "lineTo", [ x, y ] ]);
             },
-            bezierCurveTo: function() {
-                this.cmds.push([ "bezierCurveTo", arguments ]);
+            bezierCurveTo: function(c1x, c1y, c2x, c2y, x, y) {
+                this.cmds.push([ "bezierCurveTo", [ c1x, c1y, c2x, c2y, x, y ] ]);
             },
-            quadraticCurveTo: function() {
-                this.cmds.push([ "quadraticCurveTo", arguments ]);
+            quadraticCurveTo: function(cx, cy, x, y) {
+                this.cmds.push([ "quadraticCurveTo", [ cx, cy, x, y ] ]);
             },
             arc: function(cx, cy, r, startAngle, endAngle, counterclockwise) {
                 Helper.arc(this, cx, cy, r, startAngle, endAngle, counterclockwise);
@@ -13696,18 +13737,18 @@
                 Helper.roundRect(this, x, y, w, h, r);
             },
             fillRect: function(x, y, w, h) {
-                this.cmds.push([ "fillRect", arguments ]);
+                this.cmds.push([ "fillRect", [ x, y, w, h ] ]);
                 this.setDirtyFlag(_ccsg.Node._dirtyFlags.contentDirty);
             },
             close: function() {
-                this.cmds.push([ "closePath", arguments ]);
+                this.cmds.push([ "closePath", [] ]);
             },
             stroke: function() {
-                this.cmds.push([ "stroke", arguments ]);
+                this.cmds.push([ "stroke", [] ]);
                 this.setDirtyFlag(_ccsg.Node._dirtyFlags.contentDirty);
             },
             fill: function() {
-                this.cmds.push([ "fill", arguments ]);
+                this.cmds.push([ "fill", [] ]);
                 this.setDirtyFlag(_ccsg.Node._dirtyFlags.contentDirty);
             },
             clear: function() {
@@ -13717,10 +13758,10 @@
         });
         module.exports = CanvasRenderCmd;
     }, {
-        "./helper": 86,
-        "./types": 89
+        "./helper": 87,
+        "./types": 90
     } ],
-    83: [ function(require, module, exports) {
+    84: [ function(require, module, exports) {
         var CanvasRenderCmd = require("./graphics-canvas-cmd");
         var WebGLRenderCmd = require("./graphics-webgl-cmd");
         var LineCap = require("./types").LineCap;
@@ -13834,11 +13875,11 @@
         });
         module.exports = GraphicsNode;
     }, {
-        "./graphics-canvas-cmd": 82,
-        "./graphics-webgl-cmd": 84,
-        "./types": 89
+        "./graphics-canvas-cmd": 83,
+        "./graphics-webgl-cmd": 85,
+        "./types": 90
     } ],
-    84: [ function(require, module, exports) {
+    85: [ function(require, module, exports) {
         var Shader = require("./shader");
         var LineCap = require("./types").LineCap;
         var LineJoin = require("./types").LineJoin;
@@ -13898,7 +13939,7 @@
             this.points ? this.points.length = 0 : this.points = [];
         };
         function WebGLRenderCmd(renderable) {
-            _ccsg.Node.WebGLRenderCmd.call(this, renderable);
+            this._rootCtor(renderable);
             this._needDraw = true;
             var gl = cc._renderContext;
             this._vertsOffset = 0;
@@ -14584,12 +14625,12 @@
         });
         module.exports = WebGLRenderCmd;
     }, {
-        "./earcut": 81,
-        "./helper": 86,
-        "./shader": 88,
-        "./types": 89
+        "./earcut": 82,
+        "./helper": 87,
+        "./shader": 89,
+        "./types": 90
     } ],
-    85: [ function(require, module, exports) {
+    86: [ function(require, module, exports) {
         var LineCap = require("./types").LineCap;
         var LineJoin = require("./types").LineJoin;
         var Graphics = cc.Class({
@@ -14725,9 +14766,9 @@
         });
         cc.Graphics = module.exports = Graphics;
     }, {
-        "./types": 89
+        "./types": 90
     } ],
-    86: [ function(require, module, exports) {
+    87: [ function(require, module, exports) {
         var PI = Math.PI;
         var min = Math.min;
         var max = Math.max;
@@ -14810,7 +14851,7 @@
             roundRect: roundRect
         };
     }, {} ],
-    87: [ function(require, module, exports) {
+    88: [ function(require, module, exports) {
         "use strict";
         var GraphicsNode;
         GraphicsNode = cc.sys.isNative ? _ccsg.GraphicsNode = cc.GraphicsNode : _ccsg.GraphicsNode = require("./graphics-node");
@@ -14821,10 +14862,10 @@
         require("./graphics");
     }, {
         "../utils/misc": 130,
-        "./graphics": 85,
-        "./graphics-node": 83
+        "./graphics": 86,
+        "./graphics-node": 84
     } ],
-    88: [ function(require, module, exports) {
+    89: [ function(require, module, exports) {
         var vert = [ "attribute vec4 a_position;", "", "void main()", "{", "gl_Position = (CC_PMatrix * CC_MVMatrix) * a_position;", "}" ];
         var frag = [ "#ifdef GL_ES", "precision mediump float;", "#endif", "", "uniform vec4 color;", "", "void main(void) {", "gl_FragColor = color;", "}" ];
         module.exports = {
@@ -14832,7 +14873,7 @@
             frag: frag.join(" \n")
         };
     }, {} ],
-    89: [ function(require, module, exports) {
+    90: [ function(require, module, exports) {
         "use strict";
         var LineCap = cc.Enum({
             BUTT: 0,
@@ -14849,7 +14890,7 @@
             LineJoin: LineJoin
         };
     }, {} ],
-    90: [ function(require, module, exports) {
+    91: [ function(require, module, exports) {
         require("./platform");
         require("./assets");
         require("./CCNode");
@@ -14864,12 +14905,11 @@
         "./assets": 36,
         "./base-ui/CCWidgetManager": 37,
         "./collider": 45,
-        "./components": 75,
-        "./graphics": 87,
-        "./platform": 117,
-        "./sprites/CCSpriteFrameCache": 126
+        "./components": 76,
+        "./graphics": 88,
+        "./platform": 118
     } ],
-    91: [ function(require, module, exports) {
+    92: [ function(require, module, exports) {
         var eventRegx = /^(click)(\s)*=/;
         cc.HtmlTextParser = function() {
             this._parsedObject = {};
@@ -14987,6 +15027,32 @@
                         return {};
                     }
                 }
+                header = attribute.match(/^(outline(\s)*[^>]*)/);
+                if (header) {
+                    attribute = header[0].substring("outline".length).trim();
+                    var defaultOutlineObject = {
+                        color: "#ffffff",
+                        width: 1
+                    };
+                    if (attribute) {
+                        var outlineAttrReg = /(\s)*color(\s)*=|(\s)*width(\s)*=|(\s)*click(\s)*=/;
+                        header = attribute.match(outlineAttrReg);
+                        var tagValue;
+                        while (header) {
+                            attribute = attribute.substring(attribute.indexOf(header[0]));
+                            tagName = attribute.substr(0, header[0].length);
+                            remainingArgument = attribute.substring(tagName.length).trim();
+                            nextSpace = remainingArgument.indexOf(" ");
+                            tagValue = nextSpace > -1 ? remainingArgument.substr(0, nextSpace) : remainingArgument;
+                            tagName = tagName.replace(/[^a-zA-Z]/g, "").trim();
+                            tagName = tagName.toLocaleLowerCase();
+                            attribute = remainingArgument.substring(nextSpace).trim();
+                            "click" === tagName ? obj.event = this._processEventHandler(tagName + "=" + tagValue) : "color" === tagName ? defaultOutlineObject.color = tagValue : "width" === tagName && (defaultOutlineObject.width = parseInt(tagValue));
+                            header = attribute.match(outlineAttrReg);
+                        }
+                    }
+                    obj.outline = defaultOutlineObject;
+                }
                 header = attribute.match(/^(on|u|b|i)(\s)*/);
                 if (header && header[0].length > 0) {
                     tagName = header[0];
@@ -15089,7 +15155,7 @@
         };
         cc.htmlTextParser = new cc.HtmlTextParser();
     }, {} ],
-    92: [ function(require, module, exports) {
+    93: [ function(require, module, exports) {
         var CustomFontDescriptor = function() {
             this._status = "unloaded";
             this._observers = [];
@@ -15288,7 +15354,7 @@
         cc.TextUtils = module.exports = TextUtils;
         cc.CustomFontLoader = module.exports = CustomFontLoader;
     }, {} ],
-    93: [ function(require, module, exports) {
+    94: [ function(require, module, exports) {
         var JS = require("../platform/js");
         var Pipeline = require("./pipeline");
         var LoadingItems = require("./loading-items");
@@ -15306,7 +15372,7 @@
             raw: false
         };
         function getResWithUrl(res) {
-            var id, url, result, isUuid;
+            var id, result, isUuid;
             if ("object" == typeof res) {
                 result = res;
                 if (res.url) {
@@ -15317,10 +15383,12 @@
                 result = {};
                 id = res;
             }
-            isUuid = cc.AssetLibrary._getAssetUrl(id);
+            isUuid = result.type ? "uuid" === result.type : cc.AssetLibrary._getAssetUrl(id);
+            _info.url = null;
+            _info.raw = false;
             cc.AssetLibrary._getAssetInfoInRuntime(id, _info);
             result.url = isUuid ? _info.url : id;
-            if (url && "uuid" === result.type && _info.raw) {
+            if (_info.url && "uuid" === result.type && _info.raw) {
                 result.type = null;
                 result.isRawAsset = true;
             }
@@ -15407,7 +15475,7 @@
                         _sharedList.push(res);
                     }
                 }
-                var queue = LoadingItems.create(this, owner ? function() {
+                var queue = LoadingItems.create(this, owner ? function(completedCount, totalCount, item) {
                     this._ownerQueue && this._ownerQueue.onProgress && this._ownerQueue._childOnProgress(item);
                 } : null, function(errors, items) {
                     callback(errors, items);
@@ -15440,12 +15508,10 @@
             _getReferenceKey: function(assetOrUrlOrUuid) {
                 var key;
                 "object" == typeof assetOrUrlOrUuid ? key = assetOrUrlOrUuid._uuid || null : "string" == typeof assetOrUrlOrUuid && (key = this._getResUuid(assetOrUrlOrUuid) || assetOrUrlOrUuid);
-                var isUuid = cc.AssetLibrary._getAssetUrl(key);
-                if (isUuid) {
-                    cc.AssetLibrary._getAssetInfoInRuntime(key, _info);
-                    key = _info.url;
-                }
-                return key;
+                _info.url = null;
+                _info.raw = false;
+                cc.AssetLibrary._getAssetInfoInRuntime(key, _info);
+                return this._cache[_info.url] ? _info.url : key;
             },
             loadRes: function(url, type, completeCallback) {
                 if (!completeCallback && type && !cc.isChildClassOf(type, cc.RawAsset)) {
@@ -15599,16 +15665,16 @@
         cc.loader = new CCLoader();
         module.exports = cc.loader;
     }, {
-        "../platform/js": 120,
-        "../platform/utils": 125,
-        "./asset-table": 94,
-        "./auto-release-utils": 95,
-        "./downloader": 96,
-        "./loader": 99,
-        "./loading-items": 100,
-        "./pipeline": 102
+        "../platform/js": 121,
+        "../platform/utils": 126,
+        "./asset-table": 95,
+        "./auto-release-utils": 96,
+        "./downloader": 97,
+        "./loader": 100,
+        "./loading-items": 101,
+        "./pipeline": 103
     } ],
-    94: [ function(require, module, exports) {
+    95: [ function(require, module, exports) {
         function Entry(uuid, type) {
             this.uuid = uuid;
             this.type = type;
@@ -15699,7 +15765,7 @@
         });
         module.exports = AssetTable;
     }, {} ],
-    95: [ function(require, module, exports) {
+    96: [ function(require, module, exports) {
         function parseDepends(key, parsed) {
             var item = cc.loader.getItem(key);
             if (item) {
@@ -15741,7 +15807,7 @@
             }
         };
     }, {} ],
-    96: [ function(require, module, exports) {
+    97: [ function(require, module, exports) {
         var JS = require("../platform/js");
         var Path = require("../utils/CCPath");
         var Pipeline = require("./pipeline");
@@ -15905,7 +15971,6 @@
             mp3: downloadAudio,
             ogg: downloadAudio,
             wav: downloadAudio,
-            mp4: downloadAudio,
             m4a: downloadAudio,
             txt: downloadText,
             xml: downloadText,
@@ -15970,16 +16035,16 @@
         });
         Pipeline.Downloader = module.exports = Downloader;
     }, {
-        "../platform/js": 120,
+        "../platform/js": 121,
         "../utils/CCPath": 127,
-        "./audio-downloader": 190,
-        "./loading-items": 100,
-        "./pack-downloader": 101,
-        "./pipeline": 102,
-        "./text-downloader": 103,
-        "./utils": 104
+        "./audio-downloader": 189,
+        "./loading-items": 101,
+        "./pack-downloader": 102,
+        "./pipeline": 103,
+        "./text-downloader": 104,
+        "./utils": 105
     } ],
-    97: [ function(require, module, exports) {
+    98: [ function(require, module, exports) {
         require("./downloader");
         require("./loader");
         require("./json-unpacker");
@@ -15987,14 +16052,14 @@
         require("./pipeline");
         require("./CCLoader");
     }, {
-        "./CCLoader": 93,
-        "./downloader": 96,
-        "./json-unpacker": 98,
-        "./loader": 99,
-        "./loading-items": 100,
-        "./pipeline": 102
+        "./CCLoader": 94,
+        "./downloader": 97,
+        "./json-unpacker": 99,
+        "./loader": 100,
+        "./loading-items": 101,
+        "./pipeline": 103
     } ],
-    98: [ function(require, module, exports) {
+    99: [ function(require, module, exports) {
         function JsonUnpacker() {
             this.jsons = {};
             this.state = -1;
@@ -16013,7 +16078,7 @@
         };
         module.exports = JsonUnpacker;
     }, {} ],
-    99: [ function(require, module, exports) {
+    100: [ function(require, module, exports) {
         var JS = require("../platform/js");
         var Pipeline = require("./pipeline");
         var Texture2D = require("../textures/CCTexture2D");
@@ -16085,12 +16150,12 @@
         });
         Pipeline.Loader = module.exports = Loader;
     }, {
-        "../platform/js": 120,
-        "../textures/CCTexture2D": 190,
-        "./pipeline": 102,
-        "./uuid-loader": 105
+        "../platform/js": 121,
+        "../textures/CCTexture2D": 189,
+        "./pipeline": 103,
+        "./uuid-loader": 106
     } ],
-    100: [ function(require, module, exports) {
+    101: [ function(require, module, exports) {
         var CallbacksInvoker = require("../platform/callbacks-invoker");
         var Path = require("../utils/CCPath");
         var JS = require("../platform/js");
@@ -16136,7 +16201,7 @@
                 urlItem = _parseUrl(id.url);
                 result = {
                     queueId: queueId,
-                    id: urlItem.url,
+                    id: id.url,
                     url: urlItem.url,
                     urlParam: urlItem.param,
                     error: null,
@@ -16151,7 +16216,7 @@
                     urlItem = _parseUrl(id);
                     result = {
                         queueId: queueId,
-                        id: urlItem.url,
+                        id: id,
                         url: urlItem.url,
                         urlParam: urlItem.param,
                         type: Path.extname(id).toLowerCase().substr(1),
@@ -16423,11 +16488,11 @@
         });
         cc.LoadingItems = module.exports = LoadingItems;
     }, {
-        "../platform/callbacks-invoker": 114,
-        "../platform/js": 120,
+        "../platform/callbacks-invoker": 115,
+        "../platform/js": 121,
         "../utils/CCPath": 127
     } ],
-    101: [ function(require, module, exports) {
+    102: [ function(require, module, exports) {
         var JsonUnpacker = require("./json-unpacker");
         var uuidToPack = {};
         var packIndices = {};
@@ -16529,9 +16594,9 @@
             }
         };
     }, {
-        "./json-unpacker": 98
+        "./json-unpacker": 99
     } ],
-    102: [ function(require, module, exports) {
+    103: [ function(require, module, exports) {
         var JS = require("../platform/js");
         var LoadingItems = require("./loading-items");
         var ItemState = LoadingItems.ItemState;
@@ -16672,11 +16737,7 @@
             },
             removeItem: function(id) {
                 var removed = this._cache[id];
-                delete this._cache[id];
-                if (removed && !removed.complete) {
-                    removed.error = new Error("Canceled manually");
-                    this.flowOut(removed);
-                }
+                removed && removed.complete && delete this._cache[id];
                 return removed;
             },
             clear: function() {
@@ -16692,10 +16753,10 @@
         });
         cc.Pipeline = module.exports = Pipeline;
     }, {
-        "../platform/js": 120,
-        "./loading-items": 100
+        "../platform/js": 121,
+        "./loading-items": 101
     } ],
-    103: [ function(require, module, exports) {
+    104: [ function(require, module, exports) {
         var urlAppendTimestamp;
         module.exports = function(item, callback) {
             var url = item.url;
@@ -16703,9 +16764,9 @@
             "string" == typeof result && result ? callback(null, result) : callback(new Error("Download text failed: " + url));
         };
     }, {
-        "./utils": 104
+        "./utils": 105
     } ],
-    104: [ function(require, module, exports) {
+    105: [ function(require, module, exports) {
         var _noCacheRex = /\?/;
         module.exports = {
             urlAppendTimestamp: function(url) {
@@ -16714,7 +16775,7 @@
             }
         };
     }, {} ],
-    105: [ function(require, module, exports) {
+    106: [ function(require, module, exports) {
         var JS = require("../platform/js");
         require("../platform/deserialize");
         var LoadingItems = require("./loading-items");
@@ -16725,7 +16786,7 @@
             return json && (json[0] && json[0].__type__ === SCENE_ID || json[1] && json[1].__type__ === SCENE_ID || json[0] && json[0].__type__ === PREFAB_ID);
         }
         function loadDepends(pipeline, item, asset, tdInfo, deferredLoadRawAssetsInRuntime, callback) {
-            var uuid = item.uuid, uuidList = tdInfo.uuidList;
+            var uuidList = tdInfo.uuidList;
             var objList, propList, depends;
             var i, dependUuid;
             var dependKeys = item.dependKeys = [];
@@ -16778,12 +16839,11 @@
                 };
             }
             if (0 === depends.length) {
-                asset._uuid = uuid;
                 return callback(null, asset);
             }
             item.content = asset;
             pipeline.flowInDeps(item, depends, function(errors, items) {
-                var item;
+                var item, missingAssetReporter;
                 for (var src in items.map) {
                     item = items.map[src];
                     item.uuid && item.content && (item.content._uuid = item.uuid);
@@ -16795,31 +16855,29 @@
                     var dependProp = propList[i];
                     item = items.map[dependUrl];
                     if (item) {
+                        var thisOfLoadCallback = {
+                            obj: dependObj,
+                            prop: dependProp
+                        };
+                        function loadCallback(item) {
+                            var value = item.isRawAsset ? item.url : item.content;
+                            this.obj[this.prop] = value;
+                            item.uuid !== asset._uuid && dependKeys.indexOf(item.id) < 0 && dependKeys.push(item.id);
+                        }
                         if (item.complete || item.content) {
                             if (item.error) {
+                                var MissingObjectReporter;
                                 cc._throw(item.error);
                             } else {
-                                var value = item.isRawAsset ? item.url : item.content;
-                                dependObj[dependProp] = value;
-                                dependKeys.push(item.id);
+                                loadCallback.call(thisOfLoadCallback, item);
                             }
                         } else {
-                            var loadCallback = function(item) {
-                                var value = item.isRawAsset ? item.url : item.content;
-                                this.obj[this.prop] = value;
-                                dependKeys.push(item.id);
-                            };
-                            var target = {
-                                obj: dependObj,
-                                prop: dependProp
-                            };
                             var queue = LoadingItems.getQueue(item);
                             var list = queue._callbackTable[dependSrc];
-                            list ? list.unshift(loadCallback, target) : queue.addListener(dependSrc, loadCallback, target);
+                            list ? list.unshift(loadCallback, thisOfLoadCallback) : queue.addListener(dependSrc, loadCallback, thisOfLoadCallback);
                         }
                     }
                 }
-                asset._uuid = uuid;
                 callback(null, asset);
             });
         }
@@ -16828,6 +16886,7 @@
             res ? asset instanceof cc.Asset && asset.constructor.preventDeferredLoadDependents && (res = false) : isScene && asset instanceof cc.SceneAsset && (res = asset.asyncLoadAssets);
             return res;
         }
+        var MissingClass;
         function loadUuid(item, callback) {
             var json;
             if ("string" == typeof item.content) {
@@ -16844,8 +16903,9 @@
                 }
                 json = item.content;
             }
+            var classFinder;
             var isScene = isSceneObj(json);
-            var classFinder = isScene ? cc._MissingScript.safeFindClass : function(id) {
+            classFinder = isScene ? cc._MissingScript.safeFindClass : function(id) {
                 var cls = JS._getClassById(id);
                 if (cls) {
                     return cls;
@@ -16867,6 +16927,7 @@
                 callback(new Error("Uuid Loader: Deserialize asset [" + item.id + "] failed : " + err));
                 return;
             }
+            asset._uuid = item.uuid;
             var deferredLoad = canDeferredLoad(asset, item, isScene);
             loadDepends(this.pipeline, item, asset, tdInfo, deferredLoad, callback);
             tdInfo.reset();
@@ -16874,11 +16935,11 @@
         module.exports = loadUuid;
         loadUuid.isSceneObj = isSceneObj;
     }, {
-        "../platform/deserialize": 115,
-        "../platform/js": 120,
-        "./loading-items": 100
+        "../platform/deserialize": 116,
+        "../platform/js": 121,
+        "./loading-items": 101
     } ],
-    106: [ function(require, module, exports) {
+    107: [ function(require, module, exports) {
         var Asset = require("../assets/CCAsset");
         var callInNextTick = require("./utils").callInNextTick;
         var Loader = require("../load-pipeline/CCLoader");
@@ -16904,8 +16965,14 @@
                     if (error || !asset) {
                         error = new Error("[AssetLibrary] loading JSON or dependencies failed: " + (error ? error.message : "Unknown error"));
                     } else {
-                        asset.constructor === cc.SceneAsset && (asset.scene.dependAssets = AutoReleaseUtils.getDependsRecursively(uuid));
-                        isScene(asset) && Loader.removeItem(uuid);
+                        if (asset.constructor === cc.SceneAsset) {
+                            var key = cc.loader._getReferenceKey(uuid);
+                            asset.scene.dependAssets = AutoReleaseUtils.getDependsRecursively(key);
+                        }
+                        if (isScene(asset)) {
+                            var id = cc.loader._getReferenceKey(uuid);
+                            Loader.removeItem(id);
+                        }
                     }
                     callback && callback(error, asset);
                 });
@@ -16959,8 +17026,14 @@
                     if (error) {
                         error = new Error("[AssetLibrary] loading JSON or dependencies failed: " + error.message);
                     } else {
-                        asset.constructor === cc.SceneAsset && (asset.scene.dependAssets = AutoReleaseUtils.getDependsRecursively(randomUuid));
-                        isScene(asset) && Loader.removeItem(randomUuid);
+                        if (asset.constructor === cc.SceneAsset) {
+                            var key = cc.loader._getReferenceKey(randomUuid);
+                            asset.scene.dependAssets = AutoReleaseUtils.getDependsRecursively(key);
+                        }
+                        if (isScene(asset)) {
+                            var id = cc.loader._getReferenceKey(randomUuid);
+                            Loader.removeItem(id);
+                        }
                     }
                     asset._uuid = "";
                     callback && callback(error, asset);
@@ -17020,12 +17093,12 @@
         module.exports = cc.AssetLibrary = AssetLibrary;
     }, {
         "../assets/CCAsset": 25,
-        "../load-pipeline/CCLoader": 93,
-        "../load-pipeline/auto-release-utils": 95,
-        "../load-pipeline/pack-downloader": 101,
-        "./utils": 125
+        "../load-pipeline/CCLoader": 94,
+        "../load-pipeline/auto-release-utils": 96,
+        "../load-pipeline/pack-downloader": 102,
+        "./utils": 126
     } ],
-    107: [ function(require, module, exports) {
+    108: [ function(require, module, exports) {
         var JS = require("./js");
         var Enum = require("../value-types/CCEnum");
         var Utils = require("./utils");
@@ -17033,10 +17106,9 @@
         var _cloneable_DEV = Utils.cloneable_DEV;
         var Attr = require("./attribute");
         var getTypeChecker = Attr.getTypeChecker;
-        var preprocessAttrs = require("./preprocess-attrs");
+        var preprocess = require("./preprocess-class");
         var Misc = require("../utils/misc");
         var BUILTIN_ENTRIES = [ "name", "extends", "mixins", "ctor", "properties", "statics", "editor" ];
-        var TYPO_TO_CORRECT = false;
         var INVALID_STATICS_DEV = false;
         var deferredInitializer = {
             datas: null,
@@ -17340,7 +17412,7 @@
                 }
             }
             if (properties) {
-                preprocessAttrs(properties, className, cls);
+                preprocess.preprocessAttrs(properties, className, cls);
                 for (var propName in properties) {
                     var val = properties[propName];
                     var attrs = parseAttributes(val, className, propName);
@@ -17383,19 +17455,15 @@
                     continue;
                 }
                 var func = options[funcName];
-                if ("function" == typeof func || null === func) {
-                    Object.defineProperty(cls.prototype, funcName, {
-                        value: func,
-                        enumerable: true,
-                        configurable: true,
-                        writable: true
-                    });
-                } else {
-                    var overrided;
-                    var baseFuc;
-                    var subFuc;
-                    var correct;
+                if (!preprocess.validateMethod(func, funcName, name, cls, base)) {
+                    continue;
                 }
+                Object.defineProperty(cls.prototype, funcName, {
+                    value: func,
+                    enumerable: true,
+                    configurable: true,
+                    writable: true
+                });
             }
             var editor;
             return cls;
@@ -17547,12 +17615,12 @@
     }, {
         "../utils/misc": 130,
         "../value-types/CCEnum": 136,
-        "./attribute": 113,
-        "./js": 120,
-        "./preprocess-attrs": 122,
-        "./utils": 125
+        "./attribute": 114,
+        "./js": 121,
+        "./preprocess-class": 123,
+        "./utils": 126
     } ],
-    108: [ function(require, module, exports) {
+    109: [ function(require, module, exports) {
         require("./_CCClass");
         cc._tmp = cc._tmp || {};
         cc.KEY = {
@@ -17776,7 +17844,7 @@
             NORMAL_TAG: 8801,
             SELECTED_TAG: 8802,
             DISABLE_TAG: 8803,
-            FIX_ARTIFACTS_BY_STRECHING_TEXEL: 1,
+            FIX_ARTIFACTS_BY_STRECHING_TEXEL: 0,
             DIRECTOR_STATS_POSITION: cc.p(0, 0),
             DIRECTOR_FPS_INTERVAL: .5,
             COCOSNODE_RENDER_SUBPIXEL: 1,
@@ -17792,7 +17860,9 @@
             LABELATLAS_DEBUG_DRAW: 0,
             ENABLE_STACKABLE_ACTIONS: 1,
             ENABLE_GL_STATE_CACHE: 1,
-            TOUCH_TIMEOUT: 5e3
+            TOUCH_TIMEOUT: 5e3,
+            BATCH_VERTEX_COUNT: 2e3,
+            ENABLE_GC_FOR_NATIVE_OBJECTS: true
         };
         cc.defineGetterSetter(cc.macro, "BLEND_SRC", function() {
             return cc._renderType === cc.game.RENDER_TYPE_WEBGL && cc.macro.OPTIMIZE_BLEND_FUNC_FOR_PREMULTIPLIED_ALPHA ? cc.macro.ONE : cc.macro.SRC_ALPHA;
@@ -17830,9 +17900,9 @@
         };
         module.exports = cc.macro;
     }, {
-        "./_CCClass": 112
+        "./_CCClass": 113
     } ],
-    109: [ function(require, module, exports) {
+    110: [ function(require, module, exports) {
         var JS = require("./js");
         var CCClass = require("./CCClass");
         var cleanEval = require("../utils/misc").cleanEval;
@@ -18003,10 +18073,10 @@
         cc.Object = module.exports = CCObject;
     }, {
         "../utils/misc": 130,
-        "./CCClass": 107,
-        "./js": 120
+        "./CCClass": 108,
+        "./js": 121
     } ],
-    110: [ function(require, module, exports) {
+    111: [ function(require, module, exports) {
         if (cc.sys) {
             return;
         }
@@ -18103,7 +18173,11 @@
             osVersion = uaResult[2] || "";
             osMainVersion = parseInt(osVersion) || 0;
         } else {
-            /(iPhone|iPad|iPod)/.exec(nav.platform) && (iOS = true);
+            if (/(iPhone|iPad|iPod)/.exec(nav.platform)) {
+                iOS = true;
+                osVersion = "";
+                osMainVersion = 0;
+            }
         }
         var osName = sys.OS_UNKNOWN;
         nav.appVersion.indexOf("Win") !== -1 ? osName = sys.OS_WINDOWS : iOS ? osName = sys.OS_IOS : nav.appVersion.indexOf("Mac") !== -1 ? osName = sys.OS_OSX : nav.appVersion.indexOf("X11") !== -1 && nav.appVersion.indexOf("Linux") === -1 ? osName = sys.OS_UNIX : isAndroid ? osName = sys.OS_ANDROID : nav.appVersion.indexOf("Linux") !== -1 && (osName = sys.OS_LINUX);
@@ -18117,12 +18191,12 @@
             var browserTypes = typeReg1.exec(ua);
             browserTypes || (browserTypes = typeReg2.exec(ua));
             var browserType = browserTypes ? browserTypes[0].toLowerCase() : sys.BROWSER_TYPE_UNKNOWN;
-            "micromessenger" === browserType ? browserType = sys.BROWSER_TYPE_WECHAT : "safari" === browserType || "qq" === browserType ? ua.match(/android.*applewebkit/i) && (browserType = sys.BROWSER_TYPE_ANDROID) : "trident" === browserType ? browserType = sys.BROWSER_TYPE_IE : "360 aphone" === browserType ? browserType = sys.BROWSER_TYPE_360 : "mxbrowser" === browserType ? browserType = sys.BROWSER_TYPE_MAXTHON : "opr" === browserType && (browserType = sys.BROWSER_TYPE_OPERA);
+            "micromessenger" === browserType ? browserType = sys.BROWSER_TYPE_WECHAT : "safari" === browserType && isAndroid ? browserType = sys.BROWSER_TYPE_ANDROID : "qq" === browserType && ua.match(/android.*applewebkit/i) ? brwoserType = sys.BROWSER_TYPE_ANDROID : "trident" === browserType ? browserType = sys.BROWSER_TYPE_IE : "360 aphone" === browserType ? browserType = sys.BROWSER_TYPE_360 : "mxbrowser" === browserType ? browserType = sys.BROWSER_TYPE_MAXTHON : "opr" === browserType && (browserType = sys.BROWSER_TYPE_OPERA);
             sys.browserType = browserType;
         })();
         sys.browserVersion = "";
         (function() {
-            var versionReg1 = /(micromessenger|qq|mx|maxthon|baidu|sogou)(mobile)?(browser)?\/?([\d.]+)/i;
+            var versionReg1 = /(micromessenger|qq|maxthon|baidu|sogou)(mobile)?(browser)?\/?([\d.]+)/i;
             var versionReg2 = /(msie |rv:|firefox|chrome|ucbrowser|oupeng|opera|opr|safari|miui)(mobile)?(browser)?\/?([\d.]+)/i;
             var tmp = ua.match(versionReg1);
             tmp || (tmp = ua.match(versionReg2));
@@ -18155,7 +18229,6 @@
             return context;
         };
         sys._supportCanvasNewBlendModes = function() {
-            var data1, data2;
             var canvas = _tmpCanvas1;
             canvas.width = 1;
             canvas.height = 1;
@@ -18170,23 +18243,7 @@
             context2.fillStyle = "#fff";
             context2.fillRect(0, 0, 1, 1);
             context.drawImage(canvas2, 0, 0, 1, 1);
-            data1 = context.getImageData(0, 0, 1, 1).data[0];
-            canvas = _tmpCanvas1;
-            canvas.width = 1;
-            canvas.height = 1;
-            var context = canvas.getContext("2d");
-            context.fillStyle = "#fff";
-            context.fillRect(0, 0, 1, 1);
-            context.globalCompositeOperation = "destination-atop";
-            canvas2 = _tmpCanvas2;
-            canvas2.width = 1;
-            canvas2.height = 1;
-            var context2 = canvas2.getContext("2d");
-            context2.fillStyle = "#000";
-            context2.fillRect(0, 0, 1, 1);
-            context.drawImage(canvas2, 0, 0, 1, 1);
-            data2 = context.getImageData(0, 0, 1, 1).data[0];
-            return 0 === data1 && 0 === data2;
+            return 0 === context.getImageData(0, 0, 1, 1).data[0];
         }();
         if (cc.sys.isMobile) {
             var fontStyle = document.createElement("style");
@@ -18216,10 +18273,8 @@
         if (win.WebGLRenderingContext) {
             var tmpCanvas = document.createElement("CANVAS");
             try {
-                var context = cc.create3DContext(tmpCanvas, {
-                    stencil: true
-                });
-                context && context.getShaderPrecisionFormat && (_supportWebGL = true);
+                var context = cc.create3DContext(tmpCanvas);
+                context && (_supportWebGL = true);
                 _supportWebGL && sys.os === sys.OS_IOS && 9 === sys.osMainVersion && (window.indexedDB || (_supportWebGL = false));
                 if (_supportWebGL && sys.os === sys.OS_ANDROID) {
                     var browserVer = parseFloat(sys.browserVersion);
@@ -18238,9 +18293,7 @@
                         _supportWebGL = browserVer >= 30;
                         break;
 
-                      case sys.BROWSER_TYPE_UNKNOWN:
                       case sys.BROWSER_TYPE_360:
-                      case sys.BROWSER_TYPE_MIUI:
                       case sys.BROWSER_TYPE_UC:
                         _supportWebGL = false;
                     }
@@ -18339,7 +18392,7 @@
         };
         module.exports = sys;
     }, {} ],
-    111: [ function(require, module, exports) {
+    112: [ function(require, module, exports) {
         cc.visibleRect = {
             topLeft: cc.p(0, 0),
             topRight: cc.p(0, 0),
@@ -18377,7 +18430,7 @@
             }
         };
     }, {} ],
-    112: [ function(require, module, exports) {
+    113: [ function(require, module, exports) {
         var ClassManager = cc.ClassManager = {
             id: 0 | 998 * Math.random(),
             instanceId: 0 | 998 * Math.random(),
@@ -18393,23 +18446,69 @@
         Class.extend = function(props) {
             var _super = this.prototype;
             var prototype = Object.create(_super);
-            var classId = ClassManager.getNewID();
-            ClassManager[classId] = _super;
-            var nonEnumerableDesc = {
+            var desc = {
                 writable: true,
+                enumerable: false,
                 configurable: true
             };
-            prototype.__instanceId = null;
-            function _Class() {
-                this.__instanceId = ClassManager.getNewInstanceId();
-                this.ctor && this.ctor.apply(this, arguments);
+            var TheClass;
+            if (cc.game && cc.game.config && cc.game.config[cc.game.CONFIG_KEY.exposeClassName]) {
+                var constructor = "(function " + (props._className || "Class") + " (arg0, arg1, arg2, arg3, arg4, arg5) {\n";
+                constructor += "    this.__instanceId = ClassManager.getNewInstanceId();\n";
+                constructor += "    if (this.ctor) {\n";
+                constructor += "        switch (arguments.length) {\n";
+                constructor += "        case 0: this.ctor(); break;\n";
+                constructor += "        case 1: this.ctor(arg0); break;\n";
+                constructor += "        case 3: this.ctor(arg0, arg1, arg2); break;\n";
+                constructor += "        case 4: this.ctor(arg0, arg1, arg2, arg3); break;\n";
+                constructor += "        case 5: this.ctor(arg0, arg1, arg2, arg3, arg4); break;\n";
+                constructor += "        default: this.ctor.apply(this, arguments);\n";
+                constructor += "        }\n";
+                constructor += "    }\n";
+                constructor += "})";
+                TheClass = eval(constructor);
+            } else {
+                TheClass = function(arg0, arg1, arg2, arg3, arg4) {
+                    this.__instanceId = ClassManager.getNewInstanceId();
+                    if (this.ctor) {
+                        switch (arguments.length) {
+                          case 0:
+                            this.ctor();
+                            break;
+
+                          case 1:
+                            this.ctor(arg0);
+                            break;
+
+                          case 2:
+                            this.ctor(arg0, arg1);
+                            break;
+
+                          case 3:
+                            this.ctor(arg0, arg1, arg2);
+                            break;
+
+                          case 4:
+                            this.ctor(arg0, arg1, arg2, arg3);
+                            break;
+
+                          case 5:
+                            this.ctor(arg0, arg1, arg2, arg3, arg4);
+                            break;
+
+                          default:
+                            this.ctor.apply(this, arguments);
+                        }
+                    }
+                };
             }
-            _Class.id = classId;
-            nonEnumerableDesc.value = classId;
-            Object.defineProperty(prototype, "__cid__", nonEnumerableDesc);
-            _Class.prototype = prototype;
-            nonEnumerableDesc.value = _Class;
-            Object.defineProperty(_Class.prototype, "constructor", nonEnumerableDesc);
+            desc.value = ClassManager.getNewID();
+            Object.defineProperty(prototype, "__pid", desc);
+            TheClass.prototype = prototype;
+            desc.value = TheClass;
+            Object.defineProperty(prototype, "constructor", desc);
+            this.__getters__ && (TheClass.__getters__ = cc.clone(this.__getters__));
+            this.__setters__ && (TheClass.__setters__ = cc.clone(this.__setters__));
             for (var idx = 0, li = arguments.length; idx < li; ++idx) {
                 var prop = arguments[idx];
                 for (var name in prop) {
@@ -18417,7 +18516,7 @@
                     var override = "function" == typeof _super[name];
                     var hasSuperCall = fnTest.test(prop[name]);
                     if (isFunc && override && hasSuperCall) {
-                        nonEnumerableDesc.value = function(name, fn) {
+                        desc.value = function(name, fn) {
                             return function() {
                                 var tmp = this._super;
                                 this._super = _super[name];
@@ -18426,24 +18525,47 @@
                                 return ret;
                             };
                         }(name, prop[name]);
-                        Object.defineProperty(prototype, name, nonEnumerableDesc);
+                        Object.defineProperty(prototype, name, desc);
                     } else {
                         if (isFunc) {
-                            nonEnumerableDesc.value = prop[name];
-                            Object.defineProperty(prototype, name, nonEnumerableDesc);
+                            desc.value = prop[name];
+                            Object.defineProperty(prototype, name, desc);
                         } else {
                             prototype[name] = prop[name];
                         }
                     }
+                    if (isFunc) {
+                        var getter, setter, propertyName;
+                        if (this.__getters__ && this.__getters__[name]) {
+                            propertyName = this.__getters__[name];
+                            for (var i in this.__setters__) {
+                                if (this.__setters__[i] === propertyName) {
+                                    setter = i;
+                                    break;
+                                }
+                            }
+                            cc.defineGetterSetter(prototype, propertyName, prop[name], prop[setter] ? prop[setter] : prototype[setter], name, setter);
+                        }
+                        if (this.__setters__ && this.__setters__[name]) {
+                            propertyName = this.__setters__[name];
+                            for (var i in this.__getters__) {
+                                if (this.__getters__[i] === propertyName) {
+                                    getter = i;
+                                    break;
+                                }
+                            }
+                            cc.defineGetterSetter(prototype, propertyName, prop[getter] ? prop[getter] : prototype[getter], prop[name], getter, name);
+                        }
+                    }
                 }
             }
-            _Class.extend = Class.extend;
-            _Class.implement = function(prop) {
+            TheClass.extend = Class.extend;
+            TheClass.implement = function(prop) {
                 for (var name in prop) {
                     prototype[name] = prop[name];
                 }
             };
-            return _Class;
+            return TheClass;
         };
         cc.defineGetterSetter = function(proto, prop, getter, setter, getterName, setterName) {
             if (proto.__defineGetter__) {
@@ -18471,7 +18593,7 @@
         };
         cc._Class = module.exports = Class;
     }, {} ],
-    113: [ function(require, module, exports) {
+    114: [ function(require, module, exports) {
         var JS = require("./js");
         var isPlainEmptyObj = require("./utils").isPlainEmptyObj_DEV;
         function createAttrsSingle(owner, ownerCtor, superAttrs) {
@@ -18581,10 +18703,10 @@
             ScriptUuid: {}
         };
     }, {
-        "./js": 120,
-        "./utils": 125
+        "./js": 121,
+        "./utils": 126
     } ],
-    114: [ function(require, module, exports) {
+    115: [ function(require, module, exports) {
         var JS = require("./js");
         var CallbacksHandler = function() {
             this._callbackTable = {};
@@ -18770,9 +18892,9 @@
         CallbacksInvoker.CallbacksHandler = CallbacksHandler;
         module.exports = CallbacksInvoker;
     }, {
-        "./js": 120
+        "./js": 121
     } ],
-    115: [ function(require, module, exports) {
+    116: [ function(require, module, exports) {
         var JS = require("./js");
         var CCObject = require("./CCObject");
         var Attr = require("./attribute");
@@ -18818,13 +18940,13 @@
                     for (var i = 0; i < refCount; i++) {
                         if (jsonArray[i]) {
                             var mainTarget;
-                            this.deserializedList[i] = _deserializeObject(this, jsonArray[i], mainTarget);
+                            this.deserializedList[i] = _deserializeObject(this, jsonArray[i]);
                         }
                     }
                     this.deserializedData = refCount > 0 ? this.deserializedList[0] : [];
                 } else {
                     this.deserializedList = [ null ];
-                    this.deserializedData = jsonObj ? _deserializeObject(this, jsonObj, target) : null;
+                    this.deserializedData = jsonObj ? _deserializeObject(this, jsonObj) : null;
                     this.deserializedList[0] = this.deserializedData;
                 }
                 _dereference(this);
@@ -18834,9 +18956,11 @@
                 var idPropList = self._idPropList;
                 var idList = self._idList;
                 var idObjList = self._idObjList;
-                for (var i = 0, len = self._idList.length; i < len; i++) {
-                    var propName = idPropList[i];
-                    var id = idList[i];
+                var onDereferenced = self._classFinder && self._classFinder.onDereferenced;
+                var i, propName, id;
+                for (i = 0; i < idList.length; i++) {
+                    propName = idPropList[i];
+                    id = idList[i];
                     idObjList[i][propName] = deserializedList[id];
                 }
             }
@@ -18934,17 +19058,19 @@
                     });
                 }
                 deserialize(self, obj, serialized, klass, target);
+                var uuid;
+                var index;
             }
-            function _deserializeObject(self, serialized, target) {
+            function _deserializeObject(self, serialized, target, owner, propName) {
                 var prop;
                 var obj = null;
                 var klass = null;
                 if (serialized.__type__) {
                     var type = serialized.__type__;
-                    klass = self._classFinder(type, serialized);
+                    klass = self._classFinder(type, serialized, owner, propName);
                     if (!klass) {
-                        var noLog = self._classFinder === JS._getClassById;
-                        noLog && cc.deserialize.reportMissingClass(type);
+                        var notReported = self._classFinder === JS._getClassById;
+                        notReported && cc.deserialize.reportMissingClass(type);
                         return null;
                     }
                     obj = new klass();
@@ -19007,12 +19133,12 @@
         };
     }, {
         "../utils/misc": 130,
-        "./CCClass": 107,
-        "./CCObject": 109,
-        "./attribute": 113,
-        "./js": 120
+        "./CCClass": 108,
+        "./CCObject": 110,
+        "./attribute": 114,
+        "./js": 121
     } ],
-    116: [ function(require, module, exports) {
+    117: [ function(require, module, exports) {
         var NonUuidMark = ".";
         function IdGenerater(category) {
             this.id = 0 | 998 * Math.random();
@@ -19024,7 +19150,7 @@
         IdGenerater.global = new IdGenerater("global");
         module.exports = IdGenerater;
     }, {} ],
-    117: [ function(require, module, exports) {
+    118: [ function(require, module, exports) {
         require("./js");
         require("./CCClass");
         require("./CCObject");
@@ -19038,22 +19164,22 @@
         require("./CCMacro");
         require("./CCAssetLibrary");
     }, {
-        "./CCAssetLibrary": 106,
-        "./CCClass": 107,
-        "./CCMacro": 108,
-        "./CCObject": 109,
-        "./CCSys": 110,
-        "./CCVisibleRect": 111,
-        "./callbacks-invoker": 114,
-        "./deserialize": 115,
-        "./instantiate": 119,
-        "./instantiate-jit": 118,
-        "./js": 120,
-        "./miniFramework": 121,
-        "./requiring-frame": 123,
-        "./url": 124
+        "./CCAssetLibrary": 107,
+        "./CCClass": 108,
+        "./CCMacro": 109,
+        "./CCObject": 110,
+        "./CCSys": 111,
+        "./CCVisibleRect": 112,
+        "./callbacks-invoker": 115,
+        "./deserialize": 116,
+        "./instantiate": 120,
+        "./instantiate-jit": 119,
+        "./js": 121,
+        "./miniFramework": 122,
+        "./requiring-frame": 124,
+        "./url": 125
     } ],
-    118: [ function(require, module, exports) {
+    119: [ function(require, module, exports) {
         var CCObject = require("./CCObject");
         var Destroyed = CCObject.Flags.Destroyed;
         var PersistentMask = CCObject.Flags.PersistentMask;
@@ -19068,6 +19194,16 @@
         var VAR = "var ";
         var LOCAL_OBJ = "o";
         var LINE_INDEX_OF_NEW_OBJ = 0;
+        function Declaration(varName, expression) {
+            this.varName = varName;
+            this.expression = expression;
+        }
+        Declaration.prototype.toString = function() {
+            return VAR + this.varName + "=" + this.expression + ";";
+        };
+        function mergeDeclaration(statement, expression) {
+            return expression instanceof Declaration ? new Declaration(expression.varName, statement + expression.expression) : statement + expression;
+        }
         function equalsToDefault(def, value) {
             if ("function" == typeof def) {
                 try {
@@ -19164,7 +19300,7 @@
                         if (equalsToDefault(attrs[key + DEFAULT], val)) {
                             continue;
                         }
-                        this.writeField(codeArray, obj, key, val);
+                        this.writeObjectField(codeArray, obj, key, val);
                     }
                 }
             },
@@ -19173,20 +19309,16 @@
                     return "[]";
                 }
                 var arrayVar = "t" + ++this.localVariableId;
-                var codeArray = [ arrayVar + "=new Array(" + value.length + ");" ];
+                var declaration = new Declaration(arrayVar, "new Array(" + value.length + ")");
+                var codeArray = [ declaration ];
                 value._iN$t = {
                     globalVar: "",
                     source: codeArray
                 };
                 this.objsToClear_iN$t.push(value);
                 for (var i = 0; i < value.length; ++i) {
-                    var expression = this.enumerateField(value, i, value[i]);
-                    if (Array.isArray(expression)) {
-                        expression[0] = arrayVar + "[" + i + "]=" + expression[0];
-                        codeArray.push(expression);
-                    } else {
-                        codeArray.push(arrayVar + "[" + i + "]=" + expression + ";");
-                    }
+                    var statement = arrayVar + "[" + i + "]=";
+                    this.writeFiled(codeArray, statement, value, i, value[i]);
                 }
                 return codeArray;
             },
@@ -19199,12 +19331,7 @@
                             globalVar = _iN$t.globalVar = "v" + ++this.globalVariableId;
                             this.globalVariables.push(globalVar);
                             var line = _iN$t.source[LINE_INDEX_OF_NEW_OBJ];
-                            if (line.startsWith(VAR)) {
-                                var LEN_OF_VAR_O = 5;
-                                _iN$t.source[LINE_INDEX_OF_NEW_OBJ] = line.slice(0, LEN_OF_VAR_O) + "=" + globalVar + line.slice(LEN_OF_VAR_O);
-                            } else {
-                                _iN$t.source[LINE_INDEX_OF_NEW_OBJ] = globalVar + "=" + _iN$t.source[LINE_INDEX_OF_NEW_OBJ];
-                            }
+                            _iN$t.source[LINE_INDEX_OF_NEW_OBJ] = mergeDeclaration(globalVar + "=", line);
                         }
                         return globalVar;
                     }
@@ -19219,15 +19346,18 @@
                 "_objFlags" === key && obj instanceof CCObject && (value &= PersistentMask);
                 return value;
             },
-            writeField: function(codeArray, obj, key, value) {
+            writeObjectField: function(codeArray, obj, key, value) {
                 var statement;
                 statement = VAR_REG.test(key) ? LOCAL_OBJ + "." + key + "=" : LOCAL_OBJ + "[" + escapeForJS(key) + "]=";
+                this.writeFiled(codeArray, statement, obj, key, value);
+            },
+            writeFiled: function(codeArray, statement, obj, key, value) {
                 var expression = this.enumerateField(obj, key, value);
                 if (Array.isArray(expression)) {
-                    expression[0] = statement + expression[0];
+                    expression[0] = mergeDeclaration(statement, expression[0]);
                     codeArray.push(expression);
                 } else {
-                    codeArray.push(statement + expression + ";");
+                    codeArray.push(mergeDeclaration(statement, expression) + ";");
                 }
             },
             enumerateObject: function(codeArray, obj) {
@@ -19243,7 +19373,7 @@
                         if ("object" == typeof value && value && value === obj._iN$t) {
                             continue;
                         }
-                        this.writeField(codeArray, obj, key, value);
+                        this.writeObjectField(codeArray, obj, key, value);
                     }
                 }
             },
@@ -19279,12 +19409,12 @@
                             }
                         }
                     }
-                    createCode = VAR + LOCAL_OBJ + "=new " + this.getFuncModule(ctor, true) + "();";
+                    createCode = new Declaration(LOCAL_OBJ, "new " + this.getFuncModule(ctor, true) + "()");
                 } else {
                     if (ctor !== Object) {
                         return this.getObjRef(obj);
                     }
-                    createCode = VAR + LOCAL_OBJ + "={};";
+                    createCode = new Declaration(LOCAL_OBJ, "{}");
                 }
                 var codeArray = [ createCode ];
                 obj._iN$t = {
@@ -19307,12 +19437,12 @@
         };
     }, {
         "../utils/misc": 130,
-        "./CCClass": 107,
-        "./CCObject": 109,
-        "./attribute": 113,
-        "./js": 120
+        "./CCClass": 108,
+        "./CCObject": 110,
+        "./attribute": 114,
+        "./js": 121
     } ],
-    119: [ function(require, module, exports) {
+    120: [ function(require, module, exports) {
         var CCObject = require("./CCObject");
         var Destroyed = CCObject.Flags.Destroyed;
         var PersistentMask = CCObject.Flags.PersistentMask;
@@ -19456,11 +19586,11 @@
         cc.instantiate = instantiate;
         module.exports = instantiate;
     }, {
-        "./CCObject": 109,
-        "./attribute": 113,
-        "./utils": 125
+        "./CCObject": 110,
+        "./attribute": 114,
+        "./utils": 126
     } ],
-    120: [ function(require, module, exports) {
+    121: [ function(require, module, exports) {
         function _getPropertyDescriptor(obj, name) {
             while (obj) {
                 var pd = Object.getOwnPropertyDescriptor(obj, name);
@@ -19767,7 +19897,7 @@
     }, {
         "../utils/mutable-forward-iterator": 131
     } ],
-    121: [ function(require, module, exports) {
+    122: [ function(require, module, exports) {
         cc.$ = function(x) {
             var parent = this === cc ? document : this;
             var el = x instanceof HTMLElement ? x : parent.querySelector(x);
@@ -19901,7 +20031,7 @@
             };
         };
     }, {} ],
-    122: [ function(require, module, exports) {
+    123: [ function(require, module, exports) {
         var SerializableAttrs = {
             url: {
                 canUsedInGet: true
@@ -19911,6 +20041,7 @@
             editorOnly: {},
             rawType: {}
         };
+        var TYPO_TO_CORRECT_DEV = false;
         function parseNotify(val, propName, notify, properties) {
             if (val.get || val.set) {
                 return;
@@ -19953,7 +20084,7 @@
         function getBaseClassWherePropertyDefined_DEV(propName, cls) {
             var res;
         }
-        module.exports = function(properties, className, cls) {
+        module.exports.preprocessAttrs = function(properties, className, cls) {
             for (var propName in properties) {
                 var val = properties[propName];
                 var isLiteral = val && val.constructor === Object;
@@ -19993,40 +20124,56 @@
                 }
             }
         };
+        module.exports.validateMethod = function(func, funcName, className, cls, base) {
+            if ("function" != typeof func && null !== func) {
+                var overrided;
+                var baseFuc;
+                var subFuc;
+                var correct;
+                return false;
+            }
+            var baseClassName;
+            return true;
+        };
     }, {
-        "./CCClass": 107
+        "./CCClass": 108
     } ],
-    123: [ function(require, module, exports) {
-        var requiringFrames = [];
-        cc._RFpush = function(module, uuid, script) {
-            if (2 === arguments.length) {
-                script = uuid;
-                uuid = "";
-            }
-            requiringFrames.push({
-                uuid: uuid,
-                script: script,
-                module: module,
-                exports: module.exports,
-                beh: null
-            });
-        };
-        cc._RFpop = function() {
-            var frameInfo = requiringFrames.pop();
-            var module = frameInfo.module;
-            var exports = module.exports;
-            if (exports === frameInfo.exports) {
-                for (var anyKey in exports) {
-                    return;
-                }
-                module.exports = exports = frameInfo.beh;
-            }
-        };
-        cc._RFpeek = function() {
-            return requiringFrames[requiringFrames.length - 1];
-        };
-    }, {} ],
     124: [ function(require, module, exports) {
+        var requiringFrames = [];
+        cc._RF = {
+            push: function(module, uuid, script) {
+                if (2 === arguments.length) {
+                    script = uuid;
+                    uuid = "";
+                }
+                requiringFrames.push({
+                    uuid: uuid,
+                    script: script,
+                    module: module,
+                    exports: module.exports,
+                    beh: null
+                });
+            },
+            pop: function() {
+                var frameInfo = requiringFrames.pop();
+                var module = frameInfo.module;
+                var exports = module.exports;
+                if (exports === frameInfo.exports) {
+                    for (var anyKey in exports) {
+                        return;
+                    }
+                    module.exports = exports = frameInfo.beh;
+                }
+            },
+            peek: function() {
+                return requiringFrames[requiringFrames.length - 1];
+            }
+        };
+        cc._RFpush = cc._RF.push;
+        cc._RFpop = cc._RF.pop;
+        cc._RFpeek = cc._RF.peek;
+    }, {} ],
+    125: [ function(require, module, exports) {
         var _mounts = {};
         cc.url = {
             _rawAssets: "",
@@ -20053,8 +20200,24 @@
         };
         module.exports = cc.url;
     }, {} ],
-    125: [ function(require, module, exports) {
+    126: [ function(require, module, exports) {
         module.exports = {
+            contains: function(refNode, otherNode) {
+                if ("function" == typeof refNode.contains) {
+                    return refNode.contains(otherNode);
+                }
+                if ("function" == typeof refNode.compareDocumentPosition) {
+                    return !!(16 & refNode.compareDocumentPosition(otherNode));
+                }
+                var node = otherNode.parentNode;
+                do {
+                    if (node === refNode) {
+                        return true;
+                    }
+                    node = node.parentNode;
+                } while (null !== node);
+                return false;
+            },
             isDomNode: "object" == typeof window && ("function" == typeof Node ? function(obj) {
                 return obj instanceof Node;
             } : function(obj) {
@@ -20067,233 +20230,6 @@
             }
         };
     }, {} ],
-    126: [ function(require, module, exports) {
-        require("./CCSpriteFrame");
-        cc.spriteFrameCache = {
-            _CCNS_REG1: /^\s*\{\s*([\-]?\d+[.]?\d*)\s*,\s*([\-]?\d+[.]?\d*)\s*\}\s*$/,
-            _CCNS_REG2: /^\s*\{\s*\{\s*([\-]?\d+[.]?\d*)\s*,\s*([\-]?\d+[.]?\d*)\s*\}\s*,\s*\{\s*([\-]?\d+[.]?\d*)\s*,\s*([\-]?\d+[.]?\d*)\s*\}\s*\}\s*$/,
-            _spriteFrames: {},
-            _spriteFramesAliases: {},
-            _frameConfigCache: {},
-            _rectFromString: function(content) {
-                var result = this._CCNS_REG2.exec(content);
-                if (!result) {
-                    return cc.rect(0, 0, 0, 0);
-                }
-                return cc.rect(parseFloat(result[1]), parseFloat(result[2]), parseFloat(result[3]), parseFloat(result[4]));
-            },
-            _pointFromString: function(content) {
-                var result = this._CCNS_REG1.exec(content);
-                if (!result) {
-                    return cc.p(0, 0);
-                }
-                return cc.p(parseFloat(result[1]), parseFloat(result[2]));
-            },
-            _sizeFromString: function(content) {
-                var result = this._CCNS_REG1.exec(content);
-                if (!result) {
-                    return cc.size(0, 0);
-                }
-                return cc.size(parseFloat(result[1]), parseFloat(result[2]));
-            },
-            _getFrameConfig: function(url) {
-                var dict = cc.loader.getRes(url);
-                cc.assertID(dict, 2804, url);
-                cc.loader.release(url);
-                if (dict._inited) {
-                    this._frameConfigCache[url] = dict;
-                    return dict;
-                }
-                this._frameConfigCache[url] = this._parseFrameConfig(dict);
-                return this._frameConfigCache[url];
-            },
-            _getFrameConfigByJsonObject: function(url, jsonObject) {
-                cc.assertID(jsonObject, 2804, url);
-                this._frameConfigCache[url] = this._parseFrameConfig(jsonObject);
-                return this._frameConfigCache[url];
-            },
-            _parseFrameConfig: function(dict) {
-                var tempFrames = dict["frames"], tempMeta = dict["metadata"] || dict["meta"];
-                var frames = {}, meta = {};
-                var format = 0;
-                if (tempMeta) {
-                    var tmpFormat = tempMeta["format"];
-                    format = tmpFormat.length <= 1 ? parseInt(tmpFormat) : tmpFormat;
-                    meta.image = tempMeta["textureFileName"] || tempMeta["textureFileName"] || tempMeta["image"];
-                }
-                for (var key in tempFrames) {
-                    var frameDict = tempFrames[key];
-                    if (!frameDict) {
-                        continue;
-                    }
-                    var tempFrame = {};
-                    if (0 == format) {
-                        tempFrame.rect = cc.rect(frameDict["x"], frameDict["y"], frameDict["width"], frameDict["height"]);
-                        tempFrame.rotated = false;
-                        tempFrame.offset = cc.p(frameDict["offsetX"], frameDict["offsetY"]);
-                        var ow = frameDict["originalWidth"];
-                        var oh = frameDict["originalHeight"];
-                        ow && oh || cc.logID(2800);
-                        ow = Math.abs(ow);
-                        oh = Math.abs(oh);
-                        tempFrame.size = cc.size(ow, oh);
-                    } else {
-                        if (1 == format || 2 == format) {
-                            tempFrame.rect = this._rectFromString(frameDict["frame"]);
-                            tempFrame.rotated = frameDict["rotated"] || false;
-                            tempFrame.offset = this._pointFromString(frameDict["offset"]);
-                            tempFrame.size = this._sizeFromString(frameDict["sourceSize"]);
-                        } else {
-                            if (3 == format) {
-                                var spriteSize = this._sizeFromString(frameDict["spriteSize"]);
-                                var textureRect = this._rectFromString(frameDict["textureRect"]);
-                                spriteSize && (textureRect = cc.rect(textureRect.x, textureRect.y, spriteSize.width, spriteSize.height));
-                                tempFrame.rect = textureRect;
-                                tempFrame.rotated = frameDict["textureRotated"] || false;
-                                tempFrame.offset = this._pointFromString(frameDict["spriteOffset"]);
-                                tempFrame.size = this._sizeFromString(frameDict["spriteSourceSize"]);
-                                tempFrame.aliases = frameDict["aliases"];
-                            } else {
-                                var tmpFrame = frameDict["frame"], tmpSourceSize = frameDict["sourceSize"];
-                                key = frameDict["filename"] || key;
-                                tempFrame.rect = cc.rect(tmpFrame["x"], tmpFrame["y"], tmpFrame["w"], tmpFrame["h"]);
-                                tempFrame.rotated = frameDict["rotated"] || false;
-                                tempFrame.offset = cc.p(0, 0);
-                                tempFrame.size = cc.size(tmpSourceSize["w"], tmpSourceSize["h"]);
-                            }
-                        }
-                    }
-                    frames[key] = tempFrame;
-                }
-                return {
-                    _inited: true,
-                    frames: frames,
-                    meta: meta
-                };
-            },
-            _addSpriteFramesByObject: function(url, jsonObject, texture) {
-                cc.assertID(url, 2805);
-                if (!jsonObject || !jsonObject["frames"]) {
-                    return;
-                }
-                var frameConfig = this._frameConfigCache[url] || this._getFrameConfigByJsonObject(url, jsonObject);
-                this._createSpriteFrames(url, frameConfig, texture);
-            },
-            _createSpriteFrames: function(url, frameConfig, texture) {
-                var frames = frameConfig.frames, meta = frameConfig.meta;
-                if (texture) {
-                    texture instanceof cc.Texture2D || (cc.js.isString(texture) ? texture = cc.textureCache.addImage(texture) : cc.assertID(0, 2806));
-                } else {
-                    var texturePath = cc.path.changeBasename(url, meta.image || ".png");
-                    texture = cc.textureCache.addImage(texturePath);
-                }
-                var spAliases = this._spriteFramesAliases, spriteFrames = this._spriteFrames;
-                for (var key in frames) {
-                    var frame = frames[key];
-                    var spriteFrame = spriteFrames[key];
-                    if (!spriteFrame) {
-                        spriteFrame = new cc.SpriteFrame(texture, frame.rect, frame.rotated, frame.offset, frame.size);
-                        var aliases = frame.aliases;
-                        if (aliases) {
-                            for (var i = 0, li = aliases.length; i < li; i++) {
-                                var alias = aliases[i];
-                                spAliases[alias] && cc.logID(2801, alias);
-                                spAliases[alias] = key;
-                            }
-                        }
-                        if (cc._renderType === cc.game.RENDER_TYPE_CANVAS && spriteFrame.isRotated()) {
-                            var locTexture = spriteFrame.getTexture();
-                            if (locTexture.isLoaded()) {
-                                var tempElement = spriteFrame.getTexture().getHtmlElementObj();
-                                tempElement = _ccsg.Sprite.CanvasRenderCmd._cutRotateImageToCanvas(tempElement, spriteFrame.getRect());
-                                var tempTexture = new cc.Texture2D();
-                                tempTexture.initWithElement(tempElement);
-                                tempTexture.handleLoadedTexture();
-                                spriteFrame.setTexture(tempTexture);
-                                var rect = spriteFrame._rect;
-                                spriteFrame.setRect(cc.rect(0, 0, rect.width, rect.height));
-                            }
-                        }
-                        spriteFrames[key] = spriteFrame;
-                    }
-                }
-            },
-            addSpriteFrames: function(url, texture) {
-                cc.assertID(url, 2805);
-                var dict = this._frameConfigCache[url] || cc.loader.getRes(url);
-                if (!dict || !dict["frames"]) {
-                    return;
-                }
-                var frameConfig = this._frameConfigCache[url] || this._getFrameConfig(url);
-                this._createSpriteFrames(url, frameConfig, texture);
-            },
-            _checkConflict: function(dictionary) {
-                var framesDict = dictionary["frames"];
-                for (var key in framesDict) {
-                    this._spriteFrames[key] && cc.logID(2802, key);
-                }
-            },
-            addSpriteFrame: function(frame, frameName) {
-                this._spriteFrames[frameName] = frame;
-            },
-            removeSpriteFrames: function() {
-                this._spriteFrames = {};
-                this._spriteFramesAliases = {};
-            },
-            removeSpriteFrameByName: function(name) {
-                if (!name) {
-                    return;
-                }
-                this._spriteFramesAliases[name] && delete this._spriteFramesAliases[name];
-                this._spriteFrames[name] && delete this._spriteFrames[name];
-            },
-            removeSpriteFramesFromFile: function(url) {
-                var self = this, spriteFrames = self._spriteFrames, aliases = self._spriteFramesAliases, cfg = self._frameConfigCache[url];
-                if (!cfg) {
-                    return;
-                }
-                var frames = cfg.frames;
-                for (var key in frames) {
-                    if (spriteFrames[key]) {
-                        delete spriteFrames[key];
-                        for (var alias in aliases) {
-                            aliases[alias] === key && delete aliases[alias];
-                        }
-                    }
-                }
-            },
-            removeSpriteFramesFromTexture: function(texture) {
-                var self = this, spriteFrames = self._spriteFrames, aliases = self._spriteFramesAliases;
-                for (var key in spriteFrames) {
-                    var frame = spriteFrames[key];
-                    if (frame && frame.getTexture() === texture) {
-                        delete spriteFrames[key];
-                        for (var alias in aliases) {
-                            aliases[alias] === key && delete aliases[alias];
-                        }
-                    }
-                }
-            },
-            getSpriteFrame: function(name) {
-                var self = this, frame = self._spriteFrames[name];
-                if (!frame) {
-                    var key = self._spriteFramesAliases[name];
-                    if (key) {
-                        frame = self._spriteFrames[key.toString()];
-                        frame || delete self._spriteFramesAliases[name];
-                    }
-                }
-                return frame;
-            },
-            _clear: function() {
-                this._spriteFrames = {};
-                this._spriteFramesAliases = {};
-                this._frameConfigCache = {};
-            }
-        };
-    }, {
-        "./CCSpriteFrame": 190
-    } ],
     127: [ function(require, module, exports) {
         require("../platform/CCSys");
         var EXTNAME_RE = /(\.[^\.\/\?\\]*)(\?.*)?$/;
@@ -20393,7 +20329,7 @@
         };
         module.exports = cc.path;
     }, {
-        "../platform/CCSys": 110
+        "../platform/CCSys": 111
     } ],
     128: [ function(require, module, exports) {
         var SgHelper = require("./scene-graph-helper");
@@ -20734,15 +20670,11 @@
                 },
                 color: {
                     get: function() {
-                        var color = this._color;
-                        return new cc.Color(color.r, color.g, color.b, color.a);
+                        return this._color.clone();
                     },
                     set: function(value) {
                         if (!this._color.equals(value)) {
-                            var color = this._color;
-                            color.r = value.r;
-                            color.g = value.g;
-                            color.b = value.b;
+                            this._color.fromColor(value);
                             this._sizeProvider instanceof _ccsg.Node && this._sizeProvider.setColor(value);
                         }
                     }
@@ -21251,8 +21183,8 @@
         Misc.propertyDefine(BaseNode, SameNameGetSets, DiffNameGetSets);
         cc._BaseNode = module.exports = BaseNode;
     }, {
-        "../platform/CCObject": 109,
-        "../platform/id-generater": 116,
+        "../platform/CCObject": 110,
+        "../platform/id-generater": 117,
         "./misc": 130,
         "./scene-graph-helper": 133
     } ],
@@ -21616,6 +21548,16 @@
                 ty: determinant * (t.b * t.tx - t.a * t.ty)
             };
         };
+        cc.affineTransformInvertOut = function(t, out) {
+            var a = t.a, b = t.b, c = t.c, d = t.d;
+            var determinant = 1 / (a * d - b * c);
+            out.a = determinant * d;
+            out.b = -determinant * b;
+            out.c = -determinant * c;
+            out.d = determinant * a;
+            out.tx = determinant * (c * t.ty - d * t.tx);
+            out.ty = determinant * (b * t.tx - a * t.ty);
+        };
     }, {} ],
     135: [ function(require, module, exports) {
         var ValueType = require("./CCValueType");
@@ -21623,15 +21565,16 @@
         var Color = function() {
             function Color(r, g, b, a) {
                 if ("object" == typeof r) {
+                    r = r.r;
                     g = r.g;
                     b = r.b;
                     a = r.a;
-                    r = r.r;
                 }
-                this.r = r || 0;
-                this.g = g || 0;
-                this.b = b || 0;
-                this.a = "number" == typeof a ? a : 255;
+                r = r || 0;
+                g = g || 0;
+                b = b || 0;
+                a = "number" == typeof a ? a : 255;
+                this._val = (~~r << 24 >>> 0) + (~~g << 16) + (~~b << 8) + ~~a;
             }
             JS.extend(Color, ValueType);
             require("../platform/CCClass").fastDefine("cc.Color", Color, {
@@ -21663,13 +21606,16 @@
                     get: colorGetter
                 });
             }
-            Color.prototype.clone = function() {
-                return new Color(this.r, this.g, this.b, this.a);
+            var proto = Color.prototype;
+            proto.clone = function() {
+                var ret = new Color();
+                ret._val = this._val;
+                return ret;
             };
-            Color.prototype.equals = function(other) {
-                return other && this.r === other.r && this.g === other.g && this.b === other.b && this.a === other.a;
+            proto.equals = function(other) {
+                return other && this._val === other._val;
             };
-            Color.prototype.lerp = function(to, ratio, out) {
+            proto.lerp = function(to, ratio, out) {
                 out = out || new Color();
                 var r = this.r;
                 var g = this.g;
@@ -21681,42 +21627,53 @@
                 out.a = a + (to.a - a) * ratio;
                 return out;
             };
-            Color.prototype.toString = function() {
+            proto.toString = function() {
                 return "rgba(" + this.r.toFixed() + ", " + this.g.toFixed() + ", " + this.b.toFixed() + ", " + this.a.toFixed() + ")";
             };
-            Color.prototype.setR = function(red) {
-                this.r = red;
+            proto.getR = function() {
+                return (4278190080 & this._val) >>> 24;
+            };
+            proto.setR = function(red) {
+                this._val = (16777215 & this._val | ~~red << 24 >>> 0) >>> 0;
                 return this;
             };
-            Color.prototype.setG = function(green) {
-                this.g = green;
+            proto.getG = function() {
+                return (16711680 & this._val) >> 16;
+            };
+            proto.setG = function(green) {
+                this._val = (4278255615 & this._val | ~~green << 16) >>> 0;
                 return this;
             };
-            Color.prototype.setB = function(blue) {
-                this.b = blue;
+            proto.getB = function() {
+                return (65280 & this._val) >> 8;
+            };
+            proto.setB = function(blue) {
+                this._val = (4294902015 & this._val | ~~blue << 8) >>> 0;
                 return this;
             };
-            Color.prototype.setA = function(alpha) {
-                this.a = alpha;
+            proto.getA = function() {
+                return 255 & this._val;
+            };
+            proto.setA = function(alpha) {
+                this._val = (4294967040 & this._val | ~~alpha) >>> 0;
                 return this;
             };
-            Color.prototype.toCSS = function(opt) {
+            JS.getset(proto, "r", proto.getR, proto.setR, true);
+            JS.getset(proto, "g", proto.getG, proto.setG, true);
+            JS.getset(proto, "b", proto.getB, proto.setB, true);
+            JS.getset(proto, "a", proto.getA, proto.setA, true);
+            proto.toCSS = function(opt) {
                 return "rgba" === opt ? "rgba(" + (0 | this.r) + "," + (0 | this.g) + "," + (0 | this.b) + "," + (this.a / 255).toFixed(2) + ")" : "rgb" === opt ? "rgb(" + (0 | this.r) + "," + (0 | this.g) + "," + (0 | this.b) + ")" : "#" + this.toHEX(opt);
             };
-            Color.prototype.clamp = function() {
-                this.r = cc.clampf(this.r, 0, 255);
-                this.g = cc.clampf(this.g, 0, 255);
-                this.b = cc.clampf(this.b, 0, 255);
-                this.a = cc.clampf(this.a, 0, 255);
+            proto.clamp = function() {
+                return;
             };
-            Color.prototype.fromHEX = function(hexString) {
+            proto.fromHEX = function(hexString) {
                 var hex = parseInt(hexString.indexOf("#") > -1 ? hexString.substring(1) : hexString, 16);
-                this.r = hex >> 16;
-                this.g = (65280 & hex) >> 8;
-                this.b = 255 & hex;
+                this._val = 4278190080 & this._val | hex;
                 return this;
             };
-            Color.prototype.toHEX = function(fmt) {
+            proto.toHEX = function(fmt) {
                 var hex = [ (0 | this.r).toString(16), (0 | this.g).toString(16), (0 | this.b).toString(16) ];
                 var i = -1;
                 if ("#rgb" === fmt) {
@@ -21732,18 +21689,26 @@
                 }
                 return hex.join("");
             };
-            Color.prototype.toRGBValue = function() {
-                return (cc.clampf(this.r, 0, 255) << 16) + (cc.clampf(this.g, 0, 255) << 8) + cc.clampf(this.b, 0, 255);
+            proto.toRGBValue = function() {
+                return 16777215 & this._val;
             };
-            Color.prototype.fromHSV = function(h, s, v) {
+            proto.fromHSV = function(h, s, v) {
                 var rgb = Color.hsv2rgb(h, s, v);
-                this.r = rgb.r;
-                this.g = rgb.g;
-                this.b = rgb.b;
+                this._val = (rgb.r << 24 >>> 0) + (rgb.g << 16) + (rgb.b << 8) + this.a;
                 return this;
             };
-            Color.prototype.toHSV = function() {
+            proto.toHSV = function() {
                 return Color.rgb2hsv(this.r, this.g, this.b);
+            };
+            proto.fromColor = function(color) {
+                if (color._val) {
+                    this._val = color._val;
+                } else {
+                    this.r = color.r;
+                    this.g = color.g;
+                    this.b = color.b;
+                    this.a = color.a;
+                }
             };
             return Color;
         }();
@@ -21847,7 +21812,7 @@
             return new cc.Color(r, g, b, a);
         };
         cc.colorEqual = function(color1, color2) {
-            return color1.r === color2.r && color1.g === color2.g && color1.b === color2.b;
+            return void 0 !== color1._val && void 0 !== color2._val ? color1._val === color2._val : color1.r === color2.r && color1.g === color2.g && color1.b === color2.b;
         };
         cc.hexToColor = function(hex) {
             hex = hex.replace(/^#?/, "0x");
@@ -21863,8 +21828,8 @@
         };
         module.exports = cc.Color;
     }, {
-        "../platform/CCClass": 107,
-        "../platform/js": 120,
+        "../platform/CCClass": 108,
+        "../platform/js": 121,
         "./CCValueType": 142
     } ],
     136: [ function(require, module, exports) {
@@ -22280,8 +22245,8 @@
         };
         module.exports = cc.Rect;
     }, {
-        "../platform/CCClass": 107,
-        "../platform/js": 120,
+        "../platform/CCClass": 108,
+        "../platform/js": 121,
         "./CCValueType": 142
     } ],
     139: [ function(require, module, exports) {
@@ -22329,8 +22294,8 @@
         };
         cc.Size = module.exports = Size;
     }, {
-        "../platform/CCClass": 107,
-        "../platform/js": 120,
+        "../platform/CCClass": 108,
+        "../platform/js": 121,
         "./CCValueType": 142
     } ],
     140: [ function(require, module, exports) {
@@ -22960,7 +22925,7 @@
         cc.ValueType = ValueType;
         module.exports = ValueType;
     }, {
-        "../platform/js": 120
+        "../platform/js": 121
     } ],
     143: [ function(require, module, exports) {
         var ValueType = require("./CCValueType");
@@ -23153,8 +23118,8 @@
         };
         module.exports = cc.Vec2;
     }, {
-        "../platform/CCClass": 107,
-        "../platform/js": 120,
+        "../platform/CCClass": 108,
+        "../platform/js": 121,
         "./CCValueType": 142
     } ],
     144: [ function(require, module, exports) {
@@ -23680,7 +23645,7 @@
                         var sgNode = self._sgNode;
                         sgNode.particleCount = 0;
                         var active = sgNode.isActive();
-                        sgNode.initWithFile(file);
+                        sgNode.initWithDictionary(content, "");
                         content.textureUuid && cc.AssetLibrary.queryAssetInfo(content.textureUuid, function(err, url, raw) {
                             if (err) {
                                 cc.error(err);
@@ -24199,8 +24164,6 @@
                         addedLayer._replaceSgNode(sgLayer);
                         node.setSiblingIndex(sgLayer.getLocalZOrder());
                         node.setAnchorPoint(this.node.getAnchorPoint());
-                    } else {
-                        existedLayers[theIndex].setSiblingIndex(sgLayer.getLocalZOrder());
                     }
                 }
                 var existedGroupNames = existedGroups.map(function(node) {
@@ -24226,8 +24189,37 @@
                         node.setSiblingIndex(sgGroup.getLocalZOrder());
                         node.setAnchorPoint(this.node.getAnchorPoint());
                         addedGroup.enabled = sgGroup.isVisible();
+                    }
+                }
+                var curChildren = this.node.getChildren();
+                var curLayerNames = [];
+                for (i = 0, n = curChildren.length; i < n; i++) {
+                    child = curChildren[i];
+                    tmxLayer = child.getComponent(cc.TiledLayer);
+                    tmxGroup = child.getComponent(cc.TiledObjectGroup);
+                    (tmxLayer || tmxGroup) && curLayerNames.push(child._name);
+                }
+                var sgLayerNames = [];
+                var sgLayers = [];
+                var sgChildren = this._sgNode.getChildren();
+                for (i = 0, n = sgChildren.length; i < n; i++) {
+                    child = sgChildren[i];
+                    if (child instanceof _ccsg.TMXLayer) {
+                        sgLayerNames.push(child.getLayerName());
+                        sgLayers.push(child);
                     } else {
-                        existedGroups[theIndex].setSiblingIndex(sgGroup.getLocalZOrder());
+                        if (child instanceof _ccsg.TMXObjectGroup) {
+                            sgLayerNames.push(child.getGroupName());
+                            sgLayers.push(child);
+                        }
+                    }
+                }
+                for (i = sgLayerNames.length - 1; i >= 0; i--) {
+                    var curName = sgLayerNames[i];
+                    var nodeIdx = curLayerNames.indexOf(curName);
+                    if (i !== nodeIdx) {
+                        var curNode = this.node.getChildByName(curName);
+                        curNode.setSiblingIndex(sgLayers[i].getLocalZOrder());
                     }
                 }
                 for (i = 0, n = otherChildrenInfo.length; i < n; i++) {
@@ -24429,7 +24421,7 @@
             require("./cocos2d/tilemap/CCTiledLayer");
             require("./cocos2d/tilemap/CCTiledObjectGroup");
         }
-        require("./extensions/cocostudio/CCStudioComponent");
+        require("./cocos2d/core/components/CCStudioComponent");
         require("./extensions/spine");
         cc.runtime || require("./extensions/dragonbones");
         require("./extensions/ccpool/CCNodePool.js");
@@ -24438,7 +24430,8 @@
     }, {
         "./cocos2d/actions": 8,
         "./cocos2d/animation": 18,
-        "./cocos2d/core": 90,
+        "./cocos2d/core": 91,
+        "./cocos2d/core/components/CCStudioComponent": 69,
         "./cocos2d/deprecated": 145,
         "./cocos2d/motion-streak/CCMotionStreak": 146,
         "./cocos2d/particle/CCParticleAsset": 147,
@@ -24449,10 +24442,9 @@
         "./cocos2d/tilemap/CCTiledObjectGroup": 152,
         "./extensions/ccpool/CCNodePool.js": 154,
         "./extensions/ccpool/CCPool.js": 155,
-        "./extensions/cocostudio/CCStudioComponent": 156,
-        "./extensions/dragonbones": 160,
-        "./extensions/spine": 164,
-        "./external/chipmunk/chipmunk.js": 165
+        "./extensions/dragonbones": 159,
+        "./extensions/spine": 163,
+        "./external/chipmunk/chipmunk.js": 164
     } ],
     154: [ function(require, module, exports) {
         cc.NodePool = function(poolHandlerComp) {
@@ -24559,43 +24551,6 @@
         };
     }, {} ],
     156: [ function(require, module, exports) {
-        var ComponentType = cc.Enum({
-            NONE: 0,
-            CHECKBOX: 1,
-            TEXT_ATLAS: 2,
-            SLIDER_BAR: 3,
-            LIST_VIEW: 4,
-            PAGE_VIEW: 5
-        });
-        var ListDirection = cc.Enum({
-            VERTICAL: 0,
-            HORIZONTAL: 1
-        });
-        var VerticalAlign = cc.Enum({
-            TOP: 0,
-            CENTER: 1,
-            BOTTOM: 2
-        });
-        var HorizontalAlign = cc.Enum({
-            LEFT: 0,
-            CENTER: 1,
-            RIGHT: 2
-        });
-        var StudioComponent = cc.Class({
-            name: "cc.StudioComponent",
-            "extends": cc.Component,
-            editor: false,
-            properties: false,
-            statics: {
-                ComponentType: ComponentType,
-                ListDirection: ListDirection,
-                VerticalAlign: VerticalAlign,
-                HorizontalAlign: HorizontalAlign
-            }
-        });
-        cc.StudioComponent = module.exports = StudioComponent;
-    }, {} ],
-    157: [ function(require, module, exports) {
         var DefaultArmaturesEnum = cc.Enum({
             "default": -1
         });
@@ -24726,7 +24681,7 @@
                 }
             },
             ctor: function() {
-                this._factory = dragonBones.CCFactory.getFactory();
+                this._factory = new dragonBones.CCFactory();
             },
             __preload: function() {
                 this._parseDragonAsset();
@@ -24758,6 +24713,12 @@
             _parseDragonAtlasAsset: function() {
                 if (this.dragonAtlasAsset) {
                     var atlasJsonObj;
+                    var atlasName;
+                    var existedAtlasData;
+                    var atlasDataList;
+                    var texturePath;
+                    var idx;
+                    var data;
                     var texture;
                     this._factory.parseTextureAtlasData(this.dragonAtlasAsset.atlasJson, this.dragonAtlasAsset.texture);
                 }
@@ -24775,7 +24736,12 @@
                 if (sgNode) {
                     sgNode.retain();
                     self.enabledInHierarchy || sgNode.setVisible(false);
-                    listenersBefore && (sgNode._bubblingListeners = listenersBefore);
+                    if (listenersBefore) {
+                        sgNode._bubblingListeners = listenersBefore;
+                        sgNode.hasEventCallback() || sgNode.setEventCallback(function(eventObject) {
+                            sgNode.emit(eventObject.type, eventObject);
+                        });
+                    }
                     self._initSgNode();
                     self._appendSgNode(sgNode);
                     self._registSizeProvider();
@@ -24831,7 +24797,7 @@
             }
         });
     }, {} ],
-    158: [ function(require, module, exports) {
+    157: [ function(require, module, exports) {
         var DragonBonesAsset = cc.Class({
             name: "dragonBones.DragonBonesAsset",
             "extends": cc.Asset,
@@ -24858,7 +24824,7 @@
         });
         dragonBones.DragonBonesAsset = module.exports = DragonBonesAsset;
     }, {} ],
-    159: [ function(require, module, exports) {
+    158: [ function(require, module, exports) {
         var DragonBonesAtlasAsset = cc.Class({
             name: "dragonBones.DragonBonesAtlasAsset",
             "extends": cc.Asset,
@@ -24884,7 +24850,7 @@
         });
         dragonBones.DragonBonesAtlasAsset = module.exports = DragonBonesAtlasAsset;
     }, {} ],
-    160: [ function(require, module, exports) {
+    159: [ function(require, module, exports) {
         dragonBones = dragonBones;
         dragonBones.DisplayType = {
             Image: 0,
@@ -24929,16 +24895,16 @@
         require("./DragonBonesAtlasAsset");
         require("./ArmatureDisplay");
     }, {
-        "./ArmatureDisplay": 157,
-        "./CCArmatureDisplay": 190,
-        "./CCFactory": 190,
-        "./CCSlot": 190,
-        "./CCTextureData": 190,
-        "./DragonBonesAsset": 158,
-        "./DragonBonesAtlasAsset": 159,
-        "./lib/dragonBones": 190
+        "./ArmatureDisplay": 156,
+        "./CCArmatureDisplay": 189,
+        "./CCFactory": 189,
+        "./CCSlot": 189,
+        "./CCTextureData": 189,
+        "./DragonBonesAsset": 157,
+        "./DragonBonesAtlasAsset": 158,
+        "./lib/dragonBones": 189
     } ],
-    161: [ function(require, module, exports) {
+    160: [ function(require, module, exports) {
         sp.SkeletonTexture = cc.Class({
             name: "sp.SkeletonTexture",
             "extends": sp.spine.Texture,
@@ -24971,7 +24937,7 @@
             }
         });
     }, {} ],
-    162: [ function(require, module, exports) {
+    161: [ function(require, module, exports) {
         var DefaultSkinsEnum = cc.Enum({
             "default": -1
         });
@@ -25314,7 +25280,7 @@
             }
         });
     }, {} ],
-    163: [ function(require, module, exports) {
+    162: [ function(require, module, exports) {
         var TextureLoader = false;
         var SkeletonData = cc.Class({
             name: "sp.SkeletonData",
@@ -25356,12 +25322,7 @@
             statics: {
                 preventDeferredLoadDependents: true
             },
-            createNode: function(callback) {
-                var node = new cc.Node(this.name);
-                var skeleton = node.addComponent(sp.Skeleton);
-                skeleton.skeletonData = this;
-                return callback(null, node);
-            },
+            createNode: false,
             reset: function() {
                 this._skeletonCache = null;
                 this._atlasCache = null;
@@ -25373,7 +25334,7 @@
         });
         sp.SkeletonData = module.exports = SkeletonData;
     }, {} ],
-    164: [ function(require, module, exports) {
+    163: [ function(require, module, exports) {
         sp = sp;
         sp.VERTEX_INDEX = {
             X1: 0,
@@ -25400,16 +25361,16 @@
         require("./SkeletonData");
         require("./Skeleton");
     }, {
-        "./SGSkeleton": 190,
-        "./SGSkeletonAnimation": 190,
-        "./SGSkeletonCanvasRenderCmd": 190,
-        "./SGSkeletonTexture": 161,
-        "./SGSkeletonWebGLRenderCmd": 190,
-        "./Skeleton": 162,
-        "./SkeletonData": 163,
-        "./lib/spine": 190
+        "./SGSkeleton": 189,
+        "./SGSkeletonAnimation": 189,
+        "./SGSkeletonCanvasRenderCmd": 189,
+        "./SGSkeletonTexture": 160,
+        "./SGSkeletonWebGLRenderCmd": 189,
+        "./Skeleton": 161,
+        "./SkeletonData": 162,
+        "./lib/spine": 189
     } ],
-    165: [ function(require, module, exports) {
+    164: [ function(require, module, exports) {
         Object.create = Object.create || function(o) {
             function F() {}
             F.prototype = o;
@@ -28625,7 +28586,7 @@
             return Math.abs(this.jAcc);
         };
     }, {} ],
-    166: [ function(require, module, exports) {
+    165: [ function(require, module, exports) {
         "use strict";
         var _engineNumberVersion = function() {
             var result = /Cocos2d\-JS\sv([\d]+)\.([\d]+)/.exec(cc.ENGINE_VERSION);
@@ -28674,32 +28635,32 @@
         require("./jsb-dragonbones");
         cc.runtime && require("./versions/jsb-polyfill-runtime");
     }, {
-        "./jsb-action": 167,
-        "./jsb-audio": 168,
-        "./jsb-director": 169,
-        "./jsb-dragonbones": 170,
-        "./jsb-editbox": 171,
-        "./jsb-enums": 172,
-        "./jsb-etc": 173,
-        "./jsb-event": 174,
-        "./jsb-game": 175,
-        "./jsb-label": 176,
-        "./jsb-loader": 177,
-        "./jsb-particle": 178,
-        "./jsb-predefine": 179,
-        "./jsb-scale9sprite": 180,
-        "./jsb-spine": 181,
-        "./jsb-tex-sprite-frame": 182,
-        "./jsb-tiledmap": 183,
-        "./jsb-videoplayer": 184,
-        "./jsb-webview.js": 185,
-        "./versions/jsb-polyfill-runtime": 186,
-        "./versions/jsb-polyfill-v3.5": 187,
-        "./versions/jsb-polyfill-v3.8": 188,
-        "./versions/jsb-polyfill-v3.9": 189,
+        "./jsb-action": 166,
+        "./jsb-audio": 167,
+        "./jsb-director": 168,
+        "./jsb-dragonbones": 169,
+        "./jsb-editbox": 170,
+        "./jsb-enums": 171,
+        "./jsb-etc": 172,
+        "./jsb-event": 173,
+        "./jsb-game": 174,
+        "./jsb-label": 175,
+        "./jsb-loader": 176,
+        "./jsb-particle": 177,
+        "./jsb-predefine": 178,
+        "./jsb-scale9sprite": 179,
+        "./jsb-spine": 180,
+        "./jsb-tex-sprite-frame": 181,
+        "./jsb-tiledmap": 182,
+        "./jsb-videoplayer": 183,
+        "./jsb-webview.js": 184,
+        "./versions/jsb-polyfill-runtime": 185,
+        "./versions/jsb-polyfill-v3.5": 186,
+        "./versions/jsb-polyfill-v3.8": 187,
+        "./versions/jsb-polyfill-v3.9": 188,
         "script/jsb.js": void 0
     } ],
-    167: [ function(require, module, exports) {
+    166: [ function(require, module, exports) {
         var actionArr = [ "ActionEase", "EaseExponentialIn", "EaseExponentialOut", "EaseExponentialInOut", "EaseSineIn", "EaseSineOut", "EaseSineInOut", "EaseBounce", "EaseBounceIn", "EaseBounceOut", "EaseBounceInOut", "EaseBackIn", "EaseBackOut", "EaseBackInOut", "EaseRateAction", "EaseIn", "EaseElastic", "EaseElasticIn", "EaseElasticOut", "EaseElasticInOut", "RemoveSelf", "FlipX", "FlipY", "Place", "CallFunc", "DelayTime", "Sequence", "Spawn", "Speed", "Repeat", "RepeatForever", "Follow", "TargetedAction", "Animate", "OrbitCamera", "GridAction", "ProgressTo", "ProgressFromTo", "ActionInterval", "RotateTo", "RotateBy", "MoveBy", "MoveTo", "SkewTo", "SkewBy", "JumpTo", "JumpBy", "ScaleTo", "ScaleBy", "Blink", "FadeTo", "FadeIn", "FadeOut", "TintTo", "TintBy" ];
         function setCtorReplacer(proto) {
             var ctor = proto._ctor;
@@ -28717,16 +28678,6 @@
                 action._retained = true;
                 return action;
             };
-        }
-        for (var i = 0; i < actionArr.length; ++i) {
-            var name = actionArr[i];
-            var type = cc[name];
-            if (!type) {
-                continue;
-            }
-            var proto = type.prototype;
-            setCtorReplacer(proto);
-            name.indexOf("Ease") === -1 && setAliasReplacer(name, type);
         }
         cc.targetedAction = function(target, action) {
             return new cc.TargetedAction(target, action);
@@ -28818,8 +28769,6 @@
                 selector.call(this, sender, data);
             };
             var action = cc.CallFunc.create(callback, selectorTarget, data);
-            action.retain();
-            action._retained = true;
             return action;
         };
         cc.CallFunc.prototype._ctor = function(selector, selectorTarget, data) {
@@ -28830,8 +28779,6 @@
                 };
                 void 0 === selectorTarget ? this.initWithFunction(callback) : this.initWithFunction(callback, selectorTarget, data);
             }
-            this.retain();
-            this._retained = true;
         };
         function setChainFuncReplacer(proto, name) {
             var oldFunc = proto[name];
@@ -28846,18 +28793,6 @@
                 return newAction;
             };
         }
-        setChainFuncReplacer(cc.ActionInterval.prototype, "repeat");
-        setChainFuncReplacer(cc.ActionInterval.prototype, "repeatForever");
-        setChainFuncReplacer(cc.ActionInterval.prototype, "easing");
-        var jsbRunAction = cc.Node.prototype.runAction;
-        cc.Node.prototype.runAction = function(action) {
-            jsbRunAction.call(this, action);
-            if (action._retained) {
-                action.release();
-                action._retained = false;
-            }
-            return action;
-        };
         function getSGTarget(target) {
             target instanceof cc.Component ? target = target.node._sgNode : target instanceof cc.Node ? target = target._sgNode : target instanceof _ccsg.Node || (target = null);
             return target;
@@ -28865,20 +28800,17 @@
         var jsbAddAction = cc.ActionManager.prototype.addAction;
         cc.ActionManager.prototype.addAction = function(action, target, paused) {
             target = getSGTarget(target);
-            if (target) {
-                jsbAddAction.call(this, action, target, paused);
-                if (action._retained) {
-                    action.release();
-                    action._retained = false;
-                }
-            }
+            target && jsbAddAction.call(this, action, target, paused);
         };
         function actionMgrFuncReplacer(funcName, targetPos) {
             var proto = cc.ActionManager.prototype;
             var oldFunc = proto[funcName];
             proto[funcName] = function() {
-                arguments[targetPos] = getSGTarget(arguments[targetPos]);
-                return arguments[targetPos] ? oldFunc.apply(this, arguments) : void 0;
+                var args = [];
+                for (var i = 0; i < arguments.length; i++) {
+                    i === targetPos ? args[i] = getSGTarget(arguments[i]) : args[i] = arguments[i];
+                }
+                return args[targetPos] ? oldFunc.apply(this, args) : void 0;
             };
         }
         var targetRelatedFuncs = [ [ "removeAllActionsFromTarget", 0 ], [ "removeActionByTag", 1 ], [ "getActionByTag", 1 ], [ "getNumberOfRunningActionsInTarget", 0 ], [ "pauseTarget", 0 ], [ "resumeTarget", 0 ] ];
@@ -28972,7 +28904,7 @@
             action.prototype.update = actionUpdate[key];
         }
     }, {} ],
-    168: [ function(require, module, exports) {
+    167: [ function(require, module, exports) {
         cc.Audio = function(src) {
             this.src = src;
             this.volume = 1;
@@ -29080,7 +29012,7 @@
     }, {
         "../cocos2d/audio/deprecated": 22
     } ],
-    169: [ function(require, module, exports) {
+    168: [ function(require, module, exports) {
         "use strict";
         var AutoReleaseUtils = require("../cocos2d/core/load-pipeline/auto-release-utils");
         cc.js.mixin(cc.director, {
@@ -29292,16 +29224,18 @@
             cc.director.emit(cc.Director.EVENT_AFTER_DRAW, this);
         });
     }, {
-        "../cocos2d/core/load-pipeline/auto-release-utils": 95
+        "../cocos2d/core/load-pipeline/auto-release-utils": 96
     } ],
-    170: [ function(require, module, exports) {
+    169: [ function(require, module, exports) {
         var proto = dragonBones.CCArmatureDisplay.prototype;
         cc.js.mixin(proto, cc.EventTarget.prototype);
-        proto.eventCallback = function(eventObject) {
-            this.emit(eventObject.type, eventObject);
-        };
         proto.addEvent = function(type, listener, target) {
-            this.hasEventCallback() || this.setEventCallback(this.eventCallback.bind(this));
+            if (!this.hasEventCallback()) {
+                var self = this;
+                this.setEventCallback(function(eventObject) {
+                    self.emit(eventObject.type, eventObject);
+                });
+            }
             this.on(type, listener, target);
         };
         var dragonEventTypes = [ dragonBones.EventObject.START, dragonBones.EventObject.LOOP_COMPLETE, dragonBones.EventObject.COMPLETE, dragonBones.EventObject.FADE_IN, dragonBones.EventObject.FADE_IN_COMPLETE, dragonBones.EventObject.FADE_OUT, dragonBones.EventObject.FADE_OUT_COMPLETE, dragonBones.EventObject.FRAME_EVENT, dragonBones.EventObject.SOUND_EVENT ];
@@ -29329,7 +29263,7 @@
             display.removeEvent(type, listener, target);
         };
     }, {} ],
-    171: [ function(require, module, exports) {
+    170: [ function(require, module, exports) {
         "use strict";
         var _p = cc.EditBox.prototype;
         _p._setMaxLength = _p.setMaxLength;
@@ -29363,7 +29297,7 @@
         };
         _p.stayOnTop = function() {};
     }, {} ],
-    172: [ function(require, module, exports) {
+    171: [ function(require, module, exports) {
         "use strict";
         cc.ProgressTimer.Type = cc.Enum({
             RADIAL: 0,
@@ -29461,8 +29395,9 @@
             BOTH: 3
         });
     }, {} ],
-    173: [ function(require, module, exports) {
+    172: [ function(require, module, exports) {
         "use strict";
+        var macro = require("../cocos2d/core/platform/CCMacro");
         cc.sys.now = function() {
             return Date.now();
         };
@@ -29581,8 +29516,11 @@
         cc._Class = cc.Class;
         cc.formatStr = cc.js.formatStr;
         cc.Image && cc.Image.setPNGPremultipliedAlphaEnabled && cc.Image.setPNGPremultipliedAlphaEnabled(false);
-    }, {} ],
-    174: [ function(require, module, exports) {
+        void 0 !== window.__ENABLE_GC_FOR_NATIVE_OBJECTS__ && (macro.ENABLE_GC_FOR_NATIVE_OBJECTS = window.__ENABLE_GC_FOR_NATIVE_OBJECTS__);
+    }, {
+        "../cocos2d/core/platform/CCMacro": 109
+    } ],
+    173: [ function(require, module, exports) {
         "use strict";
         cc.Event.NO_TYPE = "no_type";
         cc.Event.NONE = 0;
@@ -29785,7 +29723,7 @@
             }
         });
     }, {} ],
-    175: [ function(require, module, exports) {
+    174: [ function(require, module, exports) {
         "use strict";
         cc.js.mixin(cc.game, {
             _paused: false,
@@ -29841,12 +29779,12 @@
                                 throw new Error(JSON.stringify(err));
                             }
                             self._prepared = true;
-                            self.emit(self.EVENT_GAME_INITED);
                             cb && cb();
+                            self.emit(self.EVENT_GAME_INITED);
                         });
                     } else {
-                        self.emit(self.EVENT_GAME_INITED);
                         cb && cb();
+                        self.emit(self.EVENT_GAME_INITED);
                     }
                     return;
                 }
@@ -29941,7 +29879,7 @@
             cc.game.emit(cc.game.EVENT_SHOW, cc.game);
         });
     }, {} ],
-    176: [ function(require, module, exports) {
+    175: [ function(require, module, exports) {
         "use strict";
         var jsbLabel = cc.Label;
         !jsbLabel.createWithTTF && jsbLabel.prototype.createWithTTF && (jsbLabel.createWithTTF = jsbLabel.prototype.createWithTTF);
@@ -30027,7 +29965,7 @@
                 if (".ttf" === extName) {
                     this._ttfConfig || (this._ttfConfig = {
                         fontFilePath: fontHandle,
-                        fontSize: 40,
+                        fontSize: this._fontSize,
                         outlineSize: 0,
                         glyphs: 0,
                         customGlyphs: "",
@@ -30076,24 +30014,25 @@
             fontHandle = fontHandle || "Arial";
             var extName = cc.path.extname(fontHandle);
             var type = _ccsg.Label.Type.TTF;
+            this._fontSize = 40;
             var label;
             if (".ttf" === extName) {
                 var ttfConfig = {
                     fontFilePath: fontHandle,
-                    fontSize: 40,
+                    fontSize: this._fontSize,
                     outlineSize: 0,
                     glyphs: 0,
                     customGlyphs: "",
                     distanceFieldEnable: false
                 };
-                label = jsbLabel.createWithTTF(ttfConfig, string, 40);
+                label = jsbLabel.createWithTTF(ttfConfig, string, this._fontSize);
                 label._ttfConfig = ttfConfig;
             } else {
                 if (spriteFrame) {
                     label = jsbLabel.createWithBMFont(fontHandle, string, spriteFrame);
                     type = _ccsg.Label.Type.BMFont;
                 } else {
-                    label = jsbLabel.createWithSystemFont(string || "", fontHandle, 40);
+                    label = jsbLabel.createWithSystemFont(string || "", fontHandle, this._fontSize);
                     type = _ccsg.Label.Type.SystemFont;
                     label._isSystemFontUsed = true;
                 }
@@ -30113,7 +30052,7 @@
             RESIZE_HEIGHT: 3
         });
     }, {} ],
-    177: [ function(require, module, exports) {
+    176: [ function(require, module, exports) {
         "use strict";
         require("../cocos2d/core/load-pipeline");
         function empty(item, callback) {
@@ -30154,11 +30093,21 @@
         function loadImage(item, callback) {
             var url = item.url;
             var cachedTex = cc.textureCache.getTextureForKey(url);
-            cachedTex ? callback && callback(null, cachedTex) : url.match(jsb.urlRegExp) ? jsb.loadRemoteImg(url, function(succeed, tex) {
-                succeed ? callback && callback(null, tex) : callback && callback(new Error("Load image failed: " + url));
-            }) : cc.textureCache._addImageAsync(url, function(tex) {
-                tex instanceof cc.Texture2D ? callback && callback(null, tex) : callback && callback(new Error("Load image failed: " + url));
-            });
+            if (cachedTex) {
+                callback && callback(null, cachedTex);
+            } else {
+                if (url.match(jsb.urlRegExp)) {
+                    jsb.loadRemoteImg(url, function(succeed, tex) {
+                        succeed ? callback && callback(null, tex) : callback && callback(new Error("Load image failed: " + url));
+                    });
+                } else {
+                    var addImageCallback = function(tex) {
+                        tex instanceof cc.Texture2D ? callback && callback(null, tex) : callback && callback(new Error("Load image failed: " + url));
+                        jsb.unregisterNativeRef(cc.textureCache, addImageCallback);
+                    };
+                    cc.textureCache._addImageAsync(url, addImageCallback);
+                }
+            }
         }
         cc.loader.addLoadHandlers({
             png: loadImage,
@@ -30173,9 +30122,9 @@
             "default": empty
         });
     }, {
-        "../cocos2d/core/load-pipeline": 97
+        "../cocos2d/core/load-pipeline": 98
     } ],
-    178: [ function(require, module, exports) {
+    177: [ function(require, module, exports) {
         "use strict";
         cc.ParticleSystem.Mode = cc.Enum({
             GRAVITY: 0,
@@ -30220,7 +30169,7 @@
             }
         }
     }, {} ],
-    179: [ function(require, module, exports) {
+    178: [ function(require, module, exports) {
         cc.initEngine();
         cc.ClassManager || (cc.ClassManager = window.ClassManager || {
             id: 0 | 998 * Math.random(),
@@ -30243,14 +30192,14 @@
     }, {
         "../CCDebugger": 1,
         "../DebugInfos": 2,
-        "../cocos2d/core/event": 80,
-        "../cocos2d/core/event-manager/CCSystemEvent": 77,
-        "../cocos2d/core/platform/js": 120,
+        "../cocos2d/core/event": 81,
+        "../cocos2d/core/event-manager/CCSystemEvent": 78,
+        "../cocos2d/core/platform/js": 121,
         "../cocos2d/core/utils/find": 129,
         "../cocos2d/core/utils/mutable-forward-iterator": 131,
         "../cocos2d/core/value-types": 144
     } ],
-    180: [ function(require, module, exports) {
+    179: [ function(require, module, exports) {
         "use strict";
         var v2Found = false;
         if (cc.Scale9SpriteV2) {
@@ -30427,13 +30376,13 @@
             };
         }
     }, {} ],
-    181: [ function(require, module, exports) {
+    180: [ function(require, module, exports) {
         sp._SGSkeleton = sp.Skeleton;
         sp._SGSkeletonAnimation = sp.SkeletonAnimation;
         sp._SGSkeleton.prototype.setPremultipliedAlpha = sp._SGSkeleton.prototype.setOpacityModifyRGB;
         sp._SGSkeleton.prototype.setOpacityModifyRGB = function() {};
     }, {} ],
-    182: [ function(require, module, exports) {
+    181: [ function(require, module, exports) {
         "use strict";
         require("../cocos2d/core/platform/CCClass");
         require("../cocos2d/core/assets/CCAsset");
@@ -30582,9 +30531,9 @@
         });
     }, {
         "../cocos2d/core/assets/CCAsset": 25,
-        "../cocos2d/core/platform/CCClass": 107
+        "../cocos2d/core/platform/CCClass": 108
     } ],
-    183: [ function(require, module, exports) {
+    182: [ function(require, module, exports) {
         "use strict";
         if (!cc.runtime) {
             var _p = cc.TMXObject.prototype;
@@ -30599,13 +30548,13 @@
             cc.defineGetterSetter(_p, "sgNode", _p.getNode, null);
         }
     }, {} ],
-    184: [ function(require, module, exports) {
+    183: [ function(require, module, exports) {
         cc.VideoPlayer = ccui.VideoPlayer;
     }, {} ],
-    185: [ function(require, module, exports) {
+    184: [ function(require, module, exports) {
         cc.WebView = ccui.WebView;
     }, {} ],
-    186: [ function(require, module, exports) {
+    185: [ function(require, module, exports) {
         var _imageArray = [];
         function _addDownloadList(url, picName, suffix, option, cb) {
             var item = {
@@ -30730,7 +30679,7 @@
             followedNode && (rect ? this.initWithTarget(followedNode, rect) : this.initWithTarget(followedNode));
         };
     }, {} ],
-    187: [ function(require, module, exports) {
+    186: [ function(require, module, exports) {
         "use strict";
         cc.Scheduler.prototype.unscheduleAllForTarget || (cc.Scheduler.prototype.unscheduleAllForTarget = function(target) {
             this.unscheduleAllCallbacksForTarget(target);
@@ -30787,7 +30736,7 @@
             return true;
         };
     }, {} ],
-    188: [ function(require, module, exports) {
+    187: [ function(require, module, exports) {
         "use strict";
         var scheduleTarget = {
             update: function(dt) {
@@ -30797,7 +30746,7 @@
         };
         cc.Director.getInstance().getScheduler().scheduleUpdateForTarget(scheduleTarget, -1e3, false);
     }, {} ],
-    189: [ function(require, module, exports) {
+    188: [ function(require, module, exports) {
         "use strict";
         cc.Scale9Sprite.prototype.setRenderingType = function(type) {
             if (this._renderingType === type) {
@@ -30813,5 +30762,5 @@
             }
         };
     }, {} ],
-    190: [ function(require, module, exports) {}, {} ]
-}, {}, [ 166, 153 ]);
+    189: [ function(require, module, exports) {}, {} ]
+}, {}, [ 165, 153 ]);

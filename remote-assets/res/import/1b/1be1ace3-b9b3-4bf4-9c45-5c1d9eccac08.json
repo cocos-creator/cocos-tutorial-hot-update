@@ -217,8 +217,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 17.8,
-      "height": 20.2
+      "width": 12.8,
+      "height": 16
     },
     "_position": {
       "__type__": "cc.Vec2",
@@ -244,9 +244,10 @@
       "__id__": 6
     },
     "_useOriginalSize": false,
+    "_actualFontSize": 20,
     "_fontSize": 20,
     "_N$file": {
-      "__uuid__": "67d645ab-1f14-4c86-a929-e644ab31c2a3"
+      "__uuid__": "a9e0c9b3-6c8a-4381-8123-da5f3cfe0b35"
     },
     "_isSystemFontUsed": false,
     "_N$string": "A",

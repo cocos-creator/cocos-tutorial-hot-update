@@ -3573,4 +3573,4 @@ var StateJS;
 module.exports = StateJS;
 
 cc._RFpop();
-},{}]},{},["AudioMng","RankItem","Decks","ActorRenderer","Menu","Player","Bet","SideSwitcher","Mask","PlayerData","AssetMng","Types","Game","game-fsm","FXPlayer","state.com","Utils","Actor","ButtonScaler","Card","CounterTest","TossChip","Dealer","HotUpdate","InGameUI","RankList"]);
+},{}]},{},["Actor","ActorRenderer","AssetMng","AudioMng","Bet","Card","CounterTest","Dealer","FXPlayer","Game","Menu","Player","SideSwitcher","TossChip","ButtonScaler","InGameUI","RankItem","RankList","state.com","Decks","HotUpdate","Mask","PlayerData","Types","Utils","game-fsm"]);

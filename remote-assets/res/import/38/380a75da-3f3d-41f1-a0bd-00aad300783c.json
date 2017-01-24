@@ -1,0 +1,21 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "stake_number",
+    "texture": "f5c37785-c137-413d-beb4-0c107e58830a",
+    "rect": [
+      3,
+      3,
+      115,
+      51
+    ],
+    "offset": [
+      -3.5,
+      3.5
+    ],
+    "originalSize": [
+      128,
+      64
+    ]
+  }
+}

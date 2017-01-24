@@ -1,9 +1,0 @@
-{
-  "__type__": "cc.BitmapFont",
-  "_name": "stake_number",
-  "_rawFiles": [
-    "raw-bitmap-font.fnt",
-    "stake_number.png"
-  ],
-  "fontSize": 26
-}
