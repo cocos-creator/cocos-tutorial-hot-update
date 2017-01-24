@@ -8,5 +8,16 @@
     "default"
   ],
   "start-scene": "8a546935-70d4-42d2-a051-8d0e76f28008",
-  "excluded-modules": []
+  "excluded-modules": [],
+  "design-resolution-width": 960,
+  "design-resolution-height": 640,
+  "fit-width": false,
+  "fit-height": true,
+  "use-project-simulator-setting": false,
+  "simulator-orientation": false,
+  "use-customize-simulator": false,
+  "simulator-resolution": {
+    "width": 960,
+    "height": 640
+  }
 }
