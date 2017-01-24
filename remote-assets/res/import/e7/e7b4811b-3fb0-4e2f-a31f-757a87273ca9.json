@@ -173,8 +173,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 139,
-      "height": 77
+      "width": 141,
+      "height": 78
     },
     "_children": [
       {
@@ -288,10 +288,11 @@
       "__id__": 7
     },
     "_useOriginalSize": false,
+    "_actualFontSize": 25,
     "_fontSize": 25,
     "_lineHeight": 25,
     "_N$file": {
-      "__uuid__": "d80d3fa9-3ca7-4431-ab5f-88bf39b1068a"
+      "__uuid__": "f60efab7-baa5-4ec2-ab29-c82c3ab029f4"
     },
     "_isSystemFontUsed": false,
     "_N$string": "$2000",
@@ -409,7 +410,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 100,
+      "width": 91,
       "height": 30
     },
     "_children": [
@@ -736,7 +737,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 100,
+      "width": 82,
       "height": 37
     },
     "_children": [
@@ -777,13 +778,13 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 100,
+      "width": 82,
       "height": 37
     },
     "_scaleX": -1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": -50
+      "x": -41
     },
     "_components": [
       {
@@ -838,7 +839,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 250,
-      "height": 76
+      "height": 79
     },
     "_components": [
       {

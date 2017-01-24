@@ -14,6 +14,10 @@ _CCSettings = {
                 "textures/cards/ranker.png",
                 "cc.Texture2D"
             ],
+            "0259afd7-9819-4f15-ad34-3a279d246fe7": [
+                "font/poker_number.png",
+                "cc.Texture2D"
+            ],
             "08a26555-0754-4879-86c2-ae161c3e1974": [
                 "textures/animation/blackjack/BLACK JACK_4.png",
                 "cc.Texture2D"
@@ -524,6 +528,10 @@ _CCSettings = {
             ],
             "f3852f2a-7720-440e-9f8c-d3c447159648": [
                 "textures/UI/new/biaoqing.png",
+                "cc.Texture2D"
+            ],
+            "f5c37785-c137-413d-beb4-0c107e58830a": [
+                "font/stake_number.png",
                 "cc.Texture2D"
             ],
             "f7dcbfe5-80b1-4e30-a54a-99bb4e9d0c7f": [
