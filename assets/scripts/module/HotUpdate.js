@@ -170,6 +170,63 @@ cc.Class({
         if (!cc.sys.ENABLE_GC_FOR_NATIVE_OBJECTS) {
             this._am.retain();
         }
+
+        // Setup your own version compare handler, versionA and B is versions in string
+        // if the return value greater than 0, versionA is greater than B,
+        // if the return value equals 0, versionA equals to B,
+        // if the return value smaller than 0, versionA is smaller than B.
+        this._am.setVersionCompareHandle(function (versionA, versionB) {
+            cc.log("JS Custom Version Compare: version A is " + versionA + ', version B is ' + versionB);
+            var vA = versionA.split('.');
+            var vB = versionB.split('.');
+            for (var i = 0; i < vA.length; ++i) {
+                var a = parseInt(vA[i]);
+                var b = parseInt(vB[i] || 0);
+                if (a === b) {
+                    continue;
+                }
+                else {
+                    return a - b;
+                }
+            }
+            if (vB.length > vA.length) {
+                return -1;
+            }
+            else {
+                return 0;
+            }
+        });
+
+        var panel = this.panel;
+        // Setup the verification callback, but we don't have md5 check function yet, so only print some message
+        // Return true if the verification passed, otherwise return false
+        this._am.setVerifyCallback(function (path, asset) {
+            // When asset is compressed, we don't need to check its md5, because zip file have been deleted.
+            var compressed = asset.compressed;
+            // Retrieve the correct md5 value.
+            var expectedMD5 = asset.md5;
+            // asset.path is relative path and path is absolute.
+            var relativePath = asset.path;
+            // The size of asset file, but this value could be absent.
+            var size = asset.size;
+            if (compressed) {
+                panel.info.string = "Verification passed : " + relativePath;
+                return true;
+            }
+            else {
+                panel.info.string = "Verification passed : " + relativePath + ' (' + expectedMD5 + ')';
+                return true;
+            }
+        });
+
+        this.panel.info.string = 'Hot update is ready, please check or directly update.';
+
+        if (cc.sys.os === cc.sys.OS_ANDROID) {
+            // Some Android device may slow down the download process when concurrent tasks is too much.
+            // The value may not be accurate, please do more test and find what's most suitable for your game.
+            this._am.setMaxConcurrentTask(2);
+            this.panel.info.string = "Max concurrent tasks count have been limited to 2";
+        }
         
         this.panel.fileProgress.progress = 0;
         this.panel.byteProgress.progress = 0;
