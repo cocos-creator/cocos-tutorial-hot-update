@@ -498,7 +498,7 @@ cc.Class({
         if (this._am.getState() === jsb.AssetsManager.State.UNINITED) {
             var manifest = new jsb.Manifest(customManifestStr, this._storagePath);
             this._am.loadLocalManifest(manifest, this._storagePath);
-            this.panel.info.string = 'Using custom manifest, total files to be downloaded should be 70';
+            this.panel.info.string = 'Using custom manifest';
         }
     },
     

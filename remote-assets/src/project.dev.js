@@ -1,6 +1,6 @@
 require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"ActorRenderer":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '1a792KO87NBg7vCCIp1jq+j', 'ActorRenderer');
+cc._RF.push(module, '1a792KO87NBg7vCCIp1jq+j', 'ActorRenderer');
 // scripts/ActorRenderer.js
 
 var Game = require('Game');
@@ -267,10 +267,10 @@ cc.Class({
     }
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{"Game":"Game","Types":"Types","Utils":"Utils"}],"Actor":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '7d008dTf6xB2Z0wCAdzh1Rx', 'Actor');
+cc._RF.push(module, '7d008dTf6xB2Z0wCAdzh1Rx', 'Actor');
 // scripts/Actor.js
 
 var Types = require('Types');
@@ -391,10 +391,10 @@ cc.Class({
     }
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{"Types":"Types","Utils":"Utils"}],"AssetMng":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '54522LcoVpPHbrqYgwp/1Qm', 'AssetMng');
+cc._RF.push(module, '54522LcoVpPHbrqYgwp/1Qm', 'AssetMng');
 // scripts/AssetMng.js
 
 var AssetMng = cc.Class({
@@ -424,10 +424,10 @@ var AssetMng = cc.Class({
     }
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"AudioMng":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '01ca4tStvVH+JmZ5TNcmuAu', 'AudioMng');
+cc._RF.push(module, '01ca4tStvVH+JmZ5TNcmuAu', 'AudioMng');
 // scripts/AudioMng.js
 
 cc.Class({
@@ -502,10 +502,10 @@ cc.Class({
     }
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"Bet":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '28f38yToT1Pw7NgyeCvRxDC', 'Bet');
+cc._RF.push(module, '28f38yToT1Pw7NgyeCvRxDC', 'Bet');
 // scripts/Bet.js
 
 var Game = require('Game');
@@ -570,10 +570,10 @@ cc.Class({
     }
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{"Game":"Game"}],"ButtonScaler":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, 'a171dSnCXFMRIqs1IWdvgWM', 'ButtonScaler');
+cc._RF.push(module, 'a171dSnCXFMRIqs1IWdvgWM', 'ButtonScaler');
 // scripts/UI/ButtonScaler.js
 
 cc.Class({
@@ -610,10 +610,10 @@ cc.Class({
     }
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"Card":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, 'ab67e5QkiVCBZ3DIMlWhiAt', 'Card');
+cc._RF.push(module, 'ab67e5QkiVCBZ3DIMlWhiAt', 'Card');
 // scripts/Card.js
 
 cc.Class({
@@ -692,10 +692,10 @@ cc.Class({
     }
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"CounterTest":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, 'b0926/aIatATYgTuL0RyW/q', 'CounterTest');
+cc._RF.push(module, 'b0926/aIatATYgTuL0RyW/q', 'CounterTest');
 // scripts/CounterTest.js
 
 cc.Class({
@@ -718,10 +718,10 @@ cc.Class({
     update: function update(dt) {}
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"Dealer":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, 'ce2dfoqEulHCLjS1Z9xPN7t', 'Dealer');
+cc._RF.push(module, 'ce2dfoqEulHCLjS1Z9xPN7t', 'Dealer');
 // scripts/Dealer.js
 
 var Actor = require('Actor');
@@ -778,10 +778,10 @@ cc.Class({
     }
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{"Actor":"Actor","Game":"Game","Types":"Types","Utils":"Utils"}],"Decks":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '17024G0JFpHcLI5GREbF8VN', 'Decks');
+cc._RF.push(module, '17024G0JFpHcLI5GREbF8VN', 'Decks');
 // scripts/module/Decks.js
 
 var Types = require('Types');
@@ -875,10 +875,10 @@ Decks.prototype.draw = function () {
 
 module.exports = Decks;
 
-cc._RFpop();
+cc._RF.pop();
 },{"Types":"Types"}],"FXPlayer":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '68da2yjdGVMSYhXLN9DukIB', 'FXPlayer');
+cc._RF.push(module, '68da2yjdGVMSYhXLN9DukIB', 'FXPlayer');
 // scripts/FXPlayer.js
 
 cc.Class({
@@ -904,10 +904,10 @@ cc.Class({
     }
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"Game":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '63738OONCFKHqsf4QSeJSun', 'Game');
+cc._RF.push(module, '63738OONCFKHqsf4QSeJSun', 'Game');
 // scripts/Game.js
 
 var players = require('PlayerData').players;
@@ -1226,26 +1226,28 @@ var Game = cc.Class({
 
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{"Decks":"Decks","PlayerData":"PlayerData","Types":"Types","game-fsm":"game-fsm"}],"HotUpdate":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, 'e390cpl5vpL54CRkH0xI8Ul', 'HotUpdate');
+cc._RF.push(module, 'e390cpl5vpL54CRkH0xI8Ul', 'HotUpdate');
 // scripts/module/HotUpdate.js
 
+"use strict";
+
 cc.Class({
-    "extends": cc.Component,
+    extends: cc.Component,
 
     properties: {
         updatePanel: {
-            "default": null,
+            default: null,
             type: cc.Node
         },
         manifestUrl: {
-            "default": null,
+            default: null,
             url: cc.RawAsset
         },
         percent: {
-            "default": null,
+            default: null,
             type: cc.Label
         }
     },
@@ -1389,10 +1391,10 @@ cc.Class({
     }
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"InGameUI":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, 'f192efroeFEyaxtfh8TVXYz', 'InGameUI');
+cc._RF.push(module, 'f192efroeFEyaxtfh8TVXYz', 'InGameUI');
 // scripts/UI/InGameUI.js
 
 var Game = require('Game');
@@ -1509,10 +1511,10 @@ cc.Class({
     update: function update(dt) {}
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{"Game":"Game"}],"Mask":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '3c16c3le6hCsrtnanqK8N2W', 'Mask');
+cc._RF.push(module, '3c16c3le6hCsrtnanqK8N2W', 'Mask');
 // scripts/module/Mask.js
 
 cc.Class({
@@ -1542,10 +1544,10 @@ cc.Class({
 
 // },
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"Menu":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '20f60m+3RlGO7x2/ARzZ6Qc', 'Menu');
+cc._RF.push(module, '20f60m+3RlGO7x2/ARzZ6Qc', 'Menu');
 // scripts/Menu.js
 
 cc.Class({
@@ -1572,10 +1574,10 @@ cc.Class({
     update: function update(dt) {}
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"PlayerData":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '4f9c5eXxqhHAKLxZeRmgHDB', 'PlayerData');
+cc._RF.push(module, '4f9c5eXxqhHAKLxZeRmgHDB', 'PlayerData');
 // scripts/module/PlayerData.js
 
 var players = [{
@@ -1612,10 +1614,10 @@ module.exports = {
 	players: players
 };
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"Player":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '226a2AvzRpHL7SJGTMy5PDX', 'Player');
+cc._RF.push(module, '226a2AvzRpHL7SJGTMy5PDX', 'Player');
 // scripts/Player.js
 
 var Actor = require('Actor');
@@ -1657,10 +1659,10 @@ cc.Class({
 
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{"Actor":"Actor"}],"RankItem":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '1657ewfijBOXLq5zGqr6PvE', 'RankItem');
+cc._RF.push(module, '1657ewfijBOXLq5zGqr6PvE', 'RankItem');
 // scripts/UI/RankItem.js
 
 cc.Class({
@@ -1718,10 +1720,10 @@ cc.Class({
     update: function update(dt) {}
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"RankList":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, 'fe3fcIxCFFLrKHg6s5+xRUU', 'RankList');
+cc._RF.push(module, 'fe3fcIxCFFLrKHg6s5+xRUU', 'RankList');
 // scripts/UI/RankList.js
 
 var players = require('PlayerData').players;
@@ -1760,10 +1762,10 @@ cc.Class({
     update: function update(dt) {}
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{"PlayerData":"PlayerData"}],"SideSwitcher":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '3aae7lZKyhPqqsLD3wMKl6X', 'SideSwitcher');
+cc._RF.push(module, '3aae7lZKyhPqqsLD3wMKl6X', 'SideSwitcher');
 // scripts/SideSwitcher.js
 
 cc.Class({
@@ -1786,10 +1788,10 @@ cc.Class({
     }
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"TossChip":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, 'b4eb5Lo6U1IZ4eJWuxShCdH', 'TossChip');
+cc._RF.push(module, 'b4eb5Lo6U1IZ4eJWuxShCdH', 'TossChip');
 // scripts/TossChip.js
 
 cc.Class({
@@ -1808,10 +1810,10 @@ cc.Class({
     }
 });
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"Types":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '5b633QMQxpFmYetofEvK2UD', 'Types');
+cc._RF.push(module, '5b633QMQxpFmYetofEvK2UD', 'Types');
 // scripts/module/Types.js
 
 var Suit = cc.Enum({
@@ -1927,10 +1929,10 @@ module.exports = {
     Outcome: Outcome
 };
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"Utils":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '73590esk6xP9ICqhfUZalMg', 'Utils');
+cc._RF.push(module, '73590esk6xP9ICqhfUZalMg', 'Utils');
 // scripts/module/Utils.js
 
 
@@ -1977,10 +1979,10 @@ module.exports = {
     isMobile: isMobile
 };
 
-cc._RFpop();
+cc._RF.pop();
 },{}],"game-fsm":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '6510d1SmQRMMYH8FEIA7zXq', 'game-fsm');
+cc._RF.push(module, '6510d1SmQRMMYH8FEIA7zXq', 'game-fsm');
 // scripts/module/game-fsm.js
 
 var State = require('state.com');
@@ -2100,10 +2102,10 @@ exports = {
 
 module.exports = exports;
 
-cc._RFpop();
+cc._RF.pop();
 },{"state.com":"state.com"}],"state.com":[function(require,module,exports){
 "use strict";
-cc._RFpush(module, '71d9293mx9CFryhJvRw85ZS', 'state.com');
+cc._RF.push(module, '71d9293mx9CFryhJvRw85ZS', 'state.com');
 // scripts/lib/state.com.js
 
 /*
@@ -3572,5 +3574,5 @@ var StateJS;
 //var module = module;
 module.exports = StateJS;
 
-cc._RFpop();
+cc._RF.pop();
 },{}]},{},["Actor","ActorRenderer","AssetMng","AudioMng","Bet","Card","CounterTest","Dealer","FXPlayer","Game","Menu","Player","SideSwitcher","TossChip","ButtonScaler","InGameUI","RankItem","RankList","state.com","Decks","HotUpdate","Mask","PlayerData","Types","Utils","game-fsm"]);

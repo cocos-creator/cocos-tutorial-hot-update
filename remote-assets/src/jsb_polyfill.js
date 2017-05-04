@@ -67,7 +67,7 @@
             logList.scrollTop = logList.scrollHeight;
         };
         function _formatString(arg) {
-            if ("object" != typeof arg) {
+            if ("object" !== typeof arg) {
                 return arg;
             }
             try {
@@ -88,7 +88,7 @@
         });
         var jsbLog = cc.log || console.log;
         cc._initDebugSetting = function(mode) {
-            cc.log = cc.warn = cc.error = cc._throw = cc.assert = function() {};
+            cc.log = cc.logID = cc.warn = cc.warnID = cc.error = cc.errorID = cc._throw = cc.assert = cc.assertID = function() {};
             if (mode === cc.DebugMode.NONE) {
                 return;
             }
@@ -96,62 +96,57 @@
             if (console && console.log.apply) {
                 console.error || (console.error = console.log);
                 console.warn || (console.warn = console.log);
-                console.error.bind ? cc.error = console.error.bind(console) : cc.error = function() {
-                    return console.error.apply(console, arguments);
-                };
-                cc.assert = function(cond, msg) {
+                console.error.bind ? cc.error = console.error.bind(console) : cc.error = console.error;
+                cc.assert = function(cond, msg, ...args) {
                     if (!cond && msg) {
-                        for (var i = 2; i < arguments.length; i++) {
-                            msg = msg.replace(/(%s)|(%d)/, _formatString(arguments[i]));
+                        for (var i = 0; i < args.length; i++) {
+                            msg = msg.replace(/(%s)|(%d)/, _formatString(args[i]));
                         }
                         throw new Error(msg);
                     }
                 };
-                mode !== cc.DebugMode.ERROR && (console.warn.bind ? cc.warn = console.warn.bind(console) : cc.warn = function() {
-                    return console.warn.apply(console, arguments);
-                });
-                if (mode === cc.DebugMode.INFO) {
-                    cc.log = jsbLog;
-                    cc.info = function() {
-                        (console.info || console.log).apply(console, arguments);
-                    };
-                }
             }
-            cc._throw = function(error) {
-                var stack = error.stack;
-                stack ? cc.error(error + "\n" + stack) : cc.error(error);
-            };
-            var errorMapUrl = "https://github.com/cocos-creator/engine/blob/master/EngineErrorMap.md";
-            function genLogFunc(func, type) {
-                return function(id) {
-                    if (1 === arguments.length) {
-                        func(type + " " + id + ", please go to " + errorMapUrl + "#" + id + " to see details.");
-                        return;
-                    }
-                    var argsArr = new Array(arguments.length);
-                    for (var i = 0; i < argsArr.length; ++i) {
-                        argsArr[i] = arguments[i];
-                    }
-                    var args = "";
-                    2 === arguments.length ? args = "Arguments: " + arguments[1] : arguments.length > 2 && (args = "Arguments: " + argsArr.slice(1).join(", "));
-                    func(type + " " + id + ", please go to " + errorMapUrl + "#" + id + " to see details. " + args);
-                };
+            mode !== cc.DebugMode.ERROR && (console.warn.bind ? cc.warn = console.warn.bind(console) : cc.warn = console.warn);
+            if (mode === cc.DebugMode.INFO) {
+                cc.log = jsbLog;
+                cc.info = jsbLog;
             }
             cc.warnID = genLogFunc(cc.warn, "Warning");
             cc.errorID = genLogFunc(cc.error, "Error");
             cc.logID = genLogFunc(cc.log, "Log");
-            cc.assertID = function(cond, id) {
-                var argsArr = new Array(arguments.length);
-                for (var i = 0; i < argsArr.length; ++i) {
-                    argsArr[i] = arguments[i];
+            var assertFailed = genLogFunc(function() {
+                var argsArr = [ false ];
+                for (var i = 0; i < arguments.length; ++i) {
+                    argsArr.push(arguments[i]);
                 }
-                var args = "";
-                3 === arguments.length ? args = "Arguments: " + arguments[2] : arguments.length > 3 && (args = "Arguments: " + argsArr.slice(2).join(", "));
-                cc.assert(cond, "Assert " + id + ", please go to " + errorMapUrl + "#" + id + " to see details. " + args);
+                cc.assert.apply(null, argsArr);
+            }, "Assert");
+            cc.assertID = function(cond, ...args) {
+                if (cond) {
+                    return;
+                }
+                assertFailed.apply(null, args);
             };
         };
+        cc._throw = function(error) {
+            var stack = error.stack;
+            stack ? cc.error(error + "\n" + stack) : cc.error(error);
+        };
+        var errorMapUrl = "https://github.com/cocos-creator/engine/blob/master/EngineErrorMap.md";
+        function genLogFunc(func, type) {
+            return function(...args) {
+                var id = args[0];
+                if (1 === args.length) {
+                    func(type + " " + id + ", please go to " + errorMapUrl + "#" + id + " to see details.");
+                    return;
+                }
+                var msg = "";
+                2 === args.length ? msg = "Arguments: " + args[1] : args.length > 2 && (msg = "Arguments: " + args.slice(1).join(", "));
+                func(type + " " + id + ", please go to " + errorMapUrl + "#" + id + " to see details. " + msg);
+            };
+        }
     }, {
-        "./cocos2d/core/value-types/CCEnum": 136
+        "./cocos2d/core/value-types/CCEnum": 162
     } ],
     2: [ function(require, module, exports) {
         var logs;
@@ -1001,7 +996,7 @@
                 if (0 === dt || 1 === dt) {
                     newT = dt;
                 } else {
-                    dt = 2 * dt;
+                    dt *= 2;
                     locPeriod || (locPeriod = this._period = .3 * 1.5);
                     var s = locPeriod / 4;
                     dt -= 1;
@@ -1028,7 +1023,7 @@
                     if (0 === dt || 1 === dt) {
                         newT = dt;
                     } else {
-                        dt = 2 * dt;
+                        dt *= 2;
                         locPeriod || (locPeriod = this._period = .3 * 1.5);
                         var s = locPeriod / 4;
                         dt -= 1;
@@ -1135,7 +1130,7 @@
             update: function(dt) {
                 var newT = 0;
                 if (dt < .5) {
-                    dt = 2 * dt;
+                    dt *= 2;
                     newT = .5 * (1 - this.bounceTime(1 - dt));
                 } else {
                     newT = .5 * this.bounceTime(2 * dt - 1) + .5;
@@ -1155,7 +1150,7 @@
             easing: function(time1) {
                 var newT;
                 if (time1 < .5) {
-                    time1 = 2 * time1;
+                    time1 *= 2;
                     newT = .5 * (1 - cc._bounceTime(1 - time1));
                 } else {
                     newT = .5 * cc._bounceTime(2 * time1 - 1) + .5;
@@ -1227,7 +1222,7 @@
         cc.EaseBackInOut = cc.ActionEase.extend({
             update: function(dt) {
                 var overshoot = 2.5949095;
-                dt = 2 * dt;
+                dt *= 2;
                 if (dt < 1) {
                     this._inner.update(dt * dt * ((overshoot + 1) * dt - overshoot) / 2);
                 } else {
@@ -1247,7 +1242,7 @@
         cc._easeBackInOutObj = {
             easing: function(time1) {
                 var overshoot = 2.5949095;
-                time1 = 2 * time1;
+                time1 *= 2;
                 if (time1 < 1) {
                     return time1 * time1 * ((overshoot + 1) * time1 - overshoot) / 2;
                 }
@@ -1440,7 +1435,7 @@
         };
         cc.EaseQuarticActionInOut = cc.ActionEase.extend({
             _updateTime: function(time) {
-                time = 2 * time;
+                time *= 2;
                 if (time < 1) {
                     return .5 * time * time * time * time;
                 }
@@ -1521,7 +1516,7 @@
         };
         cc.EaseQuinticActionInOut = cc.ActionEase.extend({
             _updateTime: function(time) {
-                time = 2 * time;
+                time *= 2;
                 if (time < 1) {
                     return .5 * time * time * time * time * time;
                 }
@@ -1602,7 +1597,7 @@
         };
         cc.EaseCircleActionInOut = cc.ActionEase.extend({
             _updateTime: function(time) {
-                time = 2 * time;
+                time *= 2;
                 if (time < 1) {
                     return -.5 * (Math.sqrt(1 - time * time) - 1);
                 }
@@ -1683,7 +1678,7 @@
         };
         cc.EaseCubicActionInOut = cc.ActionEase.extend({
             _updateTime: function(time) {
-                time = 2 * time;
+                time *= 2;
                 if (time < 1) {
                     return .5 * time * time * time;
                 }
@@ -1820,7 +1815,7 @@
                 this.target.scaleX = Math.abs(this.target.scaleX) * (this._flippedX ? -1 : 1);
             },
             reverse: function() {
-                return new cc.FlipX((!this._flippedX));
+                return new cc.FlipX(!this._flippedX);
             },
             clone: function() {
                 var action = new cc.FlipX();
@@ -1846,7 +1841,7 @@
                 this.target.scaleY = Math.abs(this.target.scaleY) * (this._flippedY ? -1 : 1);
             },
             reverse: function() {
-                return new cc.FlipY((!this._flippedY));
+                return new cc.FlipY(!this._flippedY);
             },
             clone: function() {
                 var action = new cc.FlipY();
@@ -2470,7 +2465,7 @@
                 }
             },
             reverse: function() {
-                var action = new cc.RotateBy(this._duration, (-this._angleX), (-this._angleY));
+                var action = new cc.RotateBy(this._duration, -this._angleX, -this._angleY);
                 this._cloneDecoration(action);
                 this._reverseEaseList(action);
                 return action;
@@ -2659,7 +2654,7 @@
                 this._endSkewY = this._startSkewY + this._deltaY;
             },
             reverse: function() {
-                var action = new cc.SkewBy(this._duration, (-this._skewX), (-this._skewY));
+                var action = new cc.SkewBy(this._duration, -this._skewX, -this._skewY);
                 this._cloneDecoration(action);
                 this._reverseEaseList(action);
                 return action;
@@ -3174,7 +3169,7 @@
                 this.target.color = cc.color(this._fromR + this._deltaR * dt, this._fromG + this._deltaG * dt, this._fromB + this._deltaB * dt);
             },
             reverse: function() {
-                var action = new cc.TintBy(this._duration, (-this._deltaR), (-this._deltaG), (-this._deltaB));
+                var action = new cc.TintBy(this._duration, -this._deltaR, -this._deltaG, -this._deltaB);
                 this._cloneDecoration(action);
                 this._reverseEaseList(action);
                 return action;
@@ -3400,6 +3395,233 @@
         };
     }, {} ],
     8: [ function(require, module, exports) {
+        var HashElement = cc._Class.extend({
+            ctor: function() {
+                this.actions = [];
+                this.target = null;
+                this.actionIndex = 0;
+                this.currentAction = null;
+                this.currentActionSalvaged = false;
+                this.paused = false;
+            }
+        });
+        cc.ActionManager = cc._Class.extend({
+            _elementPool: [],
+            _searchElementByTarget: function(arr, target) {
+                for (var k = 0; k < arr.length; k++) {
+                    if (target === arr[k].target) {
+                        return arr[k];
+                    }
+                }
+                return null;
+            },
+            ctor: function() {
+                this._hashTargets = {};
+                this._arrayTargets = [];
+                this._currentTarget = null;
+                this._currentTargetSalvaged = false;
+            },
+            _getElement: function(target, paused) {
+                var element = this._elementPool.pop();
+                element || (element = new HashElement());
+                element.target = target;
+                element.paused = !!paused;
+                return element;
+            },
+            _putElement: function(element) {
+                element.actions.length = 0;
+                element.actionIndex = 0;
+                element.currentAction = null;
+                element.currentActionSalvaged = false;
+                element.paused = false;
+                this._elementPool.push(element);
+            },
+            addAction: function(action, target, paused) {
+                if (!action) {
+                    throw new Error("cc.ActionManager.addAction(): action must be non-null");
+                }
+                if (!target) {
+                    throw new Error("cc.ActionManager.addAction(): action must be non-null");
+                }
+                var element = this._hashTargets[target.__instanceId];
+                if (element) {
+                    element.actions || (element.actions = []);
+                } else {
+                    element = this._getElement(target, paused);
+                    this._hashTargets[target.__instanceId] = element;
+                    this._arrayTargets.push(element);
+                }
+                element.actions.push(action);
+                action.startWithTarget(target);
+            },
+            removeAllActions: function() {
+                var locTargets = this._arrayTargets;
+                for (var i = 0; i < locTargets.length; i++) {
+                    var element = locTargets[i];
+                    element && this.removeAllActionsFromTarget(element.target, true);
+                }
+            },
+            removeAllActionsFromTarget: function(target, forceDelete) {
+                if (null == target) {
+                    return;
+                }
+                var element = this._hashTargets[target.__instanceId];
+                if (element) {
+                    element.actions.indexOf(element.currentAction) === -1 || element.currentActionSalvaged || (element.currentActionSalvaged = true);
+                    element.actions.length = 0;
+                    this._currentTarget !== element || forceDelete ? this._deleteHashElement(element) : this._currentTargetSalvaged = true;
+                }
+            },
+            removeAction: function(action) {
+                if (null == action) {
+                    return;
+                }
+                var target = action.getOriginalTarget();
+                var element = this._hashTargets[target.__instanceId];
+                if (element) {
+                    for (var i = 0; i < element.actions.length; i++) {
+                        if (element.actions[i] === action) {
+                            element.actions.splice(i, 1);
+                            break;
+                        }
+                    }
+                } else {
+                    cc.logID(1001);
+                }
+            },
+            removeActionByTag: function(tag, target) {
+                tag === cc.Action.TAG_INVALID && cc.logID(1002);
+                cc.assertID(target, 1003);
+                var element = this._hashTargets[target.__instanceId];
+                if (element) {
+                    var limit = element.actions.length;
+                    for (var i = 0; i < limit; ++i) {
+                        var action = element.actions[i];
+                        if (action && action.getTag() === tag && action.getOriginalTarget() === target) {
+                            this._removeActionAtIndex(i, element);
+                            break;
+                        }
+                    }
+                }
+            },
+            getActionByTag: function(tag, target) {
+                tag === cc.Action.TAG_INVALID && cc.logID(1004);
+                var element = this._hashTargets[target.__instanceId];
+                if (element) {
+                    if (null != element.actions) {
+                        for (var i = 0; i < element.actions.length; ++i) {
+                            var action = element.actions[i];
+                            if (action && action.getTag() === tag) {
+                                return action;
+                            }
+                        }
+                    }
+                    cc.logID(1005, tag);
+                }
+                return null;
+            },
+            getNumberOfRunningActionsInTarget: function(target) {
+                var element = this._hashTargets[target.__instanceId];
+                if (element) {
+                    return element.actions ? element.actions.length : 0;
+                }
+                return 0;
+            },
+            pauseTarget: function(target) {
+                var element = this._hashTargets[target.__instanceId];
+                element && (element.paused = true);
+            },
+            resumeTarget: function(target) {
+                var element = this._hashTargets[target.__instanceId];
+                element && (element.paused = false);
+            },
+            pauseAllRunningActions: function() {
+                var idsWithActions = [];
+                var locTargets = this._arrayTargets;
+                for (var i = 0; i < locTargets.length; i++) {
+                    var element = locTargets[i];
+                    if (element && !element.paused) {
+                        element.paused = true;
+                        idsWithActions.push(element.target);
+                    }
+                }
+                return idsWithActions;
+            },
+            resumeTargets: function(targetsToResume) {
+                if (!targetsToResume) {
+                    return;
+                }
+                for (var i = 0; i < targetsToResume.length; i++) {
+                    targetsToResume[i] && this.resumeTarget(targetsToResume[i]);
+                }
+            },
+            pauseTargets: function(targetsToPause) {
+                if (!targetsToPause) {
+                    return;
+                }
+                for (var i = 0; i < targetsToPause.length; i++) {
+                    targetsToPause[i] && this.pauseTarget(targetsToPause[i]);
+                }
+            },
+            purgeSharedManager: function() {
+                cc.director.getScheduler().unscheduleUpdate(this);
+            },
+            _removeActionAtIndex: function(index, element) {
+                var action = element.actions[index];
+                action !== element.currentAction || element.currentActionSalvaged || (element.currentActionSalvaged = true);
+                element.actions.splice(index, 1);
+                element.actionIndex >= index && element.actionIndex--;
+                0 === element.actions.length && (this._currentTarget === element ? this._currentTargetSalvaged = true : this._deleteHashElement(element));
+            },
+            _deleteHashElement: function(element) {
+                var ret = false;
+                if (element && this._hashTargets[element.target.__instanceId]) {
+                    delete this._hashTargets[element.target.__instanceId];
+                    var targets = this._arrayTargets;
+                    for (var i = 0, l = targets.length; i < l; i++) {
+                        if (targets[i] === element) {
+                            targets.splice(i, 1);
+                            break;
+                        }
+                    }
+                    this._putElement(element);
+                    ret = true;
+                }
+                return ret;
+            },
+            update: function(dt) {
+                var locTargets = this._arrayTargets, locCurrTarget;
+                for (var elt = 0; elt < locTargets.length; elt++) {
+                    this._currentTarget = locTargets[elt];
+                    locCurrTarget = this._currentTarget;
+                    if (!locCurrTarget.paused) {
+                        for (locCurrTarget.actionIndex = 0; locCurrTarget.actionIndex < (locCurrTarget.actions ? locCurrTarget.actions.length : 0); locCurrTarget.actionIndex++) {
+                            locCurrTarget.currentAction = locCurrTarget.actions[locCurrTarget.actionIndex];
+                            if (!locCurrTarget.currentAction) {
+                                continue;
+                            }
+                            locCurrTarget.currentActionSalvaged = false;
+                            locCurrTarget.currentAction.step(dt * (locCurrTarget.currentAction._speedMethod ? locCurrTarget.currentAction._speed : 1));
+                            if (locCurrTarget.currentActionSalvaged) {
+                                locCurrTarget.currentAction = null;
+                            } else {
+                                if (locCurrTarget.currentAction.isDone()) {
+                                    locCurrTarget.currentAction.stop();
+                                    var action = locCurrTarget.currentAction;
+                                    locCurrTarget.currentAction = null;
+                                    this.removeAction(action);
+                                }
+                            }
+                            locCurrTarget.currentAction = null;
+                        }
+                    }
+                    this._currentTargetSalvaged && 0 === locCurrTarget.actions.length && this._deleteHashElement(locCurrTarget) && elt--;
+                }
+            }
+        });
+    }, {} ],
+    9: [ function(require, module, exports) {
+        require("./CCActionManager.js");
         require("./CCAction.js");
         require("./CCActionInterval.js");
         require("./CCActionInstant.js");
@@ -3410,9 +3632,10 @@
         "./CCActionCatmullRom.js": 4,
         "./CCActionEase.js": 5,
         "./CCActionInstant.js": 6,
-        "./CCActionInterval.js": 7
+        "./CCActionInterval.js": 7,
+        "./CCActionManager.js": 8
     } ],
-    9: [ function(require, module, exports) {
+    10: [ function(require, module, exports) {
         var JS = cc.js;
         var Animator = require("./animators").Animator;
         var DynamicAnimCurve = require("./animation-curves").DynamicAnimCurve;
@@ -3421,7 +3644,7 @@
         var EventAnimCurve = require("./animation-curves").EventAnimCurve;
         var EventInfo = require("./animation-curves").EventInfo;
         var WrapModeMask = require("./types").WrapModeMask;
-        var binarySearch = require("./binary-search");
+        var binarySearch = require("../core/utils/binary-search").binarySearchEpsilon;
         function AnimationAnimator(target, animation) {
             Animator.call(this, target);
             this.animation = animation;
@@ -3436,7 +3659,7 @@
             this.addAnimation(state);
             state.animator = this;
             state.play();
-            "number" == typeof startTime && state.setTime(startTime);
+            "number" === typeof startTime && state.setTime(startTime);
             this.play();
         };
         p.addAnimation = function(anim) {
@@ -3468,7 +3691,7 @@
             this.isPaused && this.resume();
         };
         p.setStateTime = function(state, time) {
-            if (2 === arguments.length) {
+            if (void 0 !== time) {
                 if (state) {
                     state.setTime(time);
                     state.sample();
@@ -3578,7 +3801,7 @@
                     curve.values.push(curveValue);
                     var curveTypes = keyframe.curve;
                     if (curveTypes) {
-                        if ("string" == typeof curveTypes) {
+                        if ("string" === typeof curveTypes) {
                             curve.types.push(curveTypes);
                             continue;
                         }
@@ -3654,19 +3877,19 @@
         }
         module.exports = AnimationAnimator;
     }, {
-        "./animation-curves": 11,
-        "./animators": 14,
-        "./binary-search": 16,
+        "../core/utils/binary-search": 154,
+        "./animation-curves": 12,
+        "./animators": 15,
         "./motion-path-helper": 19,
         "./types": 21
     } ],
-    10: [ function(require, module, exports) {
+    11: [ function(require, module, exports) {
         var AnimationClip = cc.Class({
             name: "cc.AnimationClip",
-            "extends": cc.Asset,
+            extends: cc.Asset,
             properties: {
                 _duration: {
-                    "default": 0,
+                    default: 0,
                     type: "Float"
                 },
                 duration: {
@@ -3675,20 +3898,20 @@
                     }
                 },
                 sample: {
-                    "default": 60
+                    default: 60
                 },
                 speed: {
-                    "default": 1
+                    default: 1
                 },
                 wrapMode: {
-                    "default": cc.WrapMode.Normal
+                    default: cc.WrapMode.Normal
                 },
                 curveData: {
-                    "default": {},
+                    default: {},
                     visible: false
                 },
                 events: {
-                    "default": [],
+                    default: [],
                     visible: false
                 }
             },
@@ -3722,12 +3945,13 @@
         });
         cc.AnimationClip = module.exports = AnimationClip;
     }, {} ],
-    11: [ function(require, module, exports) {
+    12: [ function(require, module, exports) {
         var bezierByTime = require("./bezier").bezierByTime;
-        var binarySearch = require("./binary-search");
+        var binarySearch = require("../core/utils/binary-search").binarySearchEpsilon;
         var WrapModeMask = require("./types").WrapModeMask;
+        var WrappedInfo = require("./types").WrappedInfo;
         function computeRatioByType(ratio, type) {
-            if ("string" == typeof type) {
+            if ("string" === typeof type) {
                 var func = cc.Easing[type];
                 func ? ratio = func(ratio) : cc.errorID(3906, type);
             } else {
@@ -3742,7 +3966,7 @@
         });
         var DynamicAnimCurve = cc.Class({
             name: "cc.DynamicAnimCurve",
-            "extends": AnimCurve,
+            extends: AnimCurve,
             properties: {
                 target: null,
                 prop: "",
@@ -3756,7 +3980,7 @@
                 var fromVal = values[frameIndex - 1];
                 var toVal = values[frameIndex];
                 var value;
-                value = "number" == typeof fromVal ? fromVal + (toVal - fromVal) * ratio : fromVal && fromVal.lerp ? fromVal.lerp(toVal, ratio) : fromVal;
+                value = "number" === typeof fromVal ? fromVal + (toVal - fromVal) * ratio : fromVal && fromVal.lerp ? fromVal.lerp(toVal, ratio) : fromVal;
                 return value;
             },
             _applyValue: function(target, prop, value) {
@@ -3818,7 +4042,7 @@
         };
         var SampledAnimCurve = cc.Class({
             name: "cc.SampledAnimCurve",
-            "extends": DynamicAnimCurve,
+            extends: DynamicAnimCurve,
             _findFrameIndex: function(ratios, ratio) {
                 var length = ratios.length - 1;
                 if (0 === length) {
@@ -3854,11 +4078,16 @@
         };
         var EventAnimCurve = cc.Class({
             name: "cc.EventAnimCurve",
-            "extends": AnimCurve,
+            extends: AnimCurve,
             properties: {
                 target: null,
                 ratios: [],
                 events: [],
+                _wrappedInfo: {
+                    default: function() {
+                        return new WrappedInfo();
+                    }
+                },
                 _lastWrappedInfo: null,
                 _ignoreIndex: NaN
             },
@@ -3868,7 +4097,7 @@
             },
             sample: function(time, ratio, animationNode) {
                 var length = this.ratios.length;
-                var currentWrappedInfo = animationNode.getWrappedInfo(animationNode.time);
+                var currentWrappedInfo = animationNode.getWrappedInfo(animationNode.time, this._wrappedInfo);
                 var direction = currentWrappedInfo.direction;
                 var currentIndex = binarySearch(this.ratios, currentWrappedInfo.ratio);
                 if (currentIndex < 0) {
@@ -3876,23 +4105,24 @@
                     direction < 0 && (currentIndex += 1);
                 }
                 this._ignoreIndex !== currentIndex && (this._ignoreIndex = NaN);
-                var lastWrappedInfo = this._lastWrappedInfo;
                 currentWrappedInfo.frameIndex = currentIndex;
-                this._lastWrappedInfo = currentWrappedInfo;
-                if (!lastWrappedInfo) {
+                if (!this._lastWrappedInfo) {
                     this._fireEvent(currentIndex);
+                    this._lastWrappedInfo = new WrappedInfo(currentWrappedInfo);
                     return;
                 }
-                var lastIndex = lastWrappedInfo.frameIndex;
                 var wrapMode = animationNode.wrapMode;
                 var currentIterations = this._wrapIterations(currentWrappedInfo.iterations);
+                var lastWrappedInfo = this._lastWrappedInfo;
                 var lastIterations = this._wrapIterations(lastWrappedInfo.iterations);
+                var lastIndex = lastWrappedInfo.frameIndex;
+                var lastDirection = lastWrappedInfo.direction;
                 var interationsChanged = lastIterations !== -1 && currentIterations !== lastIterations;
                 if (lastIndex === currentIndex && interationsChanged && 1 === length) {
                     this._fireEvent(0);
                 } else {
                     if (lastIndex !== currentIndex || interationsChanged) {
-                        direction = lastWrappedInfo.direction;
+                        direction = lastDirection;
                         do {
                             if (lastIndex !== currentIndex) {
                                 if (direction === -1 && 0 === lastIndex && currentIndex > 0) {
@@ -3916,6 +4146,7 @@
                         } while (lastIndex !== currentIndex && lastIndex > -1 && lastIndex < length);
                     }
                 }
+                this._lastWrappedInfo.set(currentWrappedInfo);
             },
             _fireEvent: function(index) {
                 if (index < 0 || index >= this.events.length || this._ignoreIndex === index) {
@@ -3937,7 +4168,7 @@
             onTimeChangedManually: function(time, animationNode) {
                 this._lastWrappedInfo = null;
                 this._ignoreIndex = NaN;
-                var info = animationNode.getWrappedInfo(time);
+                var info = animationNode.getWrappedInfo(time, this._wrappedInfo);
                 var direction = info.direction;
                 var frameIndex = binarySearch(this.ratios, info.ratio);
                 if (frameIndex < 0) {
@@ -3956,11 +4187,11 @@
             computeRatioByType: computeRatioByType
         };
     }, {
-        "./bezier": 15,
-        "./binary-search": 16,
+        "../core/utils/binary-search": 154,
+        "./bezier": 16,
         "./types": 21
     } ],
-    12: [ function(require, module, exports) {
+    13: [ function(require, module, exports) {
         var JS = cc.js;
         var AnimationManager = cc.Class({
             ctor: function() {
@@ -4021,7 +4252,7 @@
         });
         cc.AnimationManager = module.exports = AnimationManager;
     }, {} ],
-    13: [ function(require, module, exports) {
+    14: [ function(require, module, exports) {
         var JS = cc.js;
         var AnimationNode = require("./types").AnimationNode;
         function AnimationState(clip, name) {
@@ -4029,11 +4260,7 @@
                 duration: clip.length
             });
             this._emit = this.emit;
-            this.emit = function() {
-                var args = new Array(arguments.length);
-                for (var i = 0, l = args.length; i < l; i++) {
-                    args[i] = arguments[i];
-                }
+            this.emit = function(...args) {
                 cc.director.getAnimationManager().pushDelayEvent(this, "_emit", args);
             };
             this._clip = clip;
@@ -4072,7 +4299,7 @@
     }, {
         "./types": 21
     } ],
-    14: [ function(require, module, exports) {
+    15: [ function(require, module, exports) {
         var JS = cc.js;
         var Playable = require("./playable");
         var AnimationNode = require("./types").AnimationNode;
@@ -4142,8 +4369,8 @@
             for (var i = 0; i < len; i++) {
                 var frame = keyFrames[i];
                 var ratio = frame.ratio;
-                0 === i && "number" != typeof ratio ? frame.computedRatio = ratio = 0 : i === len - 1 && "number" != typeof ratio && (frame.computedRatio = ratio = 1);
-                if ("number" == typeof ratio) {
+                0 === i && "number" !== typeof ratio ? frame.computedRatio = ratio = 0 : i === len - 1 && "number" !== typeof ratio && (frame.computedRatio = ratio = 1);
+                if ("number" === typeof ratio) {
                     if (lastIndex + 1 < i) {
                         var count = i - lastIndex;
                         var step = (ratio - lastRatio) / count;
@@ -4196,7 +4423,7 @@
             for (var i = 0; i < keyFrames.length; i++) {
                 var frame = keyFrames[i];
                 var ratio = frame.ratio;
-                "number" != typeof ratio && (ratio = frame.computedRatio);
+                "number" !== typeof ratio && (ratio = frame.computedRatio);
                 if (ratio < 0) {
                     cc.errorID(3910);
                     continue;
@@ -4233,11 +4460,11 @@
             EntityAnimator: EntityAnimator
         };
     }, {
-        "./animation-curves": 11,
+        "./animation-curves": 12,
         "./playable": 20,
         "./types": 21
     } ],
-    15: [ function(require, module, exports) {
+    16: [ function(require, module, exports) {
         function bezier(C1, C2, C3, C4, t) {
             var t1 = 1 - t;
             return C1 * t1 * t1 * t1 + 3 * C2 * t1 * t1 * t + 3 * C3 * t1 * t * t + C4 * t * t * t;
@@ -4287,21 +4514,6 @@
             bezier: bezier,
             bezierByTime: bezierByTime
         };
-    }, {} ],
-    16: [ function(require, module, exports) {
-        var EPSILON = 1e-6;
-        function binarySearch(array, value) {
-            var l = 0, h = array.length - 1;
-            while (l <= h) {
-                var m = l + h >> 1;
-                if (Math.abs(array[m] - value) < EPSILON) {
-                    return m;
-                }
-                array[m] > value ? h = m - 1 : l = m + 1;
-            }
-            return ~l;
-        }
-        module.exports = binarySearch;
     }, {} ],
     17: [ function(require, module, exports) {
         var Easing = {
@@ -4527,13 +4739,13 @@
         require("./animation-state");
         require("./animation-animator");
     }, {
-        "./animation-animator": 9,
-        "./animation-clip": 10,
-        "./animation-curves": 11,
-        "./animation-manager": 12,
-        "./animation-state": 13,
-        "./animators": 14,
-        "./bezier": 15,
+        "./animation-animator": 10,
+        "./animation-clip": 11,
+        "./animation-curves": 12,
+        "./animation-manager": 13,
+        "./animation-state": 14,
+        "./animators": 15,
+        "./bezier": 16,
         "./easing": 17,
         "./motion-path-helper": 19,
         "./types": 21
@@ -4542,7 +4754,7 @@
         var DynamicAnimCurve = require("./animation-curves").DynamicAnimCurve;
         var computeRatioByType = require("./animation-curves").computeRatioByType;
         var bezier = require("./bezier").bezier;
-        var binarySearch = require("./binary-search");
+        var binarySearch = require("../core/utils/binary-search").binarySearchEpsilon;
         var v2 = cc.v2;
         function Curve(points) {
             this.points = points || [];
@@ -4565,7 +4777,7 @@
                 bezier.start = startPoint.pos;
                 bezier.startCtrlPoint = startPoint.out;
                 bezier.end = endPoint.pos;
-                bezier.endCtrlPoint = endPoint["in"];
+                bezier.endCtrlPoint = endPoint.in;
                 this.beziers.push(bezier);
                 this.length += bezier.getLength();
             }
@@ -4650,20 +4862,20 @@
             function createControlPoints(array) {
                 if (array instanceof cc.Vec2) {
                     return {
-                        "in": array,
+                        in: array,
                         pos: array,
                         out: array
                     };
                 }
                 if (Array.isArray(array) && 6 === array.length) {
                     return {
-                        "in": v2(array[2], array[3]),
+                        in: v2(array[2], array[3]),
                         pos: v2(array[0], array[1]),
                         out: v2(array[4], array[5])
                     };
                 }
                 return {
-                    "in": cc.Vec2.ZERO,
+                    in: cc.Vec2.ZERO,
                     pos: cc.Vec2.ZERO,
                     out: cc.Vec2.ZERO
                 };
@@ -4764,9 +4976,9 @@
             Bezier: Bezier
         };
     }, {
-        "./animation-curves": 11,
-        "./bezier": 15,
-        "./binary-search": 16
+        "../core/utils/binary-search": 154,
+        "./animation-curves": 12,
+        "./bezier": 16
     } ],
     20: [ function(require, module, exports) {
         var JS = cc.js;
@@ -4846,6 +5058,22 @@
             PingPongReverse: WrapModeMask.PingPong | WrapModeMask.Reverse
         });
         cc.WrapMode = WrapMode;
+        var WrappedInfo = function(info) {
+            if (info) {
+                this.set(info);
+                return;
+            }
+            this.ratio = 0;
+            this.time = 0;
+            this.direction = 1;
+            this.stopped = true;
+            this.iterations = 0;
+        };
+        WrappedInfo.prototype.set = function(info) {
+            for (var k in info) {
+                this[k] = info[k];
+            }
+        };
         var AnimationNodeBase = function() {
             Playable.call(this);
         };
@@ -4863,22 +5091,24 @@
             if (timingInput) {
                 this.delay = timingInput.delay || this.delay;
                 var duration = timingInput.duration;
-                "undefined" != typeof duration && (this.duration = duration);
+                "undefined" !== typeof duration && (this.duration = duration);
                 var speed = timingInput.speed;
-                "undefined" != typeof speed && (this.speed = speed);
+                "undefined" !== typeof speed && (this.speed = speed);
                 var wrapMode = timingInput.wrapMode;
-                if ("undefined" != typeof wrapMode) {
-                    var isEnum = "number" == typeof wrapMode;
+                if ("undefined" !== typeof wrapMode) {
+                    var isEnum = "number" === typeof wrapMode;
                     isEnum ? this.wrapMode = wrapMode : this.wrapMode = WrapMode[wrapMode];
                 }
                 var repeatCount = timingInput.repeatCount;
-                "undefined" != typeof repeatCount ? this.repeatCount = repeatCount : this.wrapMode & WrapModeMask.Loop && (this.repeatCount = 1 / 0);
+                "undefined" !== typeof repeatCount ? this.repeatCount = repeatCount : this.wrapMode & WrapModeMask.Loop && (this.repeatCount = 1 / 0);
             }
             this.time = 0;
             this._timeNoScale = 0;
             this._firstFramePlayed = false;
             this._duringDelay = false;
             this.delay > 0 && (this._duringDelay = true);
+            this._wrappedInfo = new WrappedInfo();
+            this._lastWrappedInfo = null;
         }
         JS.extend(AnimationNode, AnimationNodeBase);
         JS.mixin(AnimationNode.prototype, {
@@ -4892,14 +5122,14 @@
                 }
                 this._firstFramePlayed ? this.time += delta * this.speed : this._firstFramePlayed = true;
                 var info = this.sample();
-                this._lastWrappedInfo || (this._lastWrappedInfo = info);
+                this._lastWrappedInfo || (this._lastWrappedInfo = new WrappedInfo(info));
                 var anotherIteration = (0 | info.iterations) > (0 | this._lastWrappedInfo.iterations);
                 this.repeatCount > 1 && anotherIteration && ((this.wrapMode & WrapModeMask.Reverse) === WrapModeMask.Reverse ? this._lastWrappedInfo.direction < 0 && this.emit("lastframe", this) : this._lastWrappedInfo.direction > 0 && this.emit("lastframe", this));
                 if (info.stopped) {
                     this.stop();
                     this.emit("finished", this);
                 }
-                this._lastWrappedInfo = info;
+                this._lastWrappedInfo.set(info);
             },
             _needRevers: function(currentIterations) {
                 var wrapMode = this.wrapMode;
@@ -4913,7 +5143,8 @@
                 (wrapMode & WrapModeMask.Reverse) === WrapModeMask.Reverse && (needRevers = !needRevers);
                 return needRevers;
             },
-            getWrappedInfo: function(time) {
+            getWrappedInfo: function(time, info) {
+                info = info || new WrappedInfo();
                 var stopped = false;
                 var duration = this.duration;
                 var ratio = 0;
@@ -4941,16 +5172,15 @@
                 }
                 wrapMode & WrapModeMask.ShouldWrap && needRevers && (time = duration - time);
                 ratio = time / duration;
-                return {
-                    ratio: ratio,
-                    time: time,
-                    direction: direction,
-                    stopped: stopped,
-                    iterations: currentIterations
-                };
+                info.ratio = ratio;
+                info.time = time;
+                info.direction = direction;
+                info.stopped = stopped;
+                info.iterations = currentIterations;
+                return info;
             },
             sample: function() {
-                var info = this.getWrappedInfo(this.time);
+                var info = this.getWrappedInfo(this.time, this._wrappedInfo);
                 var curves = this.curves;
                 for (var i = 0, len = curves.length; i < len; i++) {
                     var curve = curves[i];
@@ -4983,7 +5213,8 @@
         module.exports = {
             WrapModeMask: WrapModeMask,
             WrapMode: WrapMode,
-            AnimationNode: AnimationNode
+            AnimationNode: AnimationNode,
+            WrappedInfo: WrappedInfo
         };
     }, {
         "./playable": 20
@@ -5125,11 +5356,21 @@
     23: [ function(require, module, exports) {
         "use strict";
         var PrefabHelper = require("./utils/prefab-helper");
-        var JS = cc.js;
+        var SgHelper = require("./utils/scene-graph-helper");
         var Flags = cc.Object.Flags;
         var Destroying = Flags.Destroying;
-        var DontDestroy = Flags.DontDestroy;
-        var Activating = Flags.Activating;
+        var POSITION_CHANGED = "position-changed";
+        var SIZE_CHANGED = "size-changed";
+        var ANCHOR_CHANGED = "anchor-changed";
+        var ROTATION_CHANGED = "rotation-changed";
+        var SCALE_CHANGED = "scale-changed";
+        var CHILD_ADDED = "child-added";
+        var CHILD_REMOVED = "child-removed";
+        var CHILD_REORDER = "child-reorder";
+        var ERR_INVALID_NUMBER = false;
+        var Misc = require("./utils/misc");
+        var ActionManagerExist = !!cc.ActionManager;
+        var emptyFunc = function() {};
         var EventType = cc.Enum({
             TOUCH_START: "touchstart",
             TOUCH_MOVE: "touchmove",
@@ -5225,13 +5466,12 @@
                 node.dispatchEvent(event);
             }
         };
-        var _searchMaskParent = function(node) {
-            if (cc.Mask) {
+        function _searchMaskInParent(node) {
+            var Mask = cc.Mask;
+            if (Mask) {
                 var index = 0;
-                var mask = null;
-                for (var curr = node; curr && curr instanceof cc.Node; curr = curr.parent, ++index) {
-                    mask = curr.getComponent(cc.Mask);
-                    if (mask) {
+                for (var curr = node; curr && cc.Node.isNode(curr); curr = curr._parent, ++index) {
+                    if (curr.getComponent(Mask)) {
                         return {
                             index: index,
                             node: curr
@@ -5240,93 +5480,31 @@
                 }
             }
             return null;
-        };
-        function getConstructor(typeOrClassName) {
-            if (!typeOrClassName) {
-                cc.errorID(3804);
-                return null;
-            }
-            if ("string" == typeof typeOrClassName) {
-                return JS.getClassByName(typeOrClassName);
-            }
-            return typeOrClassName;
         }
-        function findComponent(node, constructor) {
-            for (var i = 0; i < node._components.length; ++i) {
-                var comp = node._components[i];
-                if (comp instanceof constructor) {
-                    return comp;
-                }
-            }
-            return null;
-        }
-        function findComponents(node, constructor, components) {
-            for (var i = 0; i < node._components.length; ++i) {
-                var comp = node._components[i];
-                comp instanceof constructor && components.push(comp);
-            }
-        }
-        function findChildComponent(children, constructor) {
-            for (var i = 0; i < children.length; ++i) {
-                var node = children[i];
-                var comp = findComponent(node, constructor);
-                if (comp) {
-                    return comp;
-                }
-                if (node.children.length > 0) {
-                    comp = findChildComponent(node.children, constructor);
-                    if (comp) {
-                        return comp;
-                    }
-                }
-            }
-            return null;
-        }
-        function findChildComponents(children, constructor, components) {
-            for (var i = 0; i < children.length; ++i) {
-                var node = children[i];
-                findComponents(node, constructor, components);
-                node._children.length > 0 && findChildComponents(node._children, constructor, components);
-            }
+        function updateOrder(node) {
+            node._parent._delaySort();
         }
         var Node = cc.Class({
             name: "cc.Node",
-            "extends": require("./utils/base-node"),
+            extends: require("./utils/base-node"),
             properties: {
-                active: {
-                    get: function() {
-                        return this._active;
-                    },
-                    set: function(value) {
-                        value = !!value;
-                        if (this._active !== value) {
-                            this._active = value;
-                            var couldActiveInHierarchy = this._parent && this._parent._activeInHierarchy;
-                            if (couldActiveInHierarchy) {
-                                this._onActivatedInHierarchy(value);
-                                this.emit("active-in-hierarchy-changed", this);
-                            }
-                        }
-                    }
-                },
-                activeInHierarchy: {
-                    get: function() {
-                        return this._activeInHierarchy;
-                    }
-                },
-                _active: true,
-                _components: [],
-                _prefab: null,
-                _persistNode: {
-                    get: function() {
-                        return (this._objFlags & DontDestroy) > 0;
-                    },
-                    set: function(value) {
-                        value ? this._objFlags |= DontDestroy : this._objFlags &= ~DontDestroy;
-                    }
-                },
+                _opacity: 255,
+                _color: cc.Color.WHITE,
+                _cascadeOpacityEnabled: true,
+                _anchorPoint: cc.p(.5, .5),
+                _contentSize: cc.size(0, 0),
+                _rotationX: 0,
+                _rotationY: 0,
+                _scaleX: 1,
+                _scaleY: 1,
+                _position: cc.p(0, 0),
+                _skewX: 0,
+                _skewY: 0,
+                _localZOrder: 0,
+                _globalZOrder: 0,
+                _opacityModifyRGB: false,
                 groupIndex: {
-                    "default": 0,
+                    default: 0,
                     type: cc.Integer
                 },
                 group: {
@@ -5337,36 +5515,311 @@
                         this.groupIndex = cc.game.groupList.indexOf(value);
                         this.emit("group-changed");
                     }
+                },
+                x: {
+                    get: function() {
+                        return this._position.x;
+                    },
+                    set: function(value) {
+                        var localPosition = this._position;
+                        if (value !== localPosition.x) {
+                            var oldValue;
+                            localPosition.x = value;
+                            this._sgNode.setPositionX(value);
+                            var capListeners = this._capturingListeners && this._capturingListeners._callbackTable[POSITION_CHANGED];
+                            var bubListeners = this._bubblingListeners && this._bubblingListeners._callbackTable[POSITION_CHANGED];
+                            (capListeners && capListeners.length > 0 || bubListeners && bubListeners.length > 0) && this.emit(POSITION_CHANGED);
+                        }
+                    }
+                },
+                y: {
+                    get: function() {
+                        return this._position.y;
+                    },
+                    set: function(value) {
+                        var localPosition = this._position;
+                        if (value !== localPosition.y) {
+                            var oldValue;
+                            localPosition.y = value;
+                            this._sgNode.setPositionY(value);
+                            var capListeners = this._capturingListeners && this._capturingListeners._callbackTable[POSITION_CHANGED];
+                            var bubListeners = this._bubblingListeners && this._bubblingListeners._callbackTable[POSITION_CHANGED];
+                            (capListeners && capListeners.length > 0 || bubListeners && bubListeners.length > 0) && this.emit(POSITION_CHANGED);
+                        }
+                    }
+                },
+                rotation: {
+                    get: function() {
+                        this._rotationX !== this._rotationY && cc.logID(1602);
+                        return this._rotationX;
+                    },
+                    set: function(value) {
+                        if (this._rotationX !== value || this._rotationY !== value) {
+                            this._rotationX = this._rotationY = value;
+                            this._sgNode.rotation = value;
+                            this.emit(ROTATION_CHANGED);
+                        }
+                    }
+                },
+                rotationX: {
+                    get: function() {
+                        return this._rotationX;
+                    },
+                    set: function(value) {
+                        if (this._rotationX !== value) {
+                            this._rotationX = value;
+                            this._sgNode.rotationX = value;
+                            this.emit(ROTATION_CHANGED);
+                        }
+                    }
+                },
+                rotationY: {
+                    get: function() {
+                        return this._rotationY;
+                    },
+                    set: function(value) {
+                        if (this._rotationY !== value) {
+                            this._rotationY = value;
+                            this._sgNode.rotationY = value;
+                            this.emit(ROTATION_CHANGED);
+                        }
+                    }
+                },
+                scaleX: {
+                    get: function() {
+                        return this._scaleX;
+                    },
+                    set: function(value) {
+                        if (this._scaleX !== value) {
+                            this._scaleX = value;
+                            this._sgNode.scaleX = value;
+                            this.emit(SCALE_CHANGED);
+                        }
+                    }
+                },
+                scaleY: {
+                    get: function() {
+                        return this._scaleY;
+                    },
+                    set: function(value) {
+                        if (this._scaleY !== value) {
+                            this._scaleY = value;
+                            this._sgNode.scaleY = value;
+                            this.emit(SCALE_CHANGED);
+                        }
+                    }
+                },
+                skewX: {
+                    get: function() {
+                        return this._skewX;
+                    },
+                    set: function(value) {
+                        this._skewX = value;
+                        this._sgNode.skewX = value;
+                    }
+                },
+                skewY: {
+                    get: function() {
+                        return this._skewY;
+                    },
+                    set: function(value) {
+                        this._skewY = value;
+                        this._sgNode.skewY = value;
+                    }
+                },
+                opacity: {
+                    get: function() {
+                        return this._opacity;
+                    },
+                    set: function(value) {
+                        if (this._opacity !== value) {
+                            this._opacity = value;
+                            this._sgNode.setOpacity(value);
+                            if (!this._cascadeOpacityEnabled) {
+                                var sizeProvider = this._sizeProvider;
+                                sizeProvider instanceof _ccsg.Node && sizeProvider !== this._sgNode && sizeProvider.setOpacity(value);
+                            }
+                        }
+                    },
+                    range: [ 0, 255 ]
+                },
+                cascadeOpacity: {
+                    get: function() {
+                        return this._cascadeOpacityEnabled;
+                    },
+                    set: function(value) {
+                        if (this._cascadeOpacityEnabled !== value) {
+                            this._cascadeOpacityEnabled = value;
+                            this._sgNode.cascadeOpacity = value;
+                            var opacity = value ? 255 : this._opacity;
+                            var sizeProvider = this._sizeProvider;
+                            sizeProvider instanceof _ccsg.Node && sizeProvider.setOpacity(opacity);
+                        }
+                    }
+                },
+                color: {
+                    get: function() {
+                        return this._color.clone();
+                    },
+                    set: function(value) {
+                        if (!this._color.equals(value)) {
+                            this._color.fromColor(value);
+                            this._sizeProvider instanceof _ccsg.Node && this._sizeProvider.setColor(value);
+                        }
+                    }
+                },
+                anchorX: {
+                    get: function() {
+                        return this._anchorPoint.x;
+                    },
+                    set: function(value) {
+                        var anchorPoint = this._anchorPoint;
+                        if (anchorPoint.x !== value) {
+                            anchorPoint.x = value;
+                            var sizeProvider = this._sizeProvider;
+                            sizeProvider instanceof _ccsg.Node && sizeProvider.setAnchorPoint(anchorPoint);
+                            this.emit(ANCHOR_CHANGED);
+                        }
+                    }
+                },
+                anchorY: {
+                    get: function() {
+                        return this._anchorPoint.y;
+                    },
+                    set: function(value) {
+                        var anchorPoint = this._anchorPoint;
+                        if (anchorPoint.y !== value) {
+                            anchorPoint.y = value;
+                            var sizeProvider = this._sizeProvider;
+                            sizeProvider instanceof _ccsg.Node && sizeProvider.setAnchorPoint(anchorPoint);
+                            this.emit(ANCHOR_CHANGED);
+                        }
+                    }
+                },
+                width: {
+                    get: function() {
+                        if (this._sizeProvider) {
+                            var w = this._sizeProvider._getWidth();
+                            this._contentSize.width = w;
+                            return w;
+                        }
+                        return this._contentSize.width;
+                    },
+                    set: function(value) {
+                        if (value !== this._contentSize.width) {
+                            var sizeProvider = this._sizeProvider;
+                            sizeProvider && sizeProvider.setContentSize(value, sizeProvider._getHeight());
+                            var clone;
+                            this._contentSize.width = value;
+                            this.emit(SIZE_CHANGED);
+                        }
+                    }
+                },
+                height: {
+                    get: function() {
+                        if (this._sizeProvider) {
+                            var h = this._sizeProvider._getHeight();
+                            this._contentSize.height = h;
+                            return h;
+                        }
+                        return this._contentSize.height;
+                    },
+                    set: function(value) {
+                        if (value !== this._contentSize.height) {
+                            var sizeProvider = this._sizeProvider;
+                            sizeProvider && sizeProvider.setContentSize(sizeProvider._getWidth(), value);
+                            var clone;
+                            this._contentSize.height = value;
+                            this.emit(SIZE_CHANGED);
+                        }
+                    }
+                },
+                _ignoreAnchor: {
+                    get: function() {
+                        return this.__ignoreAnchor;
+                    },
+                    set: function(value) {
+                        if (this.__ignoreAnchor !== value) {
+                            this.__ignoreAnchor = value;
+                            this._sgNode.ignoreAnchor = value;
+                            var sizeProvider = this._sizeProvider;
+                            sizeProvider instanceof _ccsg.Node && sizeProvider !== this._sgNode && (sizeProvider.ignoreAnchor = value);
+                            this.emit(ANCHOR_CHANGED);
+                        }
+                    }
+                },
+                zIndex: {
+                    get: function() {
+                        return this._localZOrder;
+                    },
+                    set: function(value) {
+                        if (this._localZOrder !== value) {
+                            this._localZOrder = value;
+                            this._sgNode.zIndex = value;
+                            this._parent && updateOrder(this);
+                        }
+                    }
                 }
             },
             ctor: function(name) {
-                this._name = "undefined" != typeof name ? name : "New Node";
-                this._activeInHierarchy = false;
+                var sgNode = this._sgNode = new _ccsg.Node();
+                sgNode.retain();
+                sgNode._entity = this;
+                sgNode.onEnter = function() {
+                    _ccsg.Node.prototype.onEnter.call(this);
+                    if (this._entity && !this._entity._active) {
+                        ActionManagerExist && cc.director.getActionManager().pauseTarget(this);
+                        cc.eventManager.pauseTarget(this);
+                    }
+                };
+                cc.game._isCloning || (sgNode.cascadeOpacity = true);
+                this._sizeProvider = null;
+                this.__ignoreAnchor = false;
+                this._reorderChildDirty = false;
                 this._widget = null;
                 this._touchListener = null;
                 this._mouseListener = null;
                 this._retainedActions = [];
             },
-            destroy: function() {
-                cc.Object.prototype.destroy.call(this) && this._activeInHierarchy && this._deactivateChildComponents();
+            statics: {
+                isNode: function(obj) {
+                    return obj instanceof Node && (obj.constructor === Node || !(obj instanceof cc.Scene));
+                }
+            },
+            _onSetParent: function(value) {
+                var sgNode = this._sgNode;
+                sgNode.parent && sgNode.parent.removeChild(sgNode, false);
+                if (value) {
+                    value._sgNode.addChild(sgNode);
+                    value._delaySort();
+                }
+            },
+            _onSiblingIndexChanged: function(index) {
+                var parent = this._parent;
+                var siblings = parent._children;
+                var i = 0, len = siblings.length, sibling;
+                if (cc.runtime) {
+                    for (;i < len; i++) {
+                        sibling = siblings[i]._sgNode;
+                        var zOrder = sibling.getLocalZOrder();
+                        sibling.setLocalZOrder(zOrder + 1);
+                        sibling.setLocalZOrder(zOrder);
+                    }
+                } else {
+                    parent._sgNode.removeChild(this._sgNode, false);
+                    if (index + 1 < siblings.length) {
+                        var nextSibling = siblings[index + 1];
+                        parent._sgNode.insertChildBefore(this._sgNode, nextSibling._sgNode);
+                    } else {
+                        parent._sgNode.addChild(this._sgNode);
+                    }
+                }
             },
             _onPreDestroy: function() {
-                var i, len;
-                this._objFlags |= Destroying;
-                var parent = this._parent;
-                var destroyByParent = parent && parent._objFlags & Destroying;
-                !destroyByParent;
-                var children = this._children;
-                for (i = 0, len = children.length; i < len; ++i) {
-                    children[i]._destroyImmediate();
-                }
-                for (i = 0, len = this._components.length; i < len; ++i) {
-                    var component = this._components[i];
-                    component._destroyImmediate();
-                }
-                cc.director.getActionManager().removeAllActionsFromTarget(this);
-                this._releaseAllActions();
+                var destroyByParent = this._onPreDestroyBase();
+                ActionManagerExist && cc.director.getActionManager().removeAllActionsFromTarget(this);
                 _currentHovered === this && (_currentHovered = null);
+                cc.macro.ENABLE_GC_FOR_NATIVE_OBJECTS || this._releaseAllActions();
                 if (this._touchListener) {
                     this._touchListener.release();
                     this._touchListener.owner = null;
@@ -5379,217 +5832,49 @@
                     this._mouseListener.mask = null;
                     this._mouseListener = null;
                 }
+                this._reorderChildDirty && cc.director.__fastOff(cc.Director.EVENT_AFTER_UPDATE, this.sortAllChildren, this);
                 cc.eventManager.removeListeners(this);
-                for (i = 0, len = this.__eventTargets.length; i < len; ++i) {
-                    var target = this.__eventTargets[i];
-                    target && target.targetOff(this);
-                }
-                this.__eventTargets.length = 0;
-                this._persistNode && cc.game.removePersistRootNode(this);
                 if (destroyByParent) {
                     this._sgNode.release();
                     this._sgNode._entity = null;
                     this._sgNode = null;
                 } else {
-                    if (parent) {
-                        var childIndex = parent._children.indexOf(this);
-                        parent._children.splice(childIndex, 1);
-                        parent.emit("child-removed", this);
-                    }
                     this._removeSgNode();
                 }
             },
-            getComponent: function(typeOrClassName) {
-                var constructor = getConstructor(typeOrClassName);
-                if (constructor) {
-                    return findComponent(this, constructor);
-                }
-                return null;
-            },
-            getComponents: function(typeOrClassName) {
-                var constructor = getConstructor(typeOrClassName), components = [];
-                constructor && findComponents(this, constructor, components);
-                return components;
-            },
-            getComponentInChildren: function(typeOrClassName) {
-                var constructor = getConstructor(typeOrClassName);
-                if (constructor) {
-                    return findChildComponent(this._children, constructor);
-                }
-                return null;
-            },
-            getComponentsInChildren: function(typeOrClassName) {
-                var constructor = getConstructor(typeOrClassName), components = [];
-                if (constructor) {
-                    findComponents(this, constructor, components);
-                    findChildComponents(this._children, constructor, components);
-                }
-                return components;
-            },
-            _checkMultipleComp: false,
-            addComponent: function(typeOrClassName) {
-                var constructor;
-                if ("string" == typeof typeOrClassName) {
-                    constructor = JS.getClassByName(typeOrClassName);
-                    if (!constructor) {
-                        cc.errorID(3807, typeOrClassName);
-                        cc._RFpeek() && cc.errorID(3808, typeOrClassName);
-                        return null;
+            _onPostActivated: function(active) {
+                var actionManager = ActionManagerExist ? cc.director.getActionManager() : null;
+                if (active) {
+                    actionManager && actionManager.resumeTarget(this);
+                    cc.eventManager.resumeTarget(this);
+                    if (this._touchListener) {
+                        var mask = this._touchListener.mask = _searchMaskInParent(this);
+                        this._mouseListener && (this._mouseListener.mask = mask);
+                    } else {
+                        this._mouseListener && (this._mouseListener.mask = _searchMaskInParent(this));
                     }
                 } else {
-                    if (!typeOrClassName) {
-                        cc.errorID(3804);
-                        return null;
-                    }
-                    constructor = typeOrClassName;
-                }
-                if ("function" != typeof constructor) {
-                    cc.errorID(3809);
-                    return null;
-                }
-                if (!cc.isChildClassOf(constructor, cc.Component)) {
-                    cc.errorID(3810);
-                    return null;
-                }
-                var ReqComp = constructor._requireComponent;
-                if (ReqComp && !this.getComponent(ReqComp)) {
-                    var depended = this.addComponent(ReqComp);
-                    if (!depended) {
-                        return null;
-                    }
-                }
-                var component = new constructor();
-                component.node = this;
-                this._components.push(component);
-                if (this._activeInHierarchy) {
-                    "function" == typeof component.__preload && cc.Component._callPreloadOnComponent(component);
-                    component.__onNodeActivated(true);
-                }
-                return component;
-            },
-            _addComponentAt: false,
-            removeComponent: function(component) {
-                if (!component) {
-                    cc.errorID(3813);
-                    return;
-                }
-                "object" != typeof component && (component = this.getComponent(component));
-                component && component.destroy();
-            },
-            _getDependComponent: false,
-            _removeComponent: function(component) {
-                if (!component) {
-                    cc.errorID(3814);
-                    return;
-                }
-                if (!(this._objFlags & Destroying)) {
-                    var i = this._components.indexOf(component);
-                    i !== -1 ? this._components.splice(i, 1) : component.node !== this && cc.errorID(3815);
+                    actionManager && actionManager.pauseTarget(this);
+                    cc.eventManager.pauseTarget(this);
                 }
             },
-            _registerIfAttached: false,
+            _onHierarchyChanged: function(oldParent) {
+                this._onHierarchyChangedBase(oldParent);
+                cc._widgetManager._nodesOrderDirty = true;
+            },
             _onBatchCreated: function() {
                 var prefabInfo = this._prefab;
                 prefabInfo && prefabInfo.sync && !prefabInfo._synced && prefabInfo.root === this && PrefabHelper.syncWithPrefab(this);
                 this._updateDummySgNode();
                 this._parent && this._parent._sgNode.addChild(this._sgNode);
                 if (!this._activeInHierarchy) {
-                    cc.director.getActionManager().pauseTarget(this);
+                    ActionManagerExist && cc.director.getActionManager().pauseTarget(this);
                     cc.eventManager.pauseTarget(this);
                 }
                 var children = this._children;
                 for (var i = 0, len = children.length; i < len; i++) {
                     children[i]._onBatchCreated();
                 }
-            },
-            _activeRecursively: function(newActive) {
-                var cancelActivation = false;
-                if (this._objFlags & Activating) {
-                    if (newActive) {
-                        cc.errorID(3816, this.name);
-                        return;
-                    }
-                    cancelActivation = true;
-                } else {
-                    newActive && (this._objFlags |= Activating);
-                }
-                this._activeInHierarchy = newActive;
-                var originCount = this._components.length;
-                for (var c = 0; c < originCount; ++c) {
-                    var component = this._components[c];
-                    if (component instanceof cc.Component) {
-                        component.__onNodeActivated(newActive);
-                        if (newActive && !this._activeInHierarchy) {
-                            this._objFlags &= ~Activating;
-                            return;
-                        }
-                    } else {
-                        component ? this._removeComponent(component) : JS.array.removeAt(this._components, c);
-                        --c;
-                        --originCount;
-                    }
-                }
-                for (var i = 0, len = this._children.length; i < len; ++i) {
-                    var child = this._children[i];
-                    if (child._active) {
-                        child._activeRecursively(newActive);
-                        if (newActive && !this._activeInHierarchy) {
-                            this._objFlags &= ~Activating;
-                            return;
-                        }
-                    }
-                }
-                if (cancelActivation) {
-                    this._objFlags &= ~Activating;
-                    return;
-                }
-                if (newActive) {
-                    cc.director.getActionManager().resumeTarget(this);
-                    cc.eventManager.resumeTarget(this);
-                    this._touchListener && (this._touchListener.mask = _searchMaskParent(this));
-                    this._mouseListener && (this._mouseListener.mask = _searchMaskParent(this));
-                } else {
-                    cc.director.getActionManager().pauseTarget(this);
-                    cc.eventManager.pauseTarget(this);
-                }
-                this._objFlags &= ~Activating;
-            },
-            _onActivatedInHierarchy: function(newActive) {
-                newActive && cc.Component._callPreloadOnNode(this);
-                this._activeRecursively(newActive);
-            },
-            _onHierarchyChanged: function(oldParent) {
-                var newParent = this._parent;
-                !this._persistNode || newParent instanceof cc.Scene || cc.game.removePersistRootNode(this);
-                var activeInHierarchyBefore = this._active && !!(oldParent && oldParent._activeInHierarchy);
-                var shouldActiveNow = this._active && !!(newParent && newParent._activeInHierarchy);
-                activeInHierarchyBefore !== shouldActiveNow && this._onActivatedInHierarchy(shouldActiveNow);
-                cc._widgetManager._nodesOrderDirty = true;
-                var scene;
-                var inCurrentSceneBefore;
-                var inCurrentSceneNow;
-                var newPrefabRoot;
-                var myPrefabInfo;
-            },
-            _deactivateChildComponents: function() {
-                var originCount = this._components.length;
-                for (var c = 0; c < originCount; ++c) {
-                    var component = this._components[c];
-                    component.__onNodeActivated(false);
-                }
-                for (var i = 0, len = this.childrenCount; i < len; ++i) {
-                    var entity = this._children[i];
-                    entity._active && entity._deactivateChildComponents();
-                }
-            },
-            _instantiate: function(cloned) {
-                cloned || (cloned = cc.instantiate._clone(this, this));
-                var thisPrefabInfo = this._prefab;
-                var syncing = thisPrefabInfo && this === thisPrefabInfo.root && thisPrefabInfo.sync;
-                syncing && (cloned._prefab._synced = thisPrefabInfo._synced);
-                cloned._parent = null;
-                cloned._onBatchCreated();
-                return cloned;
             },
             on: function(type, callback, target, useCapture) {
                 var newAdded = false;
@@ -5599,7 +5884,7 @@
                             event: cc.EventListener.TOUCH_ONE_BY_ONE,
                             swallowTouches: true,
                             owner: this,
-                            mask: _searchMaskParent(this),
+                            mask: _searchMaskInParent(this),
                             onTouchBegan: _touchStartHandler,
                             onTouchMoved: _touchMoveHandler,
                             onTouchEnded: _touchEndHandler
@@ -5614,7 +5899,7 @@
                             event: cc.EventListener.MOUSE,
                             _previousIn: false,
                             owner: this,
-                            mask: _searchMaskParent(this),
+                            mask: _searchMaskInParent(this),
                             onMouseDown: _mouseDownHandler,
                             onMouseMove: _mouseMoveHandler,
                             onMouseUp: _mouseUpHandler,
@@ -5638,6 +5923,12 @@
                 this._EventTargetTargetOff(target);
                 this._checkTouchListeners();
                 this._checkMouseListeners();
+            },
+            pauseSystemEvents: function(recursive) {
+                cc.eventManager.pauseTarget(this, recursive);
+            },
+            resumeSystemEvents: function(recursive) {
+                cc.eventManager.resumeTarget(this, recursive);
             },
             _checkTouchListeners: function() {
                 if (!(this._objFlags & Destroying) && this._touchListener) {
@@ -5721,7 +6012,7 @@
             isRunning: function() {
                 return this._activeInHierarchy;
             },
-            runAction: function(action) {
+            runAction: ActionManagerExist ? function(action) {
                 if (!this.active) {
                     return;
                 }
@@ -5730,29 +6021,39 @@
                 this._sgNode._owner = this;
                 cc.director.getActionManager().addAction(action, this, false);
                 return action;
-            },
-            stopAllActions: function() {
+            } : emptyFunc,
+            pauseAllActions: ActionManagerExist ? function() {
+                cc.director.getActionManager().pauseTarget(this);
+            } : emptyFunc,
+            resumeAllActions: ActionManagerExist ? function() {
+                cc.director.getActionManager().resumeTarget(this);
+            } : emptyFunc,
+            stopAllActions: ActionManagerExist ? function() {
                 cc.director.getActionManager().removeAllActionsFromTarget(this);
-            },
-            stopAction: function(action) {
+            } : emptyFunc,
+            stopAction: ActionManagerExist ? function(action) {
                 cc.director.getActionManager().removeAction(action);
-            },
-            stopActionByTag: function(tag) {
+            } : emptyFunc,
+            stopActionByTag: ActionManagerExist ? function(tag) {
                 if (tag === cc.Action.TAG_INVALID) {
                     cc.logID(1612);
                     return;
                 }
                 cc.director.getActionManager().removeActionByTag(tag, this);
-            },
-            getActionByTag: function(tag) {
+            } : emptyFunc,
+            getActionByTag: ActionManagerExist ? function(tag) {
                 if (tag === cc.Action.TAG_INVALID) {
                     cc.logID(1613);
                     return null;
                 }
                 return cc.director.getActionManager().getActionByTag(tag, this);
+            } : function() {
+                return null;
             },
-            getNumberOfRunningActions: function() {
+            getNumberOfRunningActions: ActionManagerExist ? function() {
                 return cc.director.getActionManager().getNumberOfRunningActionsInTarget(this);
+            } : function() {
+                return 0;
             },
             _retainAction: function(action) {
                 if (action instanceof cc.Action && this._retainedActions.indexOf(action) === -1) {
@@ -5765,7 +6066,355 @@
                     this._retainedActions[i].release();
                 }
                 this._retainedActions.length = 0;
-            }
+            },
+            setTag: function(value) {
+                this._tag = value;
+                this._sgNode.tag = value;
+            },
+            getPosition: function() {
+                return new cc.Vec2(this._position);
+            },
+            setPosition: function(newPosOrX, y) {
+                var x;
+                if ("undefined" === typeof y) {
+                    x = newPosOrX.x;
+                    y = newPosOrX.y;
+                } else {
+                    x = newPosOrX;
+                }
+                var locPosition = this._position;
+                if (locPosition.x === x && locPosition.y === y) {
+                    return;
+                }
+                var oldPosition;
+                locPosition.x = x;
+                locPosition.y = y;
+                this._sgNode.setPosition(x, y);
+                var capListeners = this._capturingListeners && this._capturingListeners._callbackTable[POSITION_CHANGED];
+                var bubListeners = this._bubblingListeners && this._bubblingListeners._callbackTable[POSITION_CHANGED];
+                (capListeners && capListeners.length > 0 || bubListeners && bubListeners.length > 0) && this.emit(POSITION_CHANGED);
+            },
+            getScale: function() {
+                this._scaleX !== this._scaleY && cc.logID(1603);
+                return this._scaleX;
+            },
+            setScale: function(scaleX, scaleY) {
+                if ("object" === typeof scaleX) {
+                    scaleY = scaleX.y;
+                    scaleX = scaleX.x;
+                } else {
+                    scaleY = scaleY || 0 === scaleY ? scaleY : scaleX;
+                }
+                if (this._scaleX !== scaleX || this._scaleY !== scaleY) {
+                    this._scaleX = scaleX;
+                    this._scaleY = scaleY;
+                    this._sgNode.setScale(scaleX, scaleY);
+                    this.emit(SCALE_CHANGED);
+                }
+            },
+            getContentSize: function(ignoreSizeProvider) {
+                if (this._sizeProvider && !ignoreSizeProvider) {
+                    var size = this._sizeProvider.getContentSize();
+                    this._contentSize = size;
+                    return size;
+                }
+                return cc.size(this._contentSize);
+            },
+            setContentSize: function(size, height) {
+                var locContentSize = this._contentSize;
+                var clone;
+                if (void 0 === height) {
+                    if (size.width === locContentSize.width && size.height === locContentSize.height) {
+                        return;
+                    }
+                    locContentSize.width = size.width;
+                    locContentSize.height = size.height;
+                } else {
+                    if (size === locContentSize.width && height === locContentSize.height) {
+                        return;
+                    }
+                    locContentSize.width = size;
+                    locContentSize.height = height;
+                }
+                this._sizeProvider && this._sizeProvider.setContentSize(locContentSize);
+                this.emit(SIZE_CHANGED);
+            },
+            setOpacityModifyRGB: function(opacityValue) {
+                if (this._opacityModifyRGB !== opacityValue) {
+                    this._opacityModifyRGB = opacityValue;
+                    this._sgNode.setOpacityModifyRGB(opacityValue);
+                    var sizeProvider = this._sizeProvider;
+                    sizeProvider instanceof _ccsg.Node && sizeProvider !== this._sgNode && sizeProvider.setOpacityModifyRGB(opacityValue);
+                }
+            },
+            isOpacityModifyRGB: function() {
+                return this._opacityModifyRGB;
+            },
+            setGlobalZOrder: function(globalZOrder) {
+                this._globalZOrder = globalZOrder;
+                this._sgNode.setGlobalZOrder(globalZOrder);
+            },
+            getGlobalZOrder: function() {
+                this._globalZOrder = this._sgNode.getGlobalZOrder();
+                return this._globalZOrder;
+            },
+            getAnchorPoint: function() {
+                return cc.p(this._anchorPoint);
+            },
+            setAnchorPoint: function(point, y) {
+                var locAnchorPoint = this._anchorPoint;
+                if (void 0 === y) {
+                    if (point.x === locAnchorPoint.x && point.y === locAnchorPoint.y) {
+                        return;
+                    }
+                    locAnchorPoint.x = point.x;
+                    locAnchorPoint.y = point.y;
+                } else {
+                    if (point === locAnchorPoint.x && y === locAnchorPoint.y) {
+                        return;
+                    }
+                    locAnchorPoint.x = point;
+                    locAnchorPoint.y = y;
+                }
+                var sizeProvider = this._sizeProvider;
+                sizeProvider instanceof _ccsg.Node && sizeProvider.setAnchorPoint(locAnchorPoint);
+                this.emit(ANCHOR_CHANGED);
+            },
+            getAnchorPointInPoints: function() {
+                return this._sgNode.getAnchorPointInPoints();
+            },
+            getDisplayedOpacity: function() {
+                return this._sgNode.getDisplayedOpacity();
+            },
+            _updateDisplayedOpacity: function(parentOpacity) {
+                this._sgNode.updateDisplayedOpacity(parentOpacity);
+            },
+            getDisplayedColor: function() {
+                return this._sgNode.getDisplayedColor();
+            },
+            getNodeToParentTransformAR: function() {
+                var contentSize = this.getContentSize();
+                var mat = this._sgNode.getNodeToParentTransform();
+                if (!this._isSgTransformArToMe(contentSize)) {
+                    var tx = this._anchorPoint.x * contentSize.width;
+                    var ty = this._anchorPoint.y * contentSize.height;
+                    var offset = cc.affineTransformMake(1, 0, 0, 1, tx, ty);
+                    mat = cc.affineTransformConcatIn(offset, mat);
+                }
+                return mat;
+            },
+            getBoundingBox: function() {
+                var size = this.getContentSize();
+                var rect = cc.rect(0, 0, size.width, size.height);
+                return cc._rectApplyAffineTransformIn(rect, this.getNodeToParentTransform());
+            },
+            getBoundingBoxToWorld: function() {
+                var trans;
+                this.parent && (trans = this.parent.getNodeToWorldTransformAR());
+                return this._getBoundingBoxTo(trans);
+            },
+            _getBoundingBoxTo: function(parentTransformAR) {
+                var size = this.getContentSize();
+                var width = size.width;
+                var height = size.height;
+                var rect = cc.rect(-this._anchorPoint.x * width, -this._anchorPoint.y * height, width, height);
+                var transAR = cc.affineTransformConcat(this.getNodeToParentTransformAR(), parentTransformAR);
+                cc._rectApplyAffineTransformIn(rect, transAR);
+                if (!this._children) {
+                    return rect;
+                }
+                var locChildren = this._children;
+                for (var i = 0; i < locChildren.length; i++) {
+                    var child = locChildren[i];
+                    if (child && child.active) {
+                        var childRect = child._getBoundingBoxTo(transAR);
+                        childRect && (rect = cc.rectUnion(rect, childRect));
+                    }
+                }
+                return rect;
+            },
+            getNodeToParentTransform: function() {
+                var contentSize = this.getContentSize();
+                var mat = this._sgNode.getNodeToParentTransform();
+                if (this._isSgTransformArToMe(contentSize)) {
+                    var tx = -this._anchorPoint.x * contentSize.width;
+                    var ty = -this._anchorPoint.y * contentSize.height;
+                    var offset = cc.affineTransformMake(1, 0, 0, 1, tx, ty);
+                    mat = cc.affineTransformConcatIn(offset, mat);
+                }
+                return mat;
+            },
+            getNodeToWorldTransform: function() {
+                var contentSize = this.getContentSize();
+                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
+                var mat = this._sgNode.getNodeToWorldTransform();
+                if (this._isSgTransformArToMe(contentSize)) {
+                    var tx = -this._anchorPoint.x * contentSize.width;
+                    var ty = -this._anchorPoint.y * contentSize.height;
+                    var offset = cc.affineTransformMake(1, 0, 0, 1, tx, ty);
+                    mat = cc.affineTransformConcatIn(offset, mat);
+                }
+                return mat;
+            },
+            getNodeToWorldTransformAR: function() {
+                var contentSize = this.getContentSize();
+                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
+                var mat = this._sgNode.getNodeToWorldTransform();
+                if (!this._isSgTransformArToMe(contentSize)) {
+                    var tx = this._anchorPoint.x * contentSize.width;
+                    var ty = this._anchorPoint.y * contentSize.height;
+                    var offset = cc.affineTransformMake(1, 0, 0, 1, tx, ty);
+                    mat = cc.affineTransformConcatIn(offset, mat);
+                }
+                return mat;
+            },
+            getParentToNodeTransform: function() {
+                return this._sgNode.getParentToNodeTransform();
+            },
+            getWorldToNodeTransform: function() {
+                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
+                return this._sgNode.getWorldToNodeTransform();
+            },
+            _isSgTransformArToMe: function(myContentSize) {
+                var renderSize = this._sgNode.getContentSize();
+                if (0 === renderSize.width && 0 === renderSize.height && (0 !== myContentSize.width || 0 !== myContentSize.height)) {
+                    return true;
+                }
+                if (this._sgNode.isIgnoreAnchorPointForPosition()) {
+                    return true;
+                }
+                return false;
+            },
+            convertToNodeSpace: function(worldPoint) {
+                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
+                var nodePositionIgnoreAnchorPoint = this._sgNode.convertToNodeSpace(worldPoint);
+                return cc.pAdd(nodePositionIgnoreAnchorPoint, cc.p(this._anchorPoint.x * this._contentSize.width, this._anchorPoint.y * this._contentSize.height));
+            },
+            convertToWorldSpace: function(nodePoint) {
+                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
+                var x = nodePoint.x - this._anchorPoint.x * this._contentSize.width;
+                var y = nodePoint.y - this._anchorPoint.y * this._contentSize.height;
+                return cc.v2(this._sgNode.convertToWorldSpace(cc.v2(x, y)));
+            },
+            convertToNodeSpaceAR: function(worldPoint) {
+                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
+                return this._sgNode.isIgnoreAnchorPointForPosition() ? cc.v2(this._sgNode.convertToNodeSpace(worldPoint)) : this._sgNode.convertToNodeSpaceAR(worldPoint);
+            },
+            convertToWorldSpaceAR: function(nodePoint) {
+                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
+                return this._sgNode.isIgnoreAnchorPointForPosition() ? cc.v2(this._sgNode.convertToWorldSpace(nodePoint)) : cc.v2(this._sgNode.convertToWorldSpaceAR(nodePoint));
+            },
+            convertTouchToNodeSpace: function(touch) {
+                return this.convertToNodeSpace(touch.getLocation());
+            },
+            convertTouchToNodeSpaceAR: function(touch) {
+                return this.convertToNodeSpaceAR(touch.getLocation());
+            },
+            setNodeDirty: function() {
+                this._sgNode.setNodeDirty();
+            },
+            addChild: function(child, localZOrder, tag) {
+                localZOrder = void 0 === localZOrder ? child._localZOrder : localZOrder;
+                var name, setTag = false;
+                if ("undefined" === typeof tag) {
+                    tag = void 0;
+                    name = child._name;
+                } else {
+                    if (cc.js.isString(tag)) {
+                        name = tag;
+                        tag = void 0;
+                    } else {
+                        if (cc.js.isNumber(tag)) {
+                            setTag = true;
+                            name = "";
+                        }
+                    }
+                }
+                cc.assertID(child, 1606);
+                cc.assertID(null === child._parent, 1605);
+                child.parent = this;
+                child.zIndex = localZOrder;
+                setTag ? child.setTag(tag) : child.setName(name);
+            },
+            cleanup: function() {
+                ActionManagerExist && cc.director.getActionManager().removeAllActionsFromTarget(this);
+                cc.eventManager.removeListeners(this);
+                var i, len = this._children.length, node;
+                for (i = 0; i < len; ++i) {
+                    node = this._children[i];
+                    node && node.cleanup();
+                }
+            },
+            sortAllChildren: function() {
+                if (this._reorderChildDirty) {
+                    this._reorderChildDirty = false;
+                    var _children = this._children;
+                    if (_children.length > 1) {
+                        var len = _children.length, i, j, child;
+                        for (i = 1; i < len; i++) {
+                            child = _children[i];
+                            j = i - 1;
+                            while (j >= 0) {
+                                if (child._localZOrder < _children[j]._localZOrder) {
+                                    _children[j + 1] = _children[j];
+                                } else {
+                                    if (!(child._localZOrder === _children[j]._localZOrder && child._sgNode._arrivalOrder < _children[j]._sgNode._arrivalOrder)) {
+                                        break;
+                                    }
+                                    _children[j + 1] = _children[j];
+                                }
+                                j--;
+                            }
+                            _children[j + 1] = child;
+                        }
+                        this.emit(CHILD_REORDER);
+                    }
+                    cc.director.__fastOff(cc.Director.EVENT_AFTER_UPDATE, this.sortAllChildren, this);
+                }
+            },
+            _delaySort: function() {
+                if (!this._reorderChildDirty) {
+                    this._reorderChildDirty = true;
+                    cc.director.__fastOn(cc.Director.EVENT_AFTER_UPDATE, this.sortAllChildren, this);
+                }
+            },
+            _updateDummySgNode: function() {
+                var self = this;
+                var sgNode = self._sgNode;
+                sgNode.setPosition(self._position);
+                sgNode.setRotationX(self._rotationX);
+                sgNode.setRotationY(self._rotationY);
+                sgNode.setScale(self._scaleX, self._scaleY);
+                sgNode.setSkewX(self._skewX);
+                sgNode.setSkewY(self._skewY);
+                sgNode.setIgnoreAnchorPointForPosition(self.__ignoreAnchor);
+                var arrivalOrder = sgNode._arrivalOrder;
+                sgNode.setLocalZOrder(self._localZOrder);
+                sgNode._arrivalOrder = arrivalOrder;
+                sgNode.setGlobalZOrder(self._globalZOrder);
+                sgNode.setColor(this._color);
+                sgNode.setOpacity(self._opacity);
+                sgNode.setOpacityModifyRGB(self._opacityModifyRGB);
+                sgNode.setCascadeOpacityEnabled(self._cascadeOpacityEnabled);
+                sgNode.setTag(self._tag);
+            },
+            _updateSgNode: function() {
+                this._updateDummySgNode();
+                var sgNode = this._sgNode;
+                sgNode.setAnchorPoint(this._anchorPoint);
+                sgNode.setVisible(this._active);
+                sgNode.setColor(this._color);
+                var actionManager = ActionManagerExist ? cc.director.getActionManager() : null;
+                if (this._activeInHierarchy) {
+                    actionManager && actionManager.resumeTarget(this);
+                    cc.eventManager.resumeTarget(this);
+                } else {
+                    actionManager && actionManager.pauseTarget(this);
+                    cc.eventManager.pauseTarget(this);
+                }
+            },
+            _removeSgNode: SgHelper.removeSgNode,
+            onRestore: false
         });
         var updateListeners = function() {
             this._activeInHierarchy || cc.eventManager.pauseTarget(this);
@@ -5790,17 +6439,28 @@
                 cc.director.once(cc.Director.EVENT_BEFORE_UPDATE, updateListeners, this);
             }
         }, true);
+        var SameNameGetSets = [ "parent", "tag", "skewX", "skewY", "position", "rotation", "rotationX", "rotationY", "scale", "scaleX", "scaleY", "opacity", "color" ];
+        var DiffNameGetSets = {
+            x: [ "getPositionX", "setPositionX" ],
+            y: [ "getPositionY", "setPositionY" ],
+            zIndex: [ "getLocalZOrder", "setLocalZOrder" ],
+            opacityModifyRGB: [ "isOpacityModifyRGB", "setOpacityModifyRGB" ],
+            cascadeOpacity: [ "isCascadeOpacityEnabled", "setCascadeOpacityEnabled" ]
+        };
+        Misc.propertyDefine(Node, SameNameGetSets, DiffNameGetSets);
         Node.EventType = EventType;
         cc.Node = module.exports = Node;
     }, {
-        "./utils/base-node": 128,
-        "./utils/prefab-helper": 132
+        "./utils/base-node": 153,
+        "./utils/misc": 156,
+        "./utils/prefab-helper": 158,
+        "./utils/scene-graph-helper": 159
     } ],
     24: [ function(require, module, exports) {
         var NIL = function() {};
         cc.Scene = cc.Class({
             name: "cc.Scene",
-            "extends": require("./utils/base-node"),
+            extends: require("./CCNode"),
             properties: {
                 autoReleaseAssets: void 0
             },
@@ -5815,47 +6475,31 @@
                 this.dependAssets = null;
             },
             destroy: function() {
-                var children = this._children;
-                var DontDestroy = cc.Object.Flags.DontDestroy;
-                for (var i = 0, len = children.length; i < len; ++i) {
-                    var child = children[i];
-                    child.isValid && (child._objFlags & DontDestroy || child.destroy());
-                }
                 this._super();
                 this._activeInHierarchy = false;
             },
             _onHierarchyChanged: NIL,
+            _instantiate: null,
             _load: function() {
                 if (!this._inited) {
-                    this._updateDummySgNode();
-                    cc.director.getActionManager().pauseTarget(this);
-                    cc.eventManager.pauseTarget(this);
-                    var children = this._children;
-                    for (var i = 0, len = children.length; i < len; i++) {
-                        children[i]._onBatchCreated();
-                    }
+                    this._onBatchCreated();
                     this._inited = true;
                 }
             },
             _activate: function(active) {
                 active = false !== active;
-                var i, child, children = this._children, len = children.length;
-                this._activeInHierarchy = active;
-                for (i = 0; i < len; ++i) {
-                    child = children[i];
-                    child._active && child._onActivatedInHierarchy(active);
-                }
+                cc.director._nodeActivator.activateNode(this, active);
             }
         });
         module.exports = cc.Scene;
     }, {
-        "./utils/base-node": 128
+        "./CCNode": 23
     } ],
     25: [ function(require, module, exports) {
         var RawAsset = require("./CCRawAsset");
         cc.Asset = cc.Class({
             name: "cc.Asset",
-            "extends": RawAsset,
+            extends: RawAsset,
             properties: {
                 rawUrl: {
                     get: function() {
@@ -5908,7 +6552,7 @@
     26: [ function(require, module, exports) {
         var AudioClip = cc.Class({
             name: "cc.AudioClip",
-            "extends": cc.RawAsset
+            extends: cc.RawAsset
         });
         cc.AudioClip = AudioClip;
         module.exports = AudioClip;
@@ -5916,18 +6560,19 @@
     27: [ function(require, module, exports) {
         var BitmapFont = cc.Class({
             name: "cc.BitmapFont",
-            "extends": cc.Font,
+            extends: cc.Font,
             properties: {
                 fntDataStr: {
-                    "default": ""
+                    default: ""
                 },
                 spriteFrame: {
-                    "default": null,
+                    default: null,
                     type: cc.SpriteFrame
                 },
                 fontSize: {
-                    "default": -1
-                }
+                    default: -1
+                },
+                _fntConfig: null
             }
         });
         cc.BitmapFont = BitmapFont;
@@ -5936,7 +6581,7 @@
     28: [ function(require, module, exports) {
         var Font = cc.Class({
             name: "cc.Font",
-            "extends": cc.Asset
+            extends: cc.Asset
         });
         cc.Font = Font;
         module.exports = Font;
@@ -5944,7 +6589,7 @@
     29: [ function(require, module, exports) {
         var LabelAtlas = cc.Class({
             name: "cc.LabelAtlas",
-            "extends": cc.BitmapFont
+            extends: cc.BitmapFont
         });
         cc.LabelAtlas = LabelAtlas;
         module.exports = LabelAtlas;
@@ -5952,11 +6597,12 @@
     30: [ function(require, module, exports) {
         var Prefab = cc.Class({
             name: "cc.Prefab",
-            "extends": cc.Asset,
+            extends: cc.Asset,
             properties: {
                 data: null,
+                asyncLoadAssets: void 0,
                 _createFunction: {
-                    "default": null,
+                    default: null,
                     serializable: false
                 }
             },
@@ -5979,13 +6625,13 @@
         cc.Prefab = module.exports = Prefab;
         cc.js.obsolete(cc, "cc._Prefab", "Prefab");
     }, {
-        "../platform/instantiate-jit": 119
+        "../platform/instantiate-jit": 144
     } ],
     31: [ function(require, module, exports) {
         var CCObject = require("../platform/CCObject");
         cc.RawAsset = cc.Class({
             name: "cc.RawAsset",
-            "extends": CCObject,
+            extends: CCObject,
             ctor: function() {
                 Object.defineProperty(this, "_uuid", {
                     value: "",
@@ -6003,12 +6649,12 @@
         });
         module.exports = cc.RawAsset;
     }, {
-        "../platform/CCObject": 110
+        "../platform/CCObject": 135
     } ],
     32: [ function(require, module, exports) {
         var Scene = cc.Class({
             name: "cc.SceneAsset",
-            "extends": cc.Asset,
+            extends: cc.Asset,
             properties: {
                 scene: null,
                 asyncLoadAssets: void 0
@@ -6020,27 +6666,32 @@
     33: [ function(require, module, exports) {
         var Script = cc.Class({
             name: "cc.Script",
-            "extends": cc.Asset
+            extends: cc.Asset
         });
         cc._Script = Script;
         var JavaScript = cc.Class({
             name: "cc.JavaScript",
-            "extends": Script
+            extends: Script
         });
         cc._JavaScript = JavaScript;
         var CoffeeScript = cc.Class({
             name: "cc.CoffeeScript",
-            "extends": Script
+            extends: Script
         });
         cc._CoffeeScript = CoffeeScript;
+        var TypeScript = cc.Class({
+            name: "cc.TypeScript",
+            extends: Script
+        });
+        cc._TypeScript = TypeScript;
     }, {} ],
     34: [ function(require, module, exports) {
         var SpriteAtlas = cc.Class({
             name: "cc.SpriteAtlas",
-            "extends": cc.Asset,
+            extends: cc.Asset,
             properties: {
                 _spriteFrames: {
-                    "default": {}
+                    default: {}
                 }
             },
             getTexture: function() {
@@ -6069,7 +6720,7 @@
     35: [ function(require, module, exports) {
         var TTFFont = cc.Class({
             name: "cc.TTFFont",
-            "extends": cc.Font
+            extends: cc.Font
         });
         cc.TTFFont = TTFFont;
         module.exports = TTFFont;
@@ -6089,8 +6740,8 @@
         require("./CCBitmapFont");
         require("./CCLabelAtlas");
     }, {
-        "../sprites/CCSpriteFrame": 186,
-        "../textures/CCTexture2D": 186,
+        "../sprites/CCSpriteFrame": 213,
+        "../textures/CCTexture2D": 213,
         "./CCAsset": 25,
         "./CCAudioClip": 26,
         "./CCBitmapFont": 27,
@@ -6291,8 +6942,8 @@
         var activeWidgets = [];
         function updateAlignment(node) {
             var parent = node._parent;
-            parent && updateAlignment(parent);
-            var widget = node._widget;
+            cc.Node.isNode(parent) && updateAlignment(parent);
+            var widget = node._widget || node.getComponent(cc.Widget);
             widget && align(node, widget);
         }
         var widgetManager = cc._widgetManager = module.exports = {
@@ -6316,21 +6967,126 @@
             },
             remove: function(widget) {
                 widget.node._widget = null;
-                var index = activeWidgets.indexOf(widget);
-                index > -1 && this._activeWidgetsIterator.removeAt(index);
+                this._activeWidgetsIterator.remove(widget);
             },
             updateAlignment: updateAlignment
         };
     }, {} ],
     38: [ function(require, module, exports) {
+        var tempTransform = cc.affineTransformMake();
+        var Camera = cc.Class({
+            name: "cc.Camera",
+            extends: cc._RendererUnderSG,
+            editor: false,
+            properties: {
+                _targets: {
+                    default: [],
+                    type: cc.Node,
+                    visible: true
+                },
+                zoomRatio: 1
+            },
+            statics: {
+                main: null
+            },
+            _createSgNode: function() {
+                if (cc._renderType === cc.game.RENDER_TYPE_CANVAS) {
+                    cc.errorID(8301);
+                    var sgNode = new _ccsg.Node();
+                    sgNode.setTransform = sgNode.addTarget = sgNode.removeTarget = function() {};
+                    return sgNode;
+                }
+                return new _ccsg.CameraNode();
+            },
+            _initSgNode: function() {},
+            _addSgTargetInSg: function(target) {
+                target instanceof cc.Node ? this._sgNode.addTarget(target._sgNode) : target instanceof _ccsg.Node && this._sgNode.addTarget(target);
+            },
+            _removeTargetInSg: function(target) {
+                target instanceof cc.Node ? this._sgNode.removeTarget(target._sgNode) : target instanceof _ccsg.Node && this._sgNode.removeTarget(target);
+            },
+            onEnable: function() {
+                if (Camera.main) {
+                    cc.errorID(8300);
+                    return;
+                }
+                Camera.main = this;
+                var targets = this._targets;
+                for (var i = 0, l = targets.length; i < l; i++) {
+                    this._addSgTargetInSg(targets[i]);
+                }
+            },
+            onDisable: function() {
+                if (Camera.main !== this) {
+                    return;
+                }
+                Camera.main = null;
+                var targets = this._targets;
+                for (var i = 0, l = targets.length; i < l; i++) {
+                    this._removeTargetInSg(targets[i]);
+                }
+            },
+            addTarget: function(target) {
+                if (this._targets.indexOf(target) !== -1) {
+                    return;
+                }
+                this._addSgTargetInSg(target);
+                this._targets.push(target);
+            },
+            removeTarget: function(target) {
+                if (this._targets.indexOf(target) === -1) {
+                    return;
+                }
+                this._removeTargetInSg(target);
+                cc.js.array.remove(this._targets, target);
+            },
+            getTargets: function() {
+                return this._targets;
+            },
+            calculateCaemraTransformIn: function(transform) {
+                var node = this.node;
+                var wt = node.getNodeToWorldTransform();
+                var rotation = .5 * -(Math.atan2(wt.b, wt.a) + Math.atan2(-wt.c, wt.d));
+                var a = 1, b = 0, c = 0, d = 1;
+                if (rotation) {
+                    c = Math.sin(rotation);
+                    d = Math.cos(rotation);
+                    a = d;
+                    b = -c;
+                }
+                var zoomRatio = this.zoomRatio;
+                a *= zoomRatio;
+                b *= zoomRatio;
+                c *= zoomRatio;
+                d *= zoomRatio;
+                var center = cc.visibleRect.center;
+                transform.tx = center.x - (a * wt.tx + c * wt.ty);
+                transform.ty = center.y - (b * wt.tx + d * wt.ty);
+                transform.a = a;
+                transform.b = b;
+                transform.c = c;
+                transform.d = d;
+            },
+            lateUpdate: function() {
+                var t = tempTransform;
+                this.calculateCaemraTransformIn(t);
+                this._sgNode.setTransform(t.a, t.b, t.c, t.d, t.tx, t.ty);
+            }
+        });
+        module.exports = cc.Camera = Camera;
+    }, {
+        "./CCSGCameraNode": 213
+    } ],
+    39: [ function(require, module, exports) {
         var BoxCollider = cc.Class({
             name: "cc.BoxCollider",
-            "extends": cc.Collider,
+            extends: cc.Collider,
             editor: false,
             properties: {
                 _offset: cc.v2(0, 0),
                 _size: cc.size(100, 100),
                 offset: {
+                    tooltip: false,
                     get: function() {
                         return this._offset;
                     },
@@ -6340,6 +7096,7 @@
                     type: cc.Vec2
                 },
                 size: {
+                    tooltip: false,
                     get: function() {
                         return this._size;
                     },
@@ -6349,14 +7106,15 @@
                     },
                     type: cc.Size
                 }
-            }
+            },
+            resetInEditor: false
         });
         cc.BoxCollider = module.exports = BoxCollider;
     }, {} ],
-    39: [ function(require, module, exports) {
+    40: [ function(require, module, exports) {
         var CircleCollider = cc.Class({
             name: "cc.CircleCollider",
-            "extends": require("./CCCollider"),
+            extends: require("./CCCollider"),
             editor: false,
             properties: {
                 _offset: cc.v2(0, 0),
@@ -6371,6 +7129,7 @@
                     type: cc.Vec2
                 },
                 radius: {
+                    tooltip: false,
                     get: function() {
                         return this._radius;
                     },
@@ -6378,24 +7137,26 @@
                         this._radius = value < 0 ? 0 : value;
                     }
                 }
-            }
+            },
+            resetInEditor: false
         });
         cc.CircleCollider = module.exports = CircleCollider;
     }, {
-        "./CCCollider": 40
+        "./CCCollider": 41
     } ],
-    40: [ function(require, module, exports) {
+    41: [ function(require, module, exports) {
         var Collider = cc.Class({
             name: "cc.Collider",
-            "extends": cc.Component,
+            extends: cc.Component,
             properties: {
                 editing: {
-                    "default": false,
+                    default: false,
                     serializable: false,
                     tooltip: false
                 },
                 tag: {
-                    "default": 0,
+                    tooltip: false,
+                    default: 0,
                     range: [ 0, 1e7 ],
                     type: cc.Integer
                 }
@@ -6409,9 +7170,11 @@
         });
         cc.Collider = module.exports = Collider;
     }, {} ],
-    41: [ function(require, module, exports) {
+    42: [ function(require, module, exports) {
         var Contact = require("./CCContact");
         var CollisionType = Contact.CollisionType;
+        var tempRect = cc.rect();
+        var tempVec2 = cc.v2();
         var CollisionManager = cc.Class({
             mixins: [ cc.EventTarget ],
             properties: {
@@ -6494,7 +7257,9 @@
                     } else {
                         if (collider instanceof cc.PolygonCollider) {
                             world.position = null;
-                            world.points = collider.points.slice(0, collider.points.length);
+                            world.points = collider.points.map(function(p) {
+                                return cc.v2(p.x, p.y);
+                            });
                         } else {
                             if (collider instanceof cc.CircleCollider) {
                                 world.position = cc.v2();
@@ -6516,13 +7281,16 @@
                 preAabb.height = aabb.height;
                 if (collider instanceof cc.BoxCollider) {
                     var size = collider.size;
-                    var rect = cc.rect(offset.x - size.width / 2, offset.y - size.height / 2, size.width, size.height);
+                    tempRect.x = offset.x - size.width / 2;
+                    tempRect.y = offset.y - size.height / 2;
+                    tempRect.width = size.width;
+                    tempRect.height = size.height;
                     var wps = world.points;
                     var wp0 = wps[0];
                     var wp1 = wps[1];
                     var wp2 = wps[2];
                     var wp3 = wps[3];
-                    cc.obbApplyAffineTransform(rect, t, wp0, wp1, wp2, wp3);
+                    cc.obbApplyAffineTransform(tempRect, t, wp0, wp1, wp2, wp3);
                     var minx = Math.min(wp0.x, wp1.x, wp2.x, wp3.x);
                     var miny = Math.min(wp0.y, wp1.y, wp2.y, wp3.y);
                     var maxx = Math.max(wp0.x, wp1.x, wp2.x, wp3.x);
@@ -6534,14 +7302,14 @@
                 } else {
                     if (collider instanceof cc.CircleCollider) {
                         var p = cc.pointApplyAffineTransform(collider.offset, t);
-                        var tmpX = t.tx, tmpY = t.ty;
+                        world.position.x = p.x;
+                        world.position.y = p.y;
                         t.tx = t.ty = 0;
-                        var tempP = cc.pointApplyAffineTransform(cc.v2(collider.radius, 0), t);
-                        var d = cc.v2(tempP).mag();
+                        tempVec2.x = collider.radius;
+                        tempVec2.y = 0;
+                        var tempP = cc.pointApplyAffineTransform(tempVec2, t);
+                        var d = Math.sqrt(tempP.x * tempP.x + tempP.y * tempP.y);
                         world.radius = d;
-                        world.position = cc.v2(p);
-                        t.tx = tmpX;
-                        t.ty = tmpY;
                         aabb.x = p.x - d;
                         aabb.y = p.y - d;
                         aabb.width = 2 * d;
@@ -6550,11 +7318,15 @@
                         if (collider instanceof cc.PolygonCollider) {
                             var points = collider.points;
                             var worldPoints = world.points;
+                            worldPoints.length = points.length;
                             var minx = 1e6, miny = 1e6, maxx = -1e6, maxy = -1e6;
                             for (var i = 0, l = points.length; i < l; i++) {
-                                var p = points[i].add(offset);
-                                p = cc.pointApplyAffineTransform(p, t);
-                                worldPoints[i] = p;
+                                worldPoints[i] || (worldPoints[i] = cc.v2());
+                                tempVec2.x = points[i].x + offset.x;
+                                tempVec2.y = points[i].y + offset.y;
+                                var p = cc.pointApplyAffineTransform(tempVec2, t);
+                                worldPoints[i].x = p.x;
+                                worldPoints[i].y = p.y;
                                 p.x > maxx && (maxx = p.x);
                                 p.x < minx && (minx = p.x);
                                 p.y > maxy && (maxy = p.y);
@@ -6602,6 +7374,18 @@
                     cc.errorID(6600);
                 }
             },
+            attachDebugDrawToCamera: function(camera) {
+                if (!this._debugDrawer) {
+                    return;
+                }
+                camera.addTarget(this._debugDrawer);
+            },
+            detachDebugDrawFromCamera: function(camera) {
+                if (!this._debugDrawer) {
+                    return;
+                }
+                camera.removeTarget(this._debugDrawer);
+            },
             onNodeGroupChanged: function(event) {
                 var node = event.currentTarget;
                 var colliders = node.getComponents(cc.Collider);
@@ -6638,16 +7422,13 @@
                     }
                     if (this.enabledDrawBoundingBox) {
                         var aabb = collider.world.aabb;
-                        var ps = [ cc.v2(aabb.xMin, aabb.yMin), cc.v2(aabb.xMin, aabb.yMax), cc.v2(aabb.xMax, aabb.yMax), cc.v2(aabb.xMax, aabb.yMin) ];
-                        if (ps.length > 0) {
-                            debugDrawer.strokeColor = cc.Color.BLUE;
-                            debugDrawer.moveTo(ps[0].x, ps[0].y);
-                            for (var j = 1; j < ps.length; j++) {
-                                debugDrawer.lineTo(ps[j].x, ps[j].y);
-                            }
-                            debugDrawer.close();
-                            debugDrawer.stroke();
-                        }
+                        debugDrawer.strokeColor = cc.Color.BLUE;
+                        debugDrawer.moveTo(aabb.xMin, aabb.yMin);
+                        debugDrawer.lineTo(aabb.xMin, aabb.yMax);
+                        debugDrawer.lineTo(aabb.xMax, aabb.yMax);
+                        debugDrawer.lineTo(aabb.xMax, aabb.yMin);
+                        debugDrawer.close();
+                        debugDrawer.stroke();
                     }
                 }
             },
@@ -6679,9 +7460,9 @@
         });
         cc.CollisionManager = module.exports = CollisionManager;
     }, {
-        "./CCContact": 42
+        "./CCContact": 43
     } ],
-    42: [ function(require, module, exports) {
+    43: [ function(require, module, exports) {
         var Intersection = require("./CCIntersection");
         var CollisionType = cc.Enum({
             None: 0,
@@ -6755,9 +7536,9 @@
         Contact.CollisionType = CollisionType;
         module.exports = Contact;
     }, {
-        "./CCIntersection": 43
+        "./CCIntersection": 44
     } ],
-    43: [ function(require, module, exports) {
+    44: [ function(require, module, exports) {
         var Intersection = {};
         function lineLine(a1, a2, b1, b2) {
             var ua_t = (b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x);
@@ -6903,7 +7684,7 @@
             var y = point.y;
             var length = polygon.length;
             for (var i = 0, j = length - 1; i < length; j = i++) {
-                var xi = polygon[i].x, yi = polygon[i].y, xj = polygon[j].x, yj = polygon[j].y, intersect = yi > y != yj > y && x < (xj - xi) * (y - yi) / (yj - yi) + xi;
+                var xi = polygon[i].x, yi = polygon[i].y, xj = polygon[j].x, yj = polygon[j].y, intersect = yi > y !== yj > y && x < (xj - xi) * (y - yi) / (yj - yi) + xi;
                 intersect && (inside = !inside);
             }
             return inside;
@@ -6923,12 +7704,17 @@
         Intersection.pointLineDistance = pointLineDistance;
         cc.Intersection = module.exports = Intersection;
     }, {} ],
-    44: [ function(require, module, exports) {
+    45: [ function(require, module, exports) {
         var PolygonCollider = cc.Class({
             name: "cc.PolygonCollider",
-            "extends": require("./CCCollider"),
+            extends: require("./CCCollider"),
             editor: false,
             properties: {
+                threshold: {
+                    default: 1,
+                    serializable: false,
+                    visible: false
+                },
                 _offset: cc.v2(0, 0),
                 offset: {
                     get: function() {
@@ -6940,31 +7726,271 @@
                     type: cc.Vec2
                 },
                 points: {
-                    "default": function() {
-                        return [ cc.v2(-50, -50), cc.v2(-50, 50), cc.v2(50, 50), cc.v2(50, -50) ];
+                    tooltip: false,
+                    default: function() {
+                        return [ cc.v2(-50, -50), cc.v2(50, -50), cc.v2(50, 50), cc.v2(-50, 50) ];
                     },
                     type: [ cc.Vec2 ]
                 }
-            }
+            },
+            resetInEditor: false,
+            resetPointsByContour: false
         });
         cc.PolygonCollider = module.exports = PolygonCollider;
     }, {
-        "./CCCollider": 40
+        "./CCCollider": 41
     } ],
-    45: [ function(require, module, exports) {
+    46: [ function(require, module, exports) {
         require("./CCCollisionManager");
         require("./CCCollider");
         require("./CCBoxCollider");
         require("./CCCircleCollider");
         require("./CCPolygonCollider");
     }, {
-        "./CCBoxCollider": 38,
-        "./CCCircleCollider": 39,
-        "./CCCollider": 40,
-        "./CCCollisionManager": 41,
-        "./CCPolygonCollider": 44
+        "./CCBoxCollider": 39,
+        "./CCCircleCollider": 40,
+        "./CCCollider": 41,
+        "./CCCollisionManager": 42,
+        "./CCPolygonCollider": 45
     } ],
-    46: [ function(require, module, exports) {
+    47: [ function(require, module, exports) {
+        require("./platform/CCClass");
+        var Flags = require("./platform/CCObject").Flags;
+        var JsArray = require("./platform/js").array;
+        var IsStartCalled = Flags.IsStartCalled;
+        var IsOnEnableCalled = Flags.IsOnEnableCalled;
+        var IsEditorOnEnableCalled = Flags.IsEditorOnEnableCalled;
+        var callerFunctor = false;
+        var callOnEnableInTryCatch = false;
+        var callStartInTryCatch = false;
+        var callUpdateInTryCatch = false;
+        var callLateUpdateInTryCatch = false;
+        var callOnDisableInTryCatch = false;
+        function sortedIndex(array, comp) {
+            var order = comp.constructor._executionOrder;
+            var id = comp.__instanceId;
+            for (var l = 0, h = array.length - 1, m = h >>> 1; l <= h; m = l + h >>> 1) {
+                var test = array[m];
+                var testOrder = test.constructor._executionOrder;
+                if (testOrder > order) {
+                    h = m - 1;
+                } else {
+                    if (testOrder < order) {
+                        l = m + 1;
+                    } else {
+                        var testId = test.__instanceId;
+                        if (testId > id) {
+                            h = m - 1;
+                        } else {
+                            if (!(testId < id)) {
+                                return m;
+                            }
+                            l = m + 1;
+                        }
+                    }
+                }
+            }
+            return ~l;
+        }
+        function stableRemoveInactive(iterator) {
+            var array = iterator.array;
+            for (var i = 0; i < array.length; ) {
+                var comp = array[i];
+                comp._enabled && comp.node._activeInHierarchy ? ++i : iterator.removeAt(i);
+            }
+        }
+        var LifeCycleInvoker = cc.Class({
+            __ctor__: function(invokeFunc) {
+                var Iterator = JsArray.MutableForwardIterator;
+                this._zero = new Iterator([]);
+                this._neg = new Iterator([]);
+                this._pos = new Iterator([]);
+                this._invoke = invokeFunc;
+            },
+            statics: {
+                stableRemoveInactive: stableRemoveInactive
+            },
+            add: null,
+            remove: null,
+            invoke: null
+        });
+        function compareOrder(a, b) {
+            return a.constructor._executionOrder - b.constructor._executionOrder;
+        }
+        var OneOffInvoker = cc.Class({
+            extends: LifeCycleInvoker,
+            add: function(comp) {
+                var order = comp.constructor._executionOrder;
+                (0 === order ? this._zero : order < 0 ? this._neg : this._pos).array.push(comp);
+            },
+            remove: function(comp) {
+                var order = comp.constructor._executionOrder;
+                (0 === order ? this._zero : order < 0 ? this._neg : this._pos).fastRemove(comp);
+            },
+            cancelInactive: function() {
+                stableRemoveInactive(this._zero);
+                stableRemoveInactive(this._neg);
+                stableRemoveInactive(this._pos);
+            },
+            invoke: function() {
+                var compsNeg = this._neg;
+                if (compsNeg.array.length > 0) {
+                    compsNeg.array.sort(compareOrder);
+                    this._invoke(compsNeg);
+                    compsNeg.array.length = 0;
+                }
+                this._invoke(this._zero);
+                this._zero.array.length = 0;
+                var compsPos = this._pos;
+                if (compsPos.array.length > 0) {
+                    compsPos.array.sort(compareOrder);
+                    this._invoke(compsPos);
+                    compsPos.array.length = 0;
+                }
+            }
+        });
+        var ReusableInvoker = cc.Class({
+            extends: LifeCycleInvoker,
+            add: function(comp) {
+                var order = comp.constructor._executionOrder;
+                if (0 === order) {
+                    this._zero.array.push(comp);
+                } else {
+                    var array = order < 0 ? this._neg.array : this._pos.array;
+                    var i = sortedIndex(array, comp);
+                    i < 0 && array.splice(~i, 0, comp);
+                }
+            },
+            remove: function(comp) {
+                var order = comp.constructor._executionOrder;
+                if (0 === order) {
+                    this._zero.fastRemove(comp);
+                } else {
+                    var iterator = order < 0 ? this._neg : this._pos;
+                    var i = sortedIndex(iterator.array, comp);
+                    i >= 0 && iterator.removeAt(i);
+                }
+            },
+            invoke: function(dt) {
+                this._neg.array.length > 0 && this._invoke(this._neg, dt);
+                this._invoke(this._zero, dt);
+                this._pos.array.length > 0 && this._invoke(this._pos, dt);
+            }
+        });
+        function enableInEditor(comp) {
+            if (!(comp._objFlags & IsEditorOnEnableCalled)) {
+                cc.engine.emit("component-enabled", comp.uuid);
+                comp._objFlags |= IsEditorOnEnableCalled;
+            }
+        }
+        function createInvokeImpl(code, useDt) {
+            var body = "var a=it.array;for(it.i=0;it.i<a.length;++it.i){var c=a[it.i];" + code + "}";
+            return useDt ? new Function("it", "dt", body) : new Function("it", body);
+        }
+        function ctor() {
+            this.startInvoker = new OneOffInvoker(createInvokeImpl("c.start();c._objFlags|=" + IsStartCalled));
+            this.updateInvoker = new ReusableInvoker(createInvokeImpl("c.update(dt)", true));
+            this.lateUpdateInvoker = new ReusableInvoker(createInvokeImpl("c.lateUpdate(dt)", true));
+            this.scheduleInNextFrame = [];
+            this._updating = false;
+        }
+        var ComponentScheduler = cc.Class({
+            ctor: ctor,
+            unscheduleAll: ctor,
+            statics: {
+                LifeCycleInvoker: LifeCycleInvoker,
+                OneOffInvoker: OneOffInvoker,
+                createInvokeImpl: createInvokeImpl,
+                invokeOnEnable: function(iterator) {
+                    var compScheduler = cc.director._compScheduler;
+                    var array = iterator.array;
+                    for (iterator.i = 0; iterator.i < array.length; ++iterator.i) {
+                        var comp = array[iterator.i];
+                        if (comp._enabled) {
+                            comp.onEnable();
+                            var deactivatedDuringOnEnable = !comp.node._activeInHierarchy;
+                            deactivatedDuringOnEnable || compScheduler._onEnabled(comp);
+                        }
+                    }
+                }
+            },
+            _onEnabled: function(comp) {
+                cc.director.getScheduler().resumeTarget(comp);
+                comp._objFlags |= IsOnEnableCalled;
+                if (this._updating) {
+                    this.scheduleInNextFrame.push(comp);
+                    return;
+                }
+                this._scheduleImmediate(comp);
+            },
+            _onDisabled: function(comp) {
+                cc.director.getScheduler().pauseTarget(comp);
+                comp._objFlags &= ~IsOnEnableCalled;
+                var index = this.scheduleInNextFrame.indexOf(comp);
+                if (index >= 0) {
+                    JsArray.fastRemoveAt(this.scheduleInNextFrame, index);
+                    return;
+                }
+                !comp.start || comp._objFlags & IsStartCalled || this.startInvoker.remove(comp);
+                comp.update && this.updateInvoker.remove(comp);
+                comp.lateUpdate && this.lateUpdateInvoker.remove(comp);
+            },
+            enableComp: function(comp, invoker) {
+                if (!(comp._objFlags & IsOnEnableCalled)) {
+                    if (comp.onEnable) {
+                        if (invoker) {
+                            invoker.add(comp);
+                            return;
+                        }
+                        comp.onEnable();
+                        var deactivatedDuringOnEnable = !comp.node._activeInHierarchy;
+                        if (deactivatedDuringOnEnable) {
+                            return;
+                        }
+                    }
+                    this._onEnabled(comp);
+                }
+            },
+            disableComp: function(comp) {
+                if (comp._objFlags & IsOnEnableCalled) {
+                    comp.onDisable && comp.onDisable();
+                    this._onDisabled(comp);
+                }
+            },
+            _scheduleImmediate: function(comp) {
+                !comp.start || comp._objFlags & IsStartCalled || this.startInvoker.add(comp);
+                comp.update && this.updateInvoker.add(comp);
+                comp.lateUpdate && this.lateUpdateInvoker.add(comp);
+            },
+            _deferredSchedule: function() {
+                var comps = this.scheduleInNextFrame;
+                for (var i = 0, len = comps.length; i < len; i++) {
+                    var comp = comps[i];
+                    this._scheduleImmediate(comp);
+                }
+                comps.length = 0;
+            },
+            startPhase: function() {
+                this._updating = true;
+                this.scheduleInNextFrame.length > 0 && this._deferredSchedule();
+                this.startInvoker.invoke();
+            },
+            updatePhase: function(dt) {
+                this.updateInvoker.invoke(dt);
+            },
+            lateUpdatePhase: function(dt) {
+                this.lateUpdateInvoker.invoke(dt);
+                this._updating = false;
+            }
+        });
+        module.exports = ComponentScheduler;
+    }, {
+        "./platform/CCClass": 132,
+        "./platform/CCObject": 135,
+        "./platform/js": 146,
+        "./utils/misc": 156
+    } ],
+    48: [ function(require, module, exports) {
         var AnimationAnimator = require("../../animation/animation-animator");
         var AnimationClip = require("../../animation/animation-clip");
         function equalClips(clip1, clip2) {
@@ -6975,7 +8001,8 @@
         }
         var Animation = cc.Class({
             name: "cc.Animation",
-            "extends": require("./CCComponent"),
+            extends: require("./CCComponent"),
+            mixins: [ cc.EventTarget ],
             editor: false,
             ctor: function() {
                 this._animator = null;
@@ -6986,7 +8013,7 @@
             },
             properties: {
                 _defaultClip: {
-                    "default": null,
+                    default: null,
                     type: AnimationClip
                 },
                 defaultClip: {
@@ -7012,24 +8039,24 @@
                     visible: false
                 },
                 _clips: {
-                    "default": [],
+                    default: [],
                     type: [ AnimationClip ],
                     tooltip: false,
                     visible: true
                 },
                 playOnLoad: {
-                    "default": false,
+                    default: false,
                     tooltip: false
                 }
             },
-            onEnable: function() {
+            start: function() {
                 if (this.playOnLoad && this._defaultClip) {
-                    this.playOnLoad = false;
                     var state = this.getAnimationState(this._defaultClip.name);
                     this._animator.playState(state);
-                } else {
-                    this.resume();
                 }
+            },
+            onEnable: function() {
+                this.resume();
             },
             onDisable: function() {
                 this.pause();
@@ -7194,6 +8221,7 @@
                     anims[j].on(type, callback, target, useCapture);
                 }
                 listeners.push([ type, callback, target, useCapture ]);
+                return callback;
             },
             off: function(type, callback, target, useCapture) {
                 this._init();
@@ -7238,28 +8266,28 @@
         });
         cc.Animation = module.exports = Animation;
     }, {
-        "../../animation/animation-animator": 9,
-        "../../animation/animation-clip": 10,
-        "./CCComponent": 50
+        "../../animation/animation-animator": 10,
+        "../../animation/animation-clip": 11,
+        "./CCComponent": 52
     } ],
-    47: [ function(require, module, exports) {
+    49: [ function(require, module, exports) {
         var AudioSource = cc.Class({
             name: "cc.AudioSource",
-            "extends": require("./CCComponent"),
+            extends: require("./CCComponent"),
             editor: false,
             ctor: function() {
                 this.audio = new cc.Audio(this._clip);
             },
             properties: {
                 _clip: {
-                    "default": "",
+                    default: "",
                     url: cc.AudioClip
                 },
                 _volume: 1,
                 _mute: false,
                 _loop: false,
                 _pausedFlag: {
-                    "default": false,
+                    default: false,
                     serializable: false
                 },
                 isPlaying: {
@@ -7329,12 +8357,12 @@
                     tooltip: false
                 },
                 playOnLoad: {
-                    "default": false,
+                    default: false,
                     tooltip: false,
                     animatable: false
                 },
                 preload: {
-                    "default": false,
+                    default: false,
                     animatable: false
                 }
             },
@@ -7431,9 +8459,9 @@
         });
         cc.AudioSource = module.exports = AudioSource;
     }, {
-        "./CCComponent": 50
+        "./CCComponent": 52
     } ],
-    48: [ function(require, module, exports) {
+    50: [ function(require, module, exports) {
         var Transition = cc.Enum({
             NONE: 0,
             COLOR: 1,
@@ -7442,7 +8470,7 @@
         });
         var Button = cc.Class({
             name: "cc.Button",
-            "extends": require("./CCComponent"),
+            extends: require("./CCComponent"),
             ctor: function() {
                 this._resetState();
                 this._fromColor = null;
@@ -7461,7 +8489,7 @@
             editor: false,
             properties: {
                 interactable: {
-                    "default": true,
+                    default: true,
                     tooltip: false,
                     notify: function(oldValue) {
                         this._updateState();
@@ -7476,20 +8504,20 @@
                     }
                 },
                 enableAutoGrayEffect: {
-                    "default": false,
+                    default: false,
                     tooltip: false,
                     notify: function() {
                         this._updateDisabledState();
                     }
                 },
                 transition: {
-                    "default": Transition.NONE,
+                    default: Transition.NONE,
                     tooltip: false,
                     type: Transition,
                     animatable: false
                 },
                 normalColor: {
-                    "default": cc.color(214, 214, 214),
+                    default: cc.color(214, 214, 214),
                     displayName: "Normal",
                     tooltip: false,
                     notify: function() {
@@ -7497,17 +8525,17 @@
                     }
                 },
                 pressedColor: {
-                    "default": cc.color(211, 211, 211),
+                    default: cc.color(211, 211, 211),
                     displayName: "Pressed",
                     tooltip: false
                 },
                 hoverColor: {
-                    "default": cc.Color.WHITE,
+                    default: cc.Color.WHITE,
                     displayName: "Hover",
                     tooltip: false
                 },
                 disabledColor: {
-                    "default": cc.color(124, 124, 124),
+                    default: cc.color(124, 124, 124),
                     displayName: "Disabled",
                     tooltip: false,
                     notify: function() {
@@ -7515,16 +8543,16 @@
                     }
                 },
                 duration: {
-                    "default": .1,
+                    default: .1,
                     range: [ 0, 10 ],
                     tooltip: false
                 },
                 zoomScale: {
-                    "default": 1.2,
+                    default: 1.2,
                     tooltip: false
                 },
                 normalSprite: {
-                    "default": null,
+                    default: null,
                     type: cc.SpriteFrame,
                     displayName: "Normal",
                     tooltip: false,
@@ -7533,19 +8561,19 @@
                     }
                 },
                 pressedSprite: {
-                    "default": null,
+                    default: null,
                     type: cc.SpriteFrame,
                     displayName: "Pressed",
                     tooltip: false
                 },
                 hoverSprite: {
-                    "default": null,
+                    default: null,
                     type: cc.SpriteFrame,
                     displayName: "Hover",
                     tooltip: false
                 },
                 disabledSprite: {
-                    "default": null,
+                    default: null,
                     type: cc.SpriteFrame,
                     displayName: "Disabled",
                     tooltip: false,
@@ -7554,7 +8582,7 @@
                     }
                 },
                 target: {
-                    "default": null,
+                    default: null,
                     type: cc.Node,
                     tooltip: false,
                     notify: function() {
@@ -7562,7 +8590,7 @@
                     }
                 },
                 clickEvents: {
-                    "default": [],
+                    default: [],
                     type: cc.Component.EventHandler,
                     tooltip: false
                 }
@@ -7743,9 +8771,9 @@
         });
         cc.Button = module.exports = Button;
     }, {
-        "./CCComponent": 50
+        "./CCComponent": 52
     } ],
-    49: [ function(require, module, exports) {
+    51: [ function(require, module, exports) {
         var designResolutionWrapper = {
             getContentSize: function() {
                 return cc.visibleRect;
@@ -7760,7 +8788,7 @@
         };
         var Canvas = cc.Class({
             name: "cc.Canvas",
-            "extends": require("./CCComponent"),
+            extends: require("./CCComponent"),
             editor: false,
             resetInEditor: false,
             statics: {
@@ -7863,111 +8891,23 @@
         });
         cc.Canvas = module.exports = Canvas;
     }, {
-        "./CCComponent": 50
+        "./CCComponent": 52
     } ],
-    50: [ function(require, module, exports) {
-        require("../platform/CCObject");
-        require("../CCNode");
+    52: [ function(require, module, exports) {
+        var CCObject = require("../platform/CCObject");
         var idGenerater = new (require("../platform/id-generater"))("Comp");
-        var Flags = cc.Object.Flags;
-        var IsOnEnableCalled = Flags.IsOnEnableCalled;
-        var IsEditorOnEnableCalled = Flags.IsEditorOnEnableCalled;
-        var IsPreloadCalled = Flags.IsPreloadCalled;
-        var IsOnLoadStarted = Flags.IsOnLoadStarted;
-        var IsOnLoadCalled = Flags.IsOnLoadCalled;
-        var IsStartCalled = Flags.IsStartCalled;
-        var callPreloadInTryCatch;
-        var callOnLoadInTryCatch;
-        var callOnEnableInTryCatch;
-        var callStartInTryCatch;
-        var callOnDisableInTryCatch;
-        var callOnDestroyInTryCatch;
-        var callOnFocusInTryCatch;
-        var callOnLostFocusInTryCatch;
-        var callResetInTryCatch;
-        var callerFunctor;
-        function callOnEnable(self, enable) {
-            var enableCalled = self._objFlags & IsOnEnableCalled;
-            if (enable) {
-                if (!enableCalled) {
-                    self.onEnable && self.onEnable();
-                    var deactivatedDuringOnEnable = !self.node._activeInHierarchy;
-                    if (deactivatedDuringOnEnable) {
-                        return;
-                    }
-                    cc.director.getScheduler().resumeTarget(self);
-                    _registerEvent(self);
-                    self._objFlags |= IsOnEnableCalled;
-                }
-            } else {
-                if (enableCalled) {
-                    self.onDisable && self.onDisable();
-                    cc.director.getScheduler().pauseTarget(self);
-                    _unregisterEvent(self);
-                    self._objFlags &= ~IsOnEnableCalled;
-                }
-            }
-        }
-        var Director = cc.Director;
-        function _registerEvent(self) {
-            !self.start || self._objFlags & IsStartCalled || cc.director.__fastOn(Director.EVENT_BEFORE_UPDATE, _callStart, self, self.__eventTargets);
-            (self.update || self.lateUpdate) && cc.director.__fastOn(Director.EVENT_BEFORE_UPDATE, _registerUpdateEvent, self, self.__eventTargets);
-        }
-        function _unregisterEvent(self) {
-            !self.start || self._objFlags & IsStartCalled || cc.director.__fastOff(Director.EVENT_BEFORE_UPDATE, _callStart, self, self.__eventTargets);
-            var hasUpdate = self.update;
-            var hasLateUpdate = self.lateUpdate;
-            if (hasUpdate || hasLateUpdate) {
-                cc.director.__fastOff(Director.EVENT_BEFORE_UPDATE, _registerUpdateEvent, self, self.__eventTargets);
-                hasUpdate && cc.director.__fastOff(Director.EVENT_COMPONENT_UPDATE, _callUpdate, self, self.__eventTargets);
-                hasLateUpdate && cc.director.__fastOff(Director.EVENT_COMPONENT_LATE_UPDATE, _callLateUpdate, self, self.__eventTargets);
-            }
-        }
-        function _registerUpdateEvent() {
-            var eventTargets = this.__eventTargets;
-            var director = cc.director;
-            director.__fastOff(Director.EVENT_BEFORE_UPDATE, _registerUpdateEvent, this, eventTargets);
-            this.update && director.__fastOn(Director.EVENT_COMPONENT_UPDATE, _callUpdate, this, eventTargets);
-            this.lateUpdate && director.__fastOn(Director.EVENT_COMPONENT_LATE_UPDATE, _callLateUpdate, this, eventTargets);
-        }
-        var _callStart = function() {
-            cc.director.__fastOff(Director.EVENT_BEFORE_UPDATE, _callStart, this, this.__eventTargets);
-            this.start();
-            this._objFlags |= IsStartCalled;
-        };
-        var _callUpdate = function(event) {
-            this.update(event.detail);
-        };
-        var _callLateUpdate = function(event) {
-            this.lateUpdate(event.detail);
-        };
-        function _callPreloadOnNode(node) {
-            node._activeInHierarchy = true;
-            var comps = node._components;
-            var i = 0, len = comps.length;
-            for (;i < len; ++i) {
-                var component = comps[i];
-                if (component && !(component._objFlags & IsPreloadCalled) && "function" == typeof component.__preload) {
-                    component.__preload();
-                    component._objFlags |= IsPreloadCalled;
-                }
-            }
-            var children = node._children;
-            for (i = 0, len = children.length; i < len; ++i) {
-                var child = children[i];
-                child._active && _callPreloadOnNode(child);
-            }
-        }
+        var IsOnEnableCalled = CCObject.Flags.IsOnEnableCalled;
+        var IsOnLoadCalled = CCObject.Flags.IsOnLoadCalled;
         var Component = cc.Class({
             name: "cc.Component",
-            "extends": cc.Object,
+            extends: CCObject,
             ctor: function() {
                 this.__instanceId = cc.ClassManager.getNewInstanceId();
                 this.__eventTargets = [];
             },
             properties: {
                 node: {
-                    "default": null,
+                    default: null,
                     visible: false
                 },
                 name: {
@@ -7986,7 +8926,7 @@
                     visible: false
                 },
                 _id: {
-                    "default": "",
+                    default: "",
                     serializable: false
                 },
                 uuid: {
@@ -8006,7 +8946,10 @@
                     set: function(value) {
                         if (this._enabled !== value) {
                             this._enabled = value;
-                            this.node._activeInHierarchy && callOnEnable(this, value);
+                            if (this.node._activeInHierarchy) {
+                                var compScheduler = cc.director._compScheduler;
+                                value ? compScheduler.enableComp(this) : compScheduler.disableComp(this);
+                            }
                         }
                     },
                     visible: false
@@ -8034,8 +8977,8 @@
             onFocusInEditor: null,
             onLostFocusInEditor: null,
             resetInEditor: null,
-            addComponent: function(typeOrTypename) {
-                return this.node.addComponent(typeOrTypename);
+            addComponent: function(typeOrClassName) {
+                return this.node.addComponent(typeOrClassName);
             },
             getComponent: function(typeOrClassName) {
                 return this.node.getComponent(typeOrClassName);
@@ -8053,34 +8996,17 @@
             onRestore: null,
             destroy: function() {
                 var depend;
-                this._super() && this._enabled && this.node._activeInHierarchy && callOnEnable(this, false);
-            },
-            __onNodeActivated: function(active) {
-                if (active && !(this._objFlags & IsOnLoadStarted)) {
-                    this._objFlags |= IsOnLoadStarted;
-                    this.onLoad && this.onLoad();
-                    this._objFlags |= IsOnLoadCalled;
-                }
-                if (this._enabled) {
-                    if (active) {
-                        var deactivatedOnLoading = !this.node._activeInHierarchy;
-                        if (deactivatedOnLoading) {
-                            return;
-                        }
-                    }
-                    callOnEnable(this, active);
-                }
+                this._super() && this._enabled && this.node._activeInHierarchy && cc.director._compScheduler.disableComp(this);
             },
             _onPreDestroy: function() {
-                var i, l, target;
-                callOnEnable(this, false);
                 this.unscheduleAllCallbacks();
-                for (i = 0, l = this.__eventTargets.length; i < l; ++i) {
-                    target = this.__eventTargets[i];
+                var eventTargets = this.__eventTargets;
+                for (var i = 0, l = eventTargets.length; i < l; ++i) {
+                    var target = eventTargets[i];
                     target && target.targetOff(this);
                 }
-                this.__eventTargets.length = 0;
-                this.onDestroy && this._objFlags & IsOnLoadCalled && this.onDestroy();
+                eventTargets.length = 0;
+                cc.director._nodeActivator.destroyComp(this);
                 this.node._removeComponent(this);
             },
             _instantiate: function(cloned) {
@@ -8113,71 +9039,52 @@
             }
         });
         Component._requireComponent = null;
+        Component._executionOrder = 0;
         Object.defineProperty(Component, "_registerEditorProps", {
             value: function(cls, props) {
                 var reqComp = props.requireComponent;
                 reqComp && (cls._requireComponent = reqComp);
+                var order = props.executionOrder;
+                order && "number" === typeof order && (cls._executionOrder = order);
                 var name;
                 var key;
                 var val;
                 var willExecuteInEditMode;
             }
         });
-        Object.defineProperties(Component, {
-            _callPreloadOnNode: {
-                value: _callPreloadOnNode
-            },
-            _callPreloadOnComponent: {
-                value: function(component) {
-                    component.__preload();
-                    component._objFlags |= IsPreloadCalled;
-                }
-            },
-            _callResetOnComponent: {
-                value: false
-            }
-        });
         Component.prototype.__scriptUuid = "";
         cc.Component = module.exports = Component;
     }, {
-        "../CCNode": 23,
-        "../platform/CCObject": 110,
-        "../platform/id-generater": 117
+        "../platform/CCObject": 135,
+        "../platform/id-generater": 142
     } ],
-    51: [ function(require, module, exports) {
-        var _args = [];
+    53: [ function(require, module, exports) {
         cc.Component.EventHandler = cc.Class({
             name: "cc.ClickEvent",
             properties: {
                 target: {
-                    "default": null,
+                    default: null,
                     type: cc.Node
                 },
                 component: {
-                    "default": ""
+                    default: ""
                 },
                 handler: {
-                    "default": ""
+                    default: ""
                 },
                 customEventData: {
-                    "default": ""
+                    default: ""
                 }
             },
             statics: {
-                emitEvents: function(events) {
-                    "use strict";
-                    _args.length = arguments.length > 0 ? arguments.length - 1 : 0;
-                    for (var i = 0, l = _args.length; i < l; i++) {
-                        _args[i] = arguments[i + 1];
-                    }
-                    for (i = 0, l = events.length; i < l; i++) {
+                emitEvents: function(events, ...args) {
+                    for (var i = 0, l = events.length; i < l; i++) {
                         var event = events[i];
                         if (!(event instanceof cc.Component.EventHandler)) {
                             continue;
                         }
-                        event.emit(_args);
+                        event.emit(args);
                     }
-                    _args.length = 0;
                 }
             },
             emit: function(params) {
@@ -8190,21 +9097,21 @@
                     return;
                 }
                 var handler = comp[this.handler];
-                if ("function" != typeof handler) {
+                if ("function" !== typeof handler) {
                     return;
                 }
-                this.customEventData && params.push(this.customEventData);
+                null != this.customEventData && "" !== this.customEventData && params.push(this.customEventData);
                 handler.apply(comp, params);
             }
         });
     }, {} ],
-    52: [ function(require, module, exports) {
+    54: [ function(require, module, exports) {
         var KeyboardReturnType = _ccsg.EditBox.KeyboardReturnType;
         var InputMode = _ccsg.EditBox.InputMode;
         var InputFlag = _ccsg.EditBox.InputFlag;
         var EditBox = cc.Class({
             name: "cc.EditBox",
-            "extends": cc._RendererUnderSG,
+            extends: cc._RendererUnderSG,
             editor: false,
             properties: {
                 _useOriginalSize: true,
@@ -8220,7 +9127,7 @@
                 },
                 backgroundImage: {
                     tooltip: false,
-                    "default": null,
+                    default: null,
                     type: cc.SpriteFrame,
                     notify: function() {
                         var sgNode = this._sgNode;
@@ -8234,7 +9141,7 @@
                     }
                 },
                 returnType: {
-                    "default": KeyboardReturnType.DEFAULT,
+                    default: KeyboardReturnType.DEFAULT,
                     tooltip: false,
                     displayName: "KeyboardReturnType",
                     type: KeyboardReturnType,
@@ -8244,7 +9151,7 @@
                 },
                 inputFlag: {
                     tooltip: false,
-                    "default": InputFlag.DEFAULT,
+                    default: InputFlag.DEFAULT,
                     type: InputFlag,
                     notify: function() {
                         this._sgNode.inputFlag = this.inputFlag;
@@ -8252,7 +9159,7 @@
                 },
                 inputMode: {
                     tooltip: false,
-                    "default": InputMode.ANY,
+                    default: InputMode.ANY,
                     type: InputMode,
                     notify: function() {
                         this._sgNode.inputMode = this.inputMode;
@@ -8260,56 +9167,56 @@
                 },
                 fontSize: {
                     tooltip: false,
-                    "default": 20,
+                    default: 20,
                     notify: function() {
                         this._sgNode.fontSize = this.fontSize;
                     }
                 },
                 lineHeight: {
                     tooltip: false,
-                    "default": 40,
+                    default: 40,
                     notify: function() {
                         this._sgNode.setLineHeight(this.lineHeight);
                     }
                 },
                 fontColor: {
                     tooltip: false,
-                    "default": cc.Color.WHITE,
+                    default: cc.Color.WHITE,
                     notify: function() {
                         this._sgNode.fontColor = this.fontColor;
                     }
                 },
                 placeholder: {
                     tooltip: false,
-                    "default": "Enter text here...",
+                    default: "Enter text here...",
                     notify: function() {
                         this._sgNode.placeholder = this.placeholder;
                     }
                 },
                 placeholderFontSize: {
                     tooltip: false,
-                    "default": 20,
+                    default: 20,
                     notify: function() {
                         this._sgNode.placeholderFontSize = this.placeholderFontSize;
                     }
                 },
                 placeholderFontColor: {
                     tooltip: false,
-                    "default": cc.Color.GRAY,
+                    default: cc.Color.GRAY,
                     notify: function() {
                         this._sgNode.placeholderFontColor = this.placeholderFontColor;
                     }
                 },
                 maxLength: {
                     tooltip: false,
-                    "default": 20,
+                    default: 20,
                     notify: function() {
                         this._sgNode.maxLength = this.maxLength;
                     }
                 },
                 stayOnTop: {
                     tooltip: false,
-                    "default": false,
+                    default: false,
                     notify: function() {}
                 },
                 _tabIndex: 0,
@@ -8324,19 +9231,19 @@
                     }
                 },
                 editingDidBegan: {
-                    "default": [],
+                    default: [],
                     type: cc.Component.EventHandler
                 },
                 textChanged: {
-                    "default": [],
+                    default: [],
                     type: cc.Component.EventHandler
                 },
                 editingDidEnded: {
-                    "default": [],
+                    default: [],
                     type: cc.Component.EventHandler
                 },
                 editingReturn: {
-                    "default": [],
+                    default: [],
                     type: cc.Component.EventHandler
                 }
             },
@@ -8432,18 +9339,14 @@
         };
         cc.EditBox = module.exports = EditBox;
     }, {} ],
-    53: [ function(require, module, exports) {
+    55: [ function(require, module, exports) {
         var HorizontalAlign = cc.TextAlignment;
         var VerticalAlign = cc.VerticalTextAlignment;
         var Overflow = _ccsg.Label.Overflow;
         function debounce(func, wait, immediate) {
             var timeout;
-            return function() {
+            return function(...args) {
                 var context = this;
-                var args = new Array(arguments.length);
-                for (var i = 0; i < arguments.length; i++) {
-                    args[i] = arguments[i];
-                }
                 var later = function() {
                     timeout = null;
                     immediate || func.apply(context, args);
@@ -8456,7 +9359,7 @@
         }
         var Label = cc.Class({
             name: "cc.Label",
-            "extends": cc._RendererUnderSG,
+            extends: cc._RendererUnderSG,
             ctor: function() {},
             editor: false,
             _updateSgNodeString: function() {
@@ -8472,7 +9375,7 @@
             properties: {
                 _useOriginalSize: true,
                 string: {
-                    "default": "Label",
+                    default: "Label",
                     multiline: true,
                     tooltip: false,
                     notify: function() {
@@ -8480,7 +9383,7 @@
                     }
                 },
                 horizontalAlign: {
-                    "default": HorizontalAlign.LEFT,
+                    default: HorizontalAlign.LEFT,
                     type: HorizontalAlign,
                     tooltip: false,
                     notify: function() {
@@ -8489,7 +9392,7 @@
                     animatable: false
                 },
                 verticalAlign: {
-                    "default": VerticalAlign.TOP,
+                    default: VerticalAlign.TOP,
                     type: VerticalAlign,
                     tooltip: false,
                     notify: function() {
@@ -8498,7 +9401,7 @@
                     animatable: false
                 },
                 _actualFontSize: {
-                    "default": 40
+                    default: 40
                 },
                 actualFontSize: {
                     displayName: "Actual Font Size",
@@ -8520,6 +9423,13 @@
                     },
                     tooltip: false
                 },
+                fontFamily: {
+                    default: "Arial",
+                    tooltip: false,
+                    notify: function() {
+                        this._sgNode && this._sgNode.setFontFileOrFamily(this.fontFamily);
+                    }
+                },
                 _lineHeight: 40,
                 lineHeight: {
                     get: function() {
@@ -8536,7 +9446,7 @@
                     tooltip: false
                 },
                 overflow: {
-                    "default": Overflow.NONE,
+                    default: Overflow.NONE,
                     type: Overflow,
                     tooltip: false,
                     notify: function() {
@@ -8571,16 +9481,22 @@
                         this._bmFontOriginalSize = -1;
                         value && this._isSystemFontUsed && (this._isSystemFontUsed = false);
                         if (this._sgNode) {
-                            "string" == typeof value && cc.warnID(4e3);
-                            var isAsset = value instanceof cc.Font;
-                            if (this.font instanceof cc.BitmapFont) {
-                                if (this.font.spriteFrame) {
-                                    this._sgNode.setFontFileOrFamily(this.font.fntDataStr, this.font.spriteFrame);
+                            "string" === typeof value && cc.warnID(4e3);
+                            var font = this.font;
+                            if (font instanceof cc.BitmapFont) {
+                                if (font.spriteFrame) {
+                                    if (font.spriteFrame.textureLoaded()) {
+                                        this._sgNode.setFontFileOrFamily(font.fntDataStr, font.spriteFrame);
+                                    } else {
+                                        cc.warnID(4012, font.name);
+                                        this._sgNode.setFontFileOrFamily("");
+                                    }
                                 } else {
-                                    cc.warnID(4011, this.font.name);
+                                    cc.warnID(4011, font.name);
                                     this._sgNode.setFontFileOrFamily("");
                                 }
                             } else {
+                                var isAsset = value instanceof cc.Font;
                                 var ttfName = isAsset ? value.rawUrl : "";
                                 this._sgNode.setFontFileOrFamily(ttfName);
                             }
@@ -8600,7 +9516,7 @@
                         this._isSystemFontUsed = !!value;
                         if (value) {
                             this.font = null;
-                            this._sgNode && this._sgNode.setFontFileOrFamily("Arial");
+                            this._sgNode && this._sgNode.setFontFileOrFamily(this.fontFamily);
                         }
                     },
                     animatable: false,
@@ -8608,7 +9524,7 @@
                 },
                 _bmFontOriginalSize: {
                     displayName: "BMFont Original Size",
-                    "default": -1,
+                    default: -1,
                     serializable: false,
                     readonly: true,
                     visible: true,
@@ -8642,30 +9558,38 @@
                 return null;
             },
             _initSgNode: function() {
-                "string" == typeof this.font && cc.warnID(4e3);
-                var isAsset = this.font instanceof cc.Font;
+                var font = this.font;
+                "string" === typeof font && cc.warnID(4e3);
                 var sgNode;
-                if (this.font instanceof cc.BitmapFont) {
-                    if (this.font.spriteFrame) {
-                        sgNode = this._sgNode = new _ccsg.Label(this.string, this.font.fntDataStr, this.font.spriteFrame);
+                if (font instanceof cc.BitmapFont) {
+                    if (font.spriteFrame) {
+                        if (font.spriteFrame.textureLoaded()) {
+                            sgNode = this._sgNode = new _ccsg.Label(this.string, font.fntDataStr, font.spriteFrame);
+                        } else {
+                            cc.warnID(4012, font.name);
+                            sgNode = this._sgNode = new _ccsg.Label(this.string);
+                        }
                     } else {
-                        cc.warnID(4011, this.font.name);
+                        cc.warnID(4011, font.name);
                         sgNode = this._sgNode = new _ccsg.Label(this.string);
                     }
                 } else {
-                    var ttfName = isAsset ? this.font.rawUrl : "";
+                    var isAsset = font instanceof cc.Font;
+                    var ttfName = isAsset ? font.rawUrl : "";
                     sgNode = this._sgNode = new _ccsg.Label(this.string, ttfName);
                 }
                 sgNode.retain();
-                this.font instanceof cc.BitmapFont && (this._bmFontOriginalSize = this.font.fontSize);
+                font instanceof cc.BitmapFont && (this._bmFontOriginalSize = font.fontSize);
                 sgNode.setVisible(false);
                 sgNode.setHorizontalAlign(this.horizontalAlign);
                 sgNode.setVerticalAlign(this.verticalAlign);
                 sgNode.setFontSize(this._fontSize);
+                this.useSystemFont && sgNode.setFontFileOrFamily(this.fontFamily);
                 sgNode.setOverflow(this.overflow);
                 sgNode.enableWrapText(this._enableWrapText);
                 sgNode.setLineHeight(this._lineHeight);
                 sgNode.setString(this.string);
+                font instanceof cc.BitmapFont && sgNode.setSpacingX(this.spacingX);
                 sgNode.setContentSize(this.node.getContentSize());
                 sgNode.setColor(this.node.color);
             },
@@ -8676,10 +9600,10 @@
         });
         cc.Label = module.exports = Label;
     }, {} ],
-    54: [ function(require, module, exports) {
+    56: [ function(require, module, exports) {
         var LabelOutline = cc.Class({
             name: "cc.LabelOutline",
-            "extends": require("./CCComponent"),
+            extends: require("./CCComponent"),
             editor: false,
             ctor: function() {
                 this._labelSGNode = null;
@@ -8729,9 +9653,9 @@
         });
         cc.LabelOutline = module.exports = LabelOutline;
     }, {
-        "./CCComponent": 50
+        "./CCComponent": 52
     } ],
-    55: [ function(require, module, exports) {
+    57: [ function(require, module, exports) {
         var Type = cc.Enum({
             NONE: 0,
             HORIZONTAL: 1,
@@ -8757,12 +9681,12 @@
         });
         var Layout = cc.Class({
             name: "cc.Layout",
-            "extends": require("./CCComponent"),
+            extends: require("./CCComponent"),
             editor: false,
             properties: {
                 _layoutSize: cc.size(300, 200),
                 _layoutDirty: {
-                    "default": true,
+                    default: true,
                     serializable: false
                 },
                 _resize: ResizeMode.NONE,
@@ -8797,7 +9721,7 @@
                     animatable: false
                 },
                 cellSize: {
-                    "default": cc.size(40, 40),
+                    default: cc.size(40, 40),
                     tooltip: false,
                     type: cc.Size,
                     notify: function() {
@@ -8806,7 +9730,7 @@
                     animatable: false
                 },
                 startAxis: {
-                    "default": AxisDirection.HORIZONTAL,
+                    default: AxisDirection.HORIZONTAL,
                     tooltip: false,
                     type: AxisDirection,
                     notify: function() {
@@ -8816,10 +9740,10 @@
                     animatable: false
                 },
                 _N$padding: {
-                    "default": 0
+                    default: 0
                 },
                 paddingLeft: {
-                    "default": 0,
+                    default: 0,
                     tooltip: false,
                     notify: function() {
                         this._doLayoutDirty();
@@ -8827,7 +9751,7 @@
                     animatable: false
                 },
                 paddingRight: {
-                    "default": 0,
+                    default: 0,
                     tooltip: false,
                     notify: function() {
                         this._doLayoutDirty();
@@ -8835,7 +9759,7 @@
                     animatable: false
                 },
                 paddingTop: {
-                    "default": 0,
+                    default: 0,
                     tooltip: false,
                     notify: function() {
                         this._doLayoutDirty();
@@ -8843,7 +9767,7 @@
                     animatable: false
                 },
                 paddingBottom: {
-                    "default": 0,
+                    default: 0,
                     tooltip: false,
                     notify: function() {
                         this._doLayoutDirty();
@@ -8851,7 +9775,7 @@
                     animatable: false
                 },
                 spacingX: {
-                    "default": 0,
+                    default: 0,
                     notify: function() {
                         this._doLayoutDirty();
                     },
@@ -8859,7 +9783,7 @@
                     tooltip: false
                 },
                 spacingY: {
-                    "default": 0,
+                    default: 0,
                     notify: function() {
                         this._doLayoutDirty();
                     },
@@ -8867,7 +9791,7 @@
                     tooltip: false
                 },
                 verticalDirection: {
-                    "default": VerticalDirection.TOP_TO_BOTTOM,
+                    default: VerticalDirection.TOP_TO_BOTTOM,
                     type: VerticalDirection,
                     notify: function() {
                         this._doLayoutDirty();
@@ -8876,7 +9800,7 @@
                     tooltip: false
                 },
                 horizontalDirection: {
-                    "default": HorizontalDirection.LEFT_TO_RIGHT,
+                    default: HorizontalDirection.LEFT_TO_RIGHT,
                     type: HorizontalDirection,
                     notify: function() {
                         this._doLayoutDirty();
@@ -9254,9 +10178,9 @@
         });
         cc.Layout = module.exports = Layout;
     }, {
-        "./CCComponent": 50
+        "./CCComponent": 52
     } ],
-    56: [ function(require, module, exports) {
+    58: [ function(require, module, exports) {
         var Base = cc._RendererInSG;
         var MaskType = cc.Enum({
             RECT: 0,
@@ -9265,11 +10189,11 @@
         });
         var Mask = cc.Class({
             name: "cc.Mask",
-            "extends": Base,
+            extends: Base,
             editor: false,
             properties: {
                 _clippingStencil: {
-                    "default": null,
+                    default: null,
                     serializable: false
                 },
                 _type: MaskType.RECT,
@@ -9285,7 +10209,7 @@
                     tooltip: false
                 },
                 spriteFrame: {
-                    "default": null,
+                    default: null,
                     type: cc.SpriteFrame,
                     tooltip: false,
                     notify: function() {
@@ -9293,7 +10217,7 @@
                     }
                 },
                 alphaThreshold: {
-                    "default": 1,
+                    default: 1,
                     type: cc.Float,
                     range: [ 0, 1, .1 ],
                     slide: true,
@@ -9307,7 +10231,7 @@
                     }
                 },
                 inverted: {
-                    "default": false,
+                    default: false,
                     type: cc.Boolean,
                     tooltip: false,
                     notify: function() {
@@ -9361,12 +10285,10 @@
                     return px * px / (a * a) + py * py / (b * b) < 1;
                 }
             },
-            onEnable: function() {
-                if (this.type === MaskType.IMAGE_STENCIL && cc._renderType !== cc.game.RENDER_TYPE_WEBGL && false) {
-                    cc.warnID(4200);
-                    return;
-                }
+            __preload: function() {
                 this._refreshStencil();
+            },
+            onEnable: function() {
                 this._super();
                 this.node.on("size-changed", this._refreshStencil, this);
                 this.node.on("anchor-changed", this._refreshStencil, this);
@@ -9385,6 +10307,10 @@
                 return polies;
             },
             _refreshStencil: function() {
+                if (this.type === MaskType.IMAGE_STENCIL && cc._renderType !== cc.game.RENDER_TYPE_WEBGL && false) {
+                    cc.warnID(4200);
+                    return;
+                }
                 var contentSize = this.node.getContentSize();
                 var anchorPoint = this.node.getAnchorPoint();
                 var stencil = this._clippingStencil;
@@ -9439,7 +10365,7 @@
         };
         cc.Mask = module.exports = Mask;
     }, {} ],
-    57: [ function(require, module, exports) {
+    59: [ function(require, module, exports) {
         var SizeMode = cc.Enum({
             Unified: 0,
             Free: 1
@@ -9453,7 +10379,7 @@
         });
         var PageView = cc.Class({
             name: "cc.PageView",
-            "extends": cc.ScrollView,
+            extends: cc.ScrollView,
             editor: false,
             ctor: function() {
                 this._curPageIdx = 0;
@@ -9464,7 +10390,7 @@
             },
             properties: {
                 sizeMode: {
-                    "default": SizeMode.Unified,
+                    default: SizeMode.Unified,
                     type: SizeMode,
                     tooltip: false,
                     notify: function() {
@@ -9472,7 +10398,7 @@
                     }
                 },
                 direction: {
-                    "default": Direction.Horizontal,
+                    default: Direction.Horizontal,
                     type: Direction,
                     tooltip: false,
                     notify: function() {
@@ -9480,25 +10406,25 @@
                     }
                 },
                 scrollThreshold: {
-                    "default": .5,
+                    default: .5,
                     type: cc.Float,
                     slide: true,
                     range: [ 0, 1, .01 ],
                     tooltip: false
                 },
                 autoPageTurningThreshold: {
-                    "default": 100,
+                    default: 100,
                     type: cc.Float,
                     tooltip: false
                 },
                 pageTurningEventTiming: {
-                    "default": .1,
+                    default: .1,
                     type: cc.Float,
                     range: [ 0, 1, .01 ],
                     tooltip: false
                 },
                 indicator: {
-                    "default": null,
+                    default: null,
                     type: cc.PageViewIndicator,
                     tooltip: false,
                     notify: function() {
@@ -9506,7 +10432,7 @@
                     }
                 },
                 pageEvents: {
-                    "default": [],
+                    default: [],
                     type: cc.Component.EventHandler,
                     tooltip: false
                 }
@@ -9788,35 +10714,35 @@
         });
         cc.PageView = module.exports = PageView;
     }, {} ],
-    58: [ function(require, module, exports) {
+    60: [ function(require, module, exports) {
         var Direction = cc.Enum({
             HORIZONTAL: 0,
             VERTICAL: 1
         });
         var PageViewIndicator = cc.Class({
             name: "cc.PageViewIndicator",
-            "extends": require("./CCComponent"),
+            extends: require("./CCComponent"),
             editor: false,
             properties: {
                 _layout: null,
                 _pageView: null,
                 _indicators: [],
                 spriteFrame: {
-                    "default": null,
+                    default: null,
                     type: cc.SpriteFrame,
                     tooltip: false
                 },
                 direction: {
-                    "default": Direction.HORIZONTAL,
+                    default: Direction.HORIZONTAL,
                     type: Direction,
                     tooltip: false
                 },
                 cellSize: {
-                    "default": cc.size(20, 20),
+                    default: cc.size(20, 20),
                     tooltip: false
                 },
                 spacing: {
-                    "default": 0,
+                    default: 0,
                     tooltip: false
                 }
             },
@@ -9896,9 +10822,9 @@
         });
         cc.PageViewIndicator = module.exports = PageViewIndicator;
     }, {
-        "./CCComponent": 50
+        "./CCComponent": 52
     } ],
-    59: [ function(require, module, exports) {
+    61: [ function(require, module, exports) {
         var Mode = cc.Enum({
             HORIZONTAL: 0,
             VERTICAL: 1,
@@ -9906,7 +10832,7 @@
         });
         var ProgressBar = cc.Class({
             name: "cc.ProgressBar",
-            "extends": require("./CCComponent"),
+            extends: require("./CCComponent"),
             editor: false,
             _initBarSprite: function() {
                 if (this.barSprite) {
@@ -9974,7 +10900,7 @@
             },
             properties: {
                 barSprite: {
-                    "default": null,
+                    default: null,
                     type: cc.Sprite,
                     tooltip: false,
                     notify: function() {
@@ -9983,7 +10909,7 @@
                     animatable: false
                 },
                 mode: {
-                    "default": Mode.HORIZONTAL,
+                    default: Mode.HORIZONTAL,
                     type: Mode,
                     tooltip: false,
                     notify: function() {
@@ -9999,7 +10925,7 @@
                     animatable: false
                 },
                 totalLength: {
-                    "default": 1,
+                    default: 1,
                     range: [ 0, Number.MAX_VALUE ],
                     tooltip: false,
                     notify: function(value) {
@@ -10007,7 +10933,7 @@
                     }
                 },
                 progress: {
-                    "default": 1,
+                    default: 1,
                     type: "Float",
                     range: [ 0, 1, .1 ],
                     slide: true,
@@ -10017,7 +10943,7 @@
                     }
                 },
                 reverse: {
-                    "default": false,
+                    default: false,
                     tooltip: false,
                     notify: function() {
                         this.barSprite && (this.barSprite.fillStart = 1 - this.barSprite.fillStart);
@@ -10032,11 +10958,11 @@
         });
         cc.ProgressBar = module.exports = ProgressBar;
     }, {
-        "./CCComponent": 50
+        "./CCComponent": 52
     } ],
-    60: [ function(require, module, exports) {
+    62: [ function(require, module, exports) {
         var RendererInSG = cc.Class({
-            "extends": require("./CCSGComponent"),
+            extends: require("./CCSGComponent"),
             name: "cc._RendererInSG",
             ctor: function() {
                 var sgNode = this._sgNode = this._createSgNode();
@@ -10050,7 +10976,7 @@
                 var sgSize;
             },
             onEnable: function() {
-                if (cc.director.getActionManager().getNumberOfRunningActionsInTarget(this.node) > 0) {
+                if (cc.director._actionManager && cc.director._actionManager.getNumberOfRunningActionsInTarget(this.node) > 0) {
                     cc.errorID(1629, this.node.name);
                     cc.errorID(1630);
                     cc.errorID(1631);
@@ -10096,11 +11022,11 @@
         });
         cc._RendererInSG = module.exports = RendererInSG;
     }, {
-        "./CCSGComponent": 63
+        "./CCSGComponent": 65
     } ],
-    61: [ function(require, module, exports) {
+    63: [ function(require, module, exports) {
         var RendererUnderSG = cc.Class({
-            "extends": require("./CCSGComponent"),
+            extends: require("./CCSGComponent"),
             name: "cc._RendererUnderSG",
             ctor: function() {
                 var sgNode = this._sgNode = this._createSgNode();
@@ -10141,21 +11067,17 @@
         });
         cc._RendererUnderSG = module.exports = RendererUnderSG;
     }, {
-        "./CCSGComponent": 63
+        "./CCSGComponent": 65
     } ],
-    62: [ function(require, module, exports) {
+    64: [ function(require, module, exports) {
         require("../label/CCHtmlTextParser.js");
         require("../label/CCTextUtils.js");
         var HorizontalAlign = cc.TextAlignment;
         var VerticalAlign = cc.VerticalTextAlignment;
         function debounce(func, wait, immediate) {
             var timeout;
-            return function() {
+            return function(...args) {
                 var context = this;
-                var args = new Array(arguments.length);
-                for (var i = 0; i < arguments.length; i++) {
-                    args[i] = arguments[i];
-                }
                 var later = function() {
                     timeout = null;
                     immediate || func.apply(context, args);
@@ -10168,7 +11090,7 @@
         }
         var RichText = cc.Class({
             name: "cc.RichText",
-            "extends": cc._RendererUnderSG,
+            extends: cc._RendererUnderSG,
             ctor: function() {
                 this._textArray = null;
                 this._labelSegmentsCache = [];
@@ -10178,7 +11100,7 @@
             editor: false,
             properties: {
                 string: {
-                    "default": "<color=#00ff00>Rich</c><color=#0fffff>Text</color>",
+                    default: "<color=#00ff00>Rich</c><color=#0fffff>Text</color>",
                     multiline: true,
                     tooltip: false,
                     notify: function() {
@@ -10186,7 +11108,7 @@
                     }
                 },
                 horizontalAlign: {
-                    "default": HorizontalAlign.LEFT,
+                    default: HorizontalAlign.LEFT,
                     type: HorizontalAlign,
                     tooltip: false,
                     animatable: false,
@@ -10199,7 +11121,7 @@
                     }
                 },
                 fontSize: {
-                    "default": 40,
+                    default: 40,
                     tooltip: false,
                     notify: function(oldValue) {
                         if (this.fontSize === oldValue) {
@@ -10210,7 +11132,7 @@
                     }
                 },
                 font: {
-                    "default": null,
+                    default: null,
                     type: cc.TTFFont,
                     tooltip: false,
                     notify: function(oldValue) {
@@ -10222,7 +11144,7 @@
                     }
                 },
                 maxWidth: {
-                    "default": 0,
+                    default: 0,
                     tooltip: false,
                     notify: function(oldValue) {
                         if (this.maxWidth === oldValue) {
@@ -10233,7 +11155,7 @@
                     }
                 },
                 lineHeight: {
-                    "default": 40,
+                    default: 40,
                     tooltip: false,
                     notify: function(oldValue) {
                         if (this.lineHeight === oldValue) {
@@ -10244,7 +11166,7 @@
                     }
                 },
                 imageAtlas: {
-                    "default": null,
+                    default: null,
                     type: cc.SpriteAtlas,
                     tooltip: false,
                     notify: function(oldValue) {
@@ -10635,18 +11557,18 @@
         });
         cc.RichText = module.exports = RichText;
     }, {
-        "../label/CCHtmlTextParser.js": 92,
-        "../label/CCTextUtils.js": 93
+        "../label/CCHtmlTextParser.js": 94,
+        "../label/CCTextUtils.js": 95
     } ],
-    63: [ function(require, module, exports) {
+    65: [ function(require, module, exports) {
         var SceneGraphHelper = require("../utils/scene-graph-helper");
         var SGComponent = cc.Class({
-            "extends": require("./CCComponent"),
+            extends: require("./CCComponent"),
             name: "cc._SGComponent",
             editor: false,
             properties: {
                 _sgNode: {
-                    "default": null,
+                    default: null,
                     serializable: false
                 }
             },
@@ -10663,10 +11585,10 @@
         });
         cc._SGComponent = module.exports = SGComponent;
     }, {
-        "../utils/scene-graph-helper": 133,
-        "./CCComponent": 50
+        "../utils/scene-graph-helper": 159,
+        "./CCComponent": 52
     } ],
-    64: [ function(require, module, exports) {
+    66: [ function(require, module, exports) {
         var GETTINGSHORTERFACTOR = 20;
         var Direction = cc.Enum({
             HORIZONTAL: 0,
@@ -10674,18 +11596,18 @@
         });
         var Scrollbar = cc.Class({
             name: "cc.Scrollbar",
-            "extends": require("./CCComponent"),
+            extends: require("./CCComponent"),
             editor: false,
             properties: {
                 _scrollView: null,
                 _touching: false,
                 _autoHideRemainingTime: {
-                    "default": 0,
+                    default: 0,
                     serializable: false
                 },
                 _opacity: 255,
                 handle: {
-                    "default": null,
+                    default: null,
                     type: cc.Sprite,
                     tooltip: false,
                     notify: function() {
@@ -10694,7 +11616,7 @@
                     animatable: false
                 },
                 direction: {
-                    "default": Direction.HORIZONTAL,
+                    default: Direction.HORIZONTAL,
                     type: Direction,
                     tooltip: false,
                     notify: function() {
@@ -10703,12 +11625,12 @@
                     animatable: false
                 },
                 enableAutoHide: {
-                    "default": true,
+                    default: true,
                     animatable: false,
                     tooltip: false
                 },
                 autoHideTime: {
-                    "default": 1,
+                    default: 1,
                     animatable: false,
                     tooltip: false
                 }
@@ -10876,9 +11798,9 @@
         });
         cc.Scrollbar = module.exports = Scrollbar;
     }, {
-        "./CCComponent": 50
+        "./CCComponent": 52
     } ],
-    65: [ function(require, module, exports) {
+    67: [ function(require, module, exports) {
         var NUMBER_OF_GATHERED_TOUCHES_FOR_MOVE_SPEED = 5;
         var OUT_OF_BOUNDARY_BREAKING_FACTOR = .05;
         var EPSILON = 1e-4;
@@ -10919,7 +11841,7 @@
         };
         var ScrollView = cc.Class({
             name: "cc.ScrollView",
-            "extends": require("./CCViewGroup"),
+            extends: require("./CCViewGroup"),
             editor: false,
             ctor: function() {
                 this._topBoundary = 0;
@@ -10944,48 +11866,49 @@
                 this._stopMouseWheel = false;
                 this._mouseWheelEventElapsedTime = 0;
                 this._isScrollEndedEventFired = false;
+                this._scrollEventEmitMask = 0;
             },
             properties: {
                 content: {
-                    "default": void 0,
+                    default: void 0,
                     type: cc.Node,
                     tooltip: false
                 },
                 horizontal: {
-                    "default": true,
+                    default: true,
                     animatable: false,
                     tooltip: false
                 },
                 vertical: {
-                    "default": true,
+                    default: true,
                     animatable: false,
                     tooltip: false
                 },
                 inertia: {
-                    "default": true,
+                    default: true,
                     animatable: false,
                     tooltip: false
                 },
                 brake: {
-                    "default": .5,
+                    default: .5,
                     type: "Float",
                     range: [ 0, 1, .1 ],
                     animatable: false,
                     tooltip: false
                 },
                 elastic: {
-                    "default": true,
+                    default: true,
                     animatable: false,
                     tooltip: false
                 },
                 bounceDuration: {
-                    "default": 1,
+                    default: 1,
                     range: [ 0, 10 ],
                     animatable: false,
                     tooltip: false
                 },
                 horizontalScrollBar: {
-                    "default": void 0,
+                    default: void 0,
                     type: cc.Scrollbar,
                     tooltip: false,
                     notify: function() {
@@ -10997,7 +11920,7 @@
                     animatable: false
                 },
                 verticalScrollBar: {
-                    "default": void 0,
+                    default: void 0,
                     type: cc.Scrollbar,
                     tooltip: false,
                     notify: function() {
@@ -11009,12 +11932,12 @@
                     animatable: false
                 },
                 scrollEvents: {
-                    "default": [],
+                    default: [],
                     type: cc.Component.EventHandler,
                     tooltip: false
                 },
                 cancelInnerEvents: {
-                    "default": true,
+                    default: true,
                     animatable: false,
                     tooltip: false
                 }
@@ -11141,13 +12064,6 @@
                 }
                 this.content.setPosition(position);
                 this._outOfBoundaryAmountDirty = true;
-                if (this.elastic) {
-                    var outOfBoundary = this._getHowMuchOutOfBoundary();
-                    outOfBoundary.y > 0 && this._dispatchEvent("bounce-top");
-                    outOfBoundary.y < 0 && this._dispatchEvent("bounce-bottom");
-                    outOfBoundary.x > 0 && this._dispatchEvent("bounce-right");
-                    outOfBoundary.x < 0 && this._dispatchEvent("bounce-left");
-                }
             },
             getContentPosition: function() {
                 return this.content.getPosition();
@@ -11328,9 +12244,9 @@
                 if (this._hasNestedViewGroup(event, captureListeners)) {
                     return;
                 }
+                this._dispatchEvent("touch-up");
                 var touch = event.touch;
                 this.content && this._handleReleaseLogic(touch);
-                this._dispatchEvent("touch-up");
                 this._touchMoved ? event.stopPropagation() : this._stopPropagationIfTargetIsMe(event);
             },
             _onTouchCancelled: function(event, captureListeners) {
@@ -11427,6 +12343,10 @@
                 }
                 var bounceBackTime = Math.max(this.bounceDuration, 0);
                 this._startAutoScroll(bounceBackAmount, bounceBackTime, true);
+                bounceBackAmount.y > 0 && this._dispatchEvent("bounce-top");
+                bounceBackAmount.y < 0 && this._dispatchEvent("bounce-bottom");
+                bounceBackAmount.x > 0 && this._dispatchEvent("bounce-right");
+                bounceBackAmount.x < 0 && this._dispatchEvent("bounce-left");
                 return true;
             },
             _processInertiaScroll: function() {
@@ -11490,12 +12410,12 @@
                         reachedEnd = true;
                     }
                 }
+                var contentPos = cc.pSub(newPosition, this.getContentPosition());
+                this._moveContent(contentPos, reachedEnd);
                 if (reachedEnd) {
                     this._autoScrolling = false;
                     this._isScrollEndedEventFired || this._dispatchEvent("scroll-ended");
                 }
-                var contentPos = cc.pSub(newPosition, this.getContentPosition());
-                this._moveContent(contentPos, reachedEnd);
             },
             _startInertiaScroll: function(touchMoveVelocity) {
                 var inertiaTotalMovement = cc.pMult(touchMoveVelocity, MOVEMENT_FACTOR);
@@ -11628,6 +12548,17 @@
                 this.verticalScrollBar && this.verticalScrollBar._onTouchEnded();
             },
             _dispatchEvent: function(event) {
+                if ("scroll-ended" === event) {
+                    this._scrollEventEmitMask = 0;
+                } else {
+                    if ("scroll-to-top" === event || "scroll-to-bottom" === event || "scroll-to-left" === event || "scroll-to-right" === event) {
+                        var flag = 1 << eventMap[event];
+                        if (this._scrollEventEmitMask & flag) {
+                            return;
+                        }
+                        this._scrollEventEmitMask |= flag;
+                    }
+                }
                 cc.Component.EventHandler.emitEvents(this.scrollEvents, this, eventMap[event]);
                 this.node.emit(event, this);
             },
@@ -11676,34 +12607,34 @@
         });
         cc.ScrollView = module.exports = ScrollView;
     }, {
-        "./CCViewGroup": 73
+        "./CCViewGroup": 75
     } ],
-    66: [ function(require, module, exports) {
+    68: [ function(require, module, exports) {
         var Direction = cc.Enum({
             Horizontal: 0,
             Vertical: 1
         });
         var Slider = cc.Class({
             name: "cc.Slider",
-            "extends": require("./CCComponent"),
+            extends: require("./CCComponent"),
             editor: false,
             ctor: function() {
                 this._dragging = false;
             },
             properties: {
                 handle: {
-                    "default": null,
+                    default: null,
                     type: cc.Button,
                     tooltip: false,
                     notify: function() {}
                 },
                 direction: {
-                    "default": Direction.Horizontal,
+                    default: Direction.Horizontal,
                     type: Direction,
                     tooltip: false
                 },
                 progress: {
-                    "default": .5,
+                    default: .5,
                     type: cc.Float,
                     range: [ 0, 1, .1 ],
                     slide: true,
@@ -11713,7 +12644,7 @@
                     }
                 },
                 slideEvents: {
-                    "default": [],
+                    default: [],
                     type: cc.Component.EventHandler,
                     tooltip: false
                 }
@@ -11722,21 +12653,9 @@
                 Direction: Direction
             },
             __preload: function() {
-                this._registerEvent();
                 this._updateHandlePosition();
             },
-            onDestroy: function() {
-                this.node.off(cc.Node.EventType.TOUCH_START, this._onTouchBegan, this);
-                this.node.off(cc.Node.EventType.TOUCH_MOVE, this._onTouchMoved, this);
-                this.node.off(cc.Node.EventType.TOUCH_END, this._onTouchEnded, this);
-                this.node.off(cc.Node.EventType.TOUCH_CANCEL, this._onTouchCancelled, this);
-                if (this.handle && this.handle.isValid) {
-                    this.handle.node.off(cc.Node.EventType.TOUCH_START, this._onHandleDragStart, this);
-                    this.handle.node.off(cc.Node.EventType.TOUCH_MOVE, this._onTouchMoved, this);
-                    this.handle.node.off(cc.Node.EventType.TOUCH_END, this._onTouchEnded, this);
-                }
-            },
-            _registerEvent: function() {
+            onEnable: function() {
                 this.node.on(cc.Node.EventType.TOUCH_START, this._onTouchBegan, this);
                 this.node.on(cc.Node.EventType.TOUCH_MOVE, this._onTouchMoved, this);
                 this.node.on(cc.Node.EventType.TOUCH_END, this._onTouchEnded, this);
@@ -11745,6 +12664,17 @@
                     this.handle.node.on(cc.Node.EventType.TOUCH_START, this._onHandleDragStart, this);
                     this.handle.node.on(cc.Node.EventType.TOUCH_MOVE, this._onTouchMoved, this);
                     this.handle.node.on(cc.Node.EventType.TOUCH_END, this._onTouchEnded, this);
+                }
+            },
+            onDisable: function() {
+                this.node.off(cc.Node.EventType.TOUCH_START, this._onTouchBegan, this);
+                this.node.off(cc.Node.EventType.TOUCH_MOVE, this._onTouchMoved, this);
+                this.node.off(cc.Node.EventType.TOUCH_END, this._onTouchEnded, this);
+                this.node.off(cc.Node.EventType.TOUCH_CANCEL, this._onTouchCancelled, this);
+                if (this.handle && this.handle.isValid) {
+                    this.handle.node.off(cc.Node.EventType.TOUCH_START, this._onHandleDragStart, this);
+                    this.handle.node.off(cc.Node.EventType.TOUCH_MOVE, this._onTouchMoved, this);
+                    this.handle.node.off(cc.Node.EventType.TOUCH_END, this._onTouchEnded, this);
                 }
             },
             _onHandleDragStart: function(event) {
@@ -11810,9 +12740,9 @@
         });
         cc.Slider = module.exports = Slider;
     }, {
-        "./CCComponent": 50
+        "./CCComponent": 52
     } ],
-    67: [ function(require, module, exports) {
+    69: [ function(require, module, exports) {
         var Base = require("./CCRendererUnderSG");
         var SpriteType = cc.Scale9Sprite.RenderingType;
         var FillType = cc.Scale9Sprite.FillType;
@@ -11824,14 +12754,14 @@
         });
         var Sprite = cc.Class({
             name: "cc.Sprite",
-            "extends": Base,
+            extends: Base,
             editor: false,
             ctor: function() {
                 this._blendFunc = new cc.BlendFunc(this._srcBlendFactor, this._dstBlendFactor);
             },
             properties: {
                 _spriteFrame: {
-                    "default": null,
+                    default: null,
                     type: cc.SpriteFrame
                 },
                 _type: SpriteType.SIMPLE,
@@ -11844,7 +12774,7 @@
                 _srcBlendFactor: BlendFactor.SRC_ALPHA,
                 _dstBlendFactor: BlendFactor.ONE_MINUS_SRC_ALPHA,
                 _atlas: {
-                    "default": null,
+                    default: null,
                     type: cc.SpriteAtlas,
                     tooltip: false,
                     editorOnly: true,
@@ -11871,8 +12801,7 @@
                     },
                     set: function(value) {
                         this._type = value;
-                        this._sgNode.setRenderingType(this._type);
-                        this._applyCapInset();
+                        this._sgNode.setRenderingType(value);
                     },
                     type: SpriteType,
                     animatable: false,
@@ -12007,14 +12936,13 @@
                 this._sgNode && this._spriteFrame && this._spriteFrame.textureLoaded() && this._sgNode.setVisible(true);
             },
             _applyAtlas: false,
-            _applyCapInset: function() {
-                if (this._type === SpriteType.SLICED && this._spriteFrame) {
-                    var sgNode = this._sgNode;
-                    sgNode.setInsetTop(this._spriteFrame.insetTop);
-                    sgNode.setInsetBottom(this._spriteFrame.insetBottom);
-                    sgNode.setInsetRight(this._spriteFrame.insetRight);
-                    sgNode.setInsetLeft(this._spriteFrame.insetLeft);
-                }
+            _applySpriteFrameInsets: function() {
+                var spriteFrame = this._spriteFrame;
+                var sgNode = this._sgNode;
+                sgNode.setInsetTop(spriteFrame.insetTop);
+                sgNode.setInsetBottom(spriteFrame.insetBottom);
+                sgNode.setInsetRight(spriteFrame.insetRight);
+                sgNode.setInsetLeft(spriteFrame.insetLeft);
             },
             _applySpriteSize: function() {
                 if (SizeMode.CUSTOM !== this._sizeMode && this._spriteFrame) {
@@ -12033,26 +12961,26 @@
                     this.node.setContentSize(this.node.getContentSize(true));
                 }
             },
-            _onSpriteFrameLoaded: function(event) {
+            _onTextureLoaded: function(event) {
                 var self = this;
                 if (!self.isValid) {
                     return;
                 }
                 var sgNode = self._sgNode;
                 sgNode.setSpriteFrame(self._spriteFrame);
-                self._applyCapInset();
                 self._applySpriteSize();
                 self.enabledInHierarchy && !sgNode.isVisible() && sgNode.setVisible(true);
             },
-            _applySpriteFrame: function(oldFrame) {
+            _applySpriteFrame: function(oldFrame, keepInsets) {
                 var sgNode = this._sgNode;
-                oldFrame && oldFrame.off && oldFrame.off("load", this._onSpriteFrameLoaded, this);
+                oldFrame && oldFrame.off && oldFrame.off("load", this._onTextureLoaded, this);
                 var spriteFrame = this._spriteFrame;
                 if (spriteFrame) {
+                    keepInsets || this._applySpriteFrameInsets();
                     if (spriteFrame.textureLoaded()) {
-                        this._onSpriteFrameLoaded(null);
+                        this._onTextureLoaded(null);
                     } else {
-                        spriteFrame.once("load", this._onSpriteFrameLoaded, this);
+                        spriteFrame.once("load", this._onTextureLoaded, this);
                         spriteFrame.ensureLoadTexture();
                     }
                 } else {
@@ -12063,8 +12991,9 @@
                 return new cc.Scale9Sprite();
             },
             _initSgNode: function() {
-                this._applySpriteFrame(null);
                 var sgNode = this._sgNode;
+                var insetsChangedViaAPI = 0 !== sgNode.getInsetLeft() || 0 !== sgNode.getInsetRight() || 0 !== sgNode.getInsetTop() || 0 !== sgNode.getInsetBottom();
+                this._applySpriteFrame(null, insetsChangedViaAPI);
                 sgNode.setContentSize(this.node.getContentSize(true));
                 this._applySpriteSize();
                 sgNode.setRenderingType(this._type);
@@ -12087,13 +13016,13 @@
         misc.propertyDefine(Sprite, SameNameGetSets, DiffNameGetSets);
         cc.Sprite = module.exports = Sprite;
     }, {
-        "../utils/misc": 130,
-        "./CCRendererUnderSG": 61
+        "../utils/misc": 156,
+        "./CCRendererUnderSG": 63
     } ],
-    68: [ function(require, module, exports) {
+    70: [ function(require, module, exports) {
         var SpriteDistortion = cc.Class({
             name: "cc.SpriteDistortion",
-            "extends": require("./CCComponent"),
+            extends: require("./CCComponent"),
             editor: false,
             ctor: function() {
                 this._spriteSGNode = null;
@@ -12138,9 +13067,9 @@
         });
         cc.SpriteDistortion = module.exports = SpriteDistortion;
     }, {
-        "./CCComponent": 50
+        "./CCComponent": 52
     } ],
-    69: [ function(require, module, exports) {
+    71: [ function(require, module, exports) {
         var ComponentType = cc.Enum({
             NONE: 0,
             CHECKBOX: 1,
@@ -12165,7 +13094,7 @@
         });
         var StudioComponent = cc.Class({
             name: "cc.StudioComponent",
-            "extends": cc.Component,
+            extends: cc.Component,
             editor: false,
             properties: false,
             statics: {
@@ -12177,31 +13106,31 @@
         });
         cc.StudioComponent = module.exports = StudioComponent;
     }, {} ],
-    70: [ function(require, module, exports) {
+    72: [ function(require, module, exports) {
         var Toggle = cc.Class({
             name: "cc.Toggle",
-            "extends": require("./CCButton.js"),
+            extends: require("./CCButton.js"),
             editor: false,
             properties: {
                 isChecked: {
-                    "default": true,
+                    default: true,
                     tooltip: false,
                     notify: function() {
                         this._updateCheckMark();
                     }
                 },
                 toggleGroup: {
-                    "default": null,
+                    default: null,
                     tooltip: false,
                     type: cc.ToggleGroup
                 },
                 checkMark: {
-                    "default": null,
+                    default: null,
                     type: cc.Sprite,
                     tooltip: false
                 },
                 checkEvents: {
-                    "default": [],
+                    default: [],
                     type: cc.Component.EventHandler
                 },
                 _resizeToTarget: {
@@ -12217,15 +13146,15 @@
             onEnable: function() {
                 this._super();
                 this._registerToggleEvent();
-                this.toggleGroup && this.toggleGroup.addToggle(this);
+                this.toggleGroup && this.toggleGroup.enabled && this.toggleGroup.addToggle(this);
             },
             onDisable: function() {
                 this._super();
                 this._unregisterToggleEvent();
-                this.toggleGroup && this.toggleGroup.removeToggle(this);
+                this.toggleGroup && this.toggleGroup.enabled && this.toggleGroup.removeToggle(this);
             },
             _updateCheckMark: function() {
-                this.checkMark && (this.checkMark.enabled = !!this.isChecked);
+                this.checkMark && (this.checkMark.node.active = !!this.isChecked);
             },
             _updateDisabledState: function() {
                 this._super();
@@ -12239,28 +13168,28 @@
                 this.node.off("click", this.toggle, this);
             },
             toggle: function(event) {
-                if (this.toggleGroup && this.isChecked && !this.toggleGroup.allowSwitchOff) {
+                if (this.toggleGroup && this.toggleGroup.enabled && this.isChecked && !this.toggleGroup.allowSwitchOff) {
                     return;
                 }
                 this.isChecked = !this.isChecked;
                 this._updateCheckMark();
+                this.toggleGroup && this.toggleGroup.enabled && this.toggleGroup.updateToggles(this);
                 this._emitToggleEvents(event);
-                this.toggleGroup && this.toggleGroup.updateToggles(this);
             },
             _emitToggleEvents: function() {
                 this.node.emit("toggle", this);
                 this.checkEvents && cc.Component.EventHandler.emitEvents(this.checkEvents, this);
             },
             check: function() {
-                if (this.toggleGroup && this.isChecked && !this.toggleGroup.allowSwitchOff) {
+                if (this.toggleGroup && this.toggleGroup.enabled && this.isChecked && !this.toggleGroup.allowSwitchOff) {
                     return;
                 }
                 this.isChecked = true;
+                this.toggleGroup && this.toggleGroup.enabled && this.toggleGroup.updateToggles(this);
                 this._emitToggleEvents();
-                this.toggleGroup && this.toggleGroup.updateToggles(this);
             },
             uncheck: function() {
-                if (this.toggleGroup && this.isChecked && !this.toggleGroup.allowSwitchOff) {
+                if (this.toggleGroup && this.toggleGroup.enabled && this.isChecked && !this.toggleGroup.allowSwitchOff) {
                     return;
                 }
                 this.isChecked = false;
@@ -12269,12 +13198,12 @@
         });
         cc.Toggle = module.exports = Toggle;
     }, {
-        "./CCButton.js": 48
+        "./CCButton.js": 50
     } ],
-    71: [ function(require, module, exports) {
+    73: [ function(require, module, exports) {
         var ToggleGroup = cc.Class({
             name: "cc.ToggleGroup",
-            "extends": cc.Component,
+            extends: cc.Component,
             ctor: function() {
                 this._toggleItems = [];
             },
@@ -12282,7 +13211,12 @@
             properties: {
                 allowSwitchOff: {
                     tooltip: false,
-                    "default": false
+                    default: false
+                },
+                toggleItems: {
+                    get: function() {
+                        return this._toggleItems;
+                    }
                 }
             },
             updateToggles: function(toggle) {
@@ -12321,7 +13255,7 @@
         });
         cc.ToggleGroup = module.exports = ToggleGroup;
     }, {} ],
-    72: [ function(require, module, exports) {
+    74: [ function(require, module, exports) {
         var EventType = _ccsg.VideoPlayer.EventType;
         var ResourceType = cc.Enum({
             REMOTE: 0,
@@ -12329,7 +13263,7 @@
         });
         var VideoPlayer = cc.Class({
             name: "cc.VideoPlayer",
-            "extends": cc._RendererUnderSG,
+            extends: cc._RendererUnderSG,
             editor: false,
             properties: {
                 _resourceType: ResourceType.REMOTE,
@@ -12357,7 +13291,7 @@
                     }
                 },
                 _clip: {
-                    "default": null,
+                    default: null,
                     url: cc.RawAsset
                 },
                 clip: {
@@ -12366,7 +13300,7 @@
                         return this._clip;
                     },
                     set: function(value) {
-                        "string" != typeof value && (value = "");
+                        "string" !== typeof value && (value = "");
                         this._clip = value;
                         this._updateVideoSource();
                     },
@@ -12387,7 +13321,7 @@
                 },
                 keepAspectRatio: {
                     tooltip: false,
-                    "default": true,
+                    default: true,
                     type: cc.Boolean,
                     notify: function() {
                         this._sgNode.setKeepAspectRatioEnabled(this.keepAspectRatio);
@@ -12395,14 +13329,14 @@
                 },
                 isFullscreen: {
                     tooltip: false,
-                    "default": false,
+                    default: false,
                     type: cc.Boolean,
                     notify: function() {
                         this._sgNode.setFullScreenEnabled(this.isFullscreen);
                     }
                 },
                 videoPlayerEvent: {
-                    "default": [],
+                    default: [],
                     type: cc.Component.EventHandler
                 }
             },
@@ -12497,20 +13431,20 @@
         });
         cc.VideoPlayer = module.exports = VideoPlayer;
     }, {} ],
-    73: [ function(require, module, exports) {
+    75: [ function(require, module, exports) {
         var ViewGroup = cc.Class({
             name: "cc.ViewGroup",
-            "extends": require("./CCComponent")
+            extends: require("./CCComponent")
         });
         cc.ViewGroup = module.exports = ViewGroup;
     }, {
-        "./CCComponent": 50
+        "./CCComponent": 52
     } ],
-    74: [ function(require, module, exports) {
+    76: [ function(require, module, exports) {
         var EventType = _ccsg.WebView.EventType;
         var WebView = cc.Class({
             name: "cc.WebView",
-            "extends": cc._RendererUnderSG,
+            extends: cc._RendererUnderSG,
             editor: false,
             properties: {
                 _useOriginalSize: true,
@@ -12528,7 +13462,7 @@
                     }
                 },
                 webviewEvents: {
-                    "default": [],
+                    default: [],
                     type: cc.Component.EventHandler
                 }
             },
@@ -12572,7 +13506,7 @@
         });
         cc.WebView = module.exports = WebView;
     }, {} ],
-    75: [ function(require, module, exports) {
+    77: [ function(require, module, exports) {
         var WidgetManager = require("../base-ui/CCWidgetManager");
         var AlignFlags = WidgetManager._AlignFlags;
         var TOP = AlignFlags.TOP;
@@ -12585,7 +13519,7 @@
         var LEFT_RIGHT = LEFT | RIGHT;
         var Widget = cc.Class({
             name: "cc.Widget",
-            "extends": require("./CCComponent"),
+            extends: require("./CCComponent"),
             editor: false,
             properties: {
                 target: {
@@ -12791,7 +13725,7 @@
                     animatable: false
                 },
                 isAlignOnce: {
-                    "default": true,
+                    default: true,
                     tooltip: false,
                     displayName: "AlignOnce"
                 },
@@ -12845,9 +13779,9 @@
         cc.Widget = module.exports = Widget;
     }, {
         "../base-ui/CCWidgetManager": 37,
-        "./CCComponent": 50
+        "./CCComponent": 52
     } ],
-    76: [ function(require, module, exports) {
+    78: [ function(require, module, exports) {
         require("./CCComponent");
         require("./CCRendererInSG");
         require("./CCRendererUnderSG");
@@ -12855,42 +13789,42 @@
         require("./missing-script");
         module.exports = [ require("./CCSprite"), require("./CCWidget"), require("./CCCanvas"), require("./CCAudioSource"), require("./CCAnimation"), require("./CCButton"), require("./CCLabel"), require("./CCProgressBar"), require("./CCMask"), require("./CCScrollBar"), require("./CCScrollView"), require("./CCPageViewIndicator"), require("./CCPageView"), require("./CCSlider"), require("./CCLayout"), require("./CCEditBox"), require("./CCVideoPlayer"), require("./CCWebView"), require("./CCSpriteDistortion"), require("./CCLabelOutline"), require("./CCRichText"), require("./CCToggleGroup"), require("./CCToggle") ];
     }, {
-        "./CCAnimation": 46,
-        "./CCAudioSource": 47,
-        "./CCButton": 48,
-        "./CCCanvas": 49,
-        "./CCComponent": 50,
-        "./CCComponentEventHandler": 51,
-        "./CCEditBox": 52,
-        "./CCLabel": 53,
-        "./CCLabelOutline": 54,
-        "./CCLayout": 55,
-        "./CCMask": 56,
-        "./CCPageView": 57,
-        "./CCPageViewIndicator": 58,
-        "./CCProgressBar": 59,
-        "./CCRendererInSG": 60,
-        "./CCRendererUnderSG": 61,
-        "./CCRichText": 62,
-        "./CCScrollBar": 64,
-        "./CCScrollView": 65,
-        "./CCSlider": 66,
-        "./CCSprite": 67,
-        "./CCSpriteDistortion": 68,
-        "./CCToggle": 70,
-        "./CCToggleGroup": 71,
-        "./CCVideoPlayer": 72,
-        "./CCWebView": 74,
-        "./CCWidget": 75,
-        "./missing-script": 77
+        "./CCAnimation": 48,
+        "./CCAudioSource": 49,
+        "./CCButton": 50,
+        "./CCCanvas": 51,
+        "./CCComponent": 52,
+        "./CCComponentEventHandler": 53,
+        "./CCEditBox": 54,
+        "./CCLabel": 55,
+        "./CCLabelOutline": 56,
+        "./CCLayout": 57,
+        "./CCMask": 58,
+        "./CCPageView": 59,
+        "./CCPageViewIndicator": 60,
+        "./CCProgressBar": 61,
+        "./CCRendererInSG": 62,
+        "./CCRendererUnderSG": 63,
+        "./CCRichText": 64,
+        "./CCScrollBar": 66,
+        "./CCScrollView": 67,
+        "./CCSlider": 68,
+        "./CCSprite": 69,
+        "./CCSpriteDistortion": 70,
+        "./CCToggle": 72,
+        "./CCToggleGroup": 73,
+        "./CCVideoPlayer": 74,
+        "./CCWebView": 76,
+        "./CCWidget": 77,
+        "./missing-script": 79
     } ],
-    77: [ function(require, module, exports) {
+    79: [ function(require, module, exports) {
         var JS = cc.js;
         var MissingClass = cc.Class({
             name: "cc.MissingClass",
             properties: {
                 _$erialized: {
-                    "default": null,
+                    default: null,
                     visible: false,
                     editorOnly: true
                 }
@@ -12898,17 +13832,17 @@
         });
         var MissingScript = cc.Class({
             name: "cc.MissingScript",
-            "extends": cc.Component,
+            extends: cc.Component,
             editor: {
                 inspector: "packages://inspector/inspectors/comps/missing-script.js"
             },
             properties: {
                 compiled: {
-                    "default": false,
+                    default: false,
                     serializable: false
                 },
                 _$erialized: {
-                    "default": null,
+                    default: null,
                     visible: false,
                     editorOnly: true
                 }
@@ -12936,7 +13870,7 @@
         });
         cc._MissingScript = module.exports = MissingScript;
     }, {} ],
-    78: [ function(require, module, exports) {
+    80: [ function(require, module, exports) {
         var EventTarget = require("../event/event-target");
         var EventType = cc.Enum({
             KEY_DOWN: "keydown",
@@ -12948,7 +13882,7 @@
         var keyboardListenerAddFrame = 0;
         var SystemEvent = cc.Class({
             name: "SystemEvent",
-            "extends": EventTarget,
+            extends: EventTarget,
             statics: {
                 EventType: EventType
             },
@@ -12981,9 +13915,8 @@
                 if (type === EventType.DEVICEMOTION) {
                     accelerationListener || (accelerationListener = cc.EventListener.create({
                         event: cc.EventListener.ACCELERATION,
-                        callback: function(accelEvent, event) {
+                        callback: function(acc, event) {
                             event.type = EventType.DEVICEMOTION;
-                            event.acc = cc.p(accelEvent.x, accelEvent.y);
                             cc.systemEvent.dispatchEvent(event);
                         }
                     }));
@@ -13003,9 +13936,9 @@
         cc.SystemEvent = module.exports = SystemEvent;
         cc.systemEvent = new cc.SystemEvent();
     }, {
-        "../event/event-target": 80
+        "../event/event-target": 82
     } ],
-    79: [ function(require, module, exports) {
+    81: [ function(require, module, exports) {
         var JS = cc.js;
         var CallbacksHandler = require("../platform/callbacks-invoker").CallbacksHandler;
         var REMOVE_PLACEHOLDER = CallbacksHandler.REMOVE_PLACEHOLDER;
@@ -13022,31 +13955,23 @@
                     callingFunc !== REMOVE_PLACEHOLDER && callingFunc.call(event.currentTarget, event, captureListeners);
                 } else {
                     endIndex = list.length - 1;
-                    if (key === cc.Director.EVENT_COMPONENT_UPDATE) {
-                        var dt = event.detail;
-                        for (i = 1; i <= endIndex; i += 2) {
-                            target = list[i];
-                            target !== REMOVE_PLACEHOLDER && target.update(dt);
-                        }
-                    } else {
-                        for (i = 0; i <= endIndex; ) {
-                            callingFunc = list[i];
-                            var increment = 1;
-                            if (callingFunc !== REMOVE_PLACEHOLDER) {
-                                target = list[i + 1];
-                                hasTarget = target && "object" == typeof target;
-                                if (hasTarget) {
-                                    callingFunc.call(target, event, captureListeners);
-                                    increment = 2;
-                                } else {
-                                    callingFunc.call(event.currentTarget, event, captureListeners);
-                                }
-                                if (event._propagationImmediateStopped || i + increment > endIndex) {
-                                    break;
-                                }
+                    for (i = 0; i <= endIndex; ) {
+                        callingFunc = list[i];
+                        var increment = 1;
+                        if (callingFunc !== REMOVE_PLACEHOLDER) {
+                            target = list[i + 1];
+                            hasTarget = target && "object" === typeof target;
+                            if (hasTarget) {
+                                callingFunc.call(target, event, captureListeners);
+                                increment = 2;
+                            } else {
+                                callingFunc.call(event.currentTarget, event, captureListeners);
                             }
-                            i += increment;
+                            if (event._propagationImmediateStopped || i + increment > endIndex) {
+                                break;
+                            }
                         }
+                        i += increment;
                     }
                 }
             }
@@ -13055,9 +13980,9 @@
         };
         module.exports = EventListeners;
     }, {
-        "../platform/callbacks-invoker": 115
+        "../platform/callbacks-invoker": 140
     } ],
-    80: [ function(require, module, exports) {
+    82: [ function(require, module, exports) {
         var EventListeners = require("./event-listeners");
         require("./event");
         var JS = cc.js;
@@ -13120,7 +14045,7 @@
                 return false;
             },
             on: function(type, callback, target, useCapture) {
-                if ("boolean" == typeof target) {
+                if ("boolean" === typeof target) {
                     useCapture = target;
                     target = void 0;
                 } else {
@@ -13138,14 +14063,8 @@
                 }
                 return callback;
             },
-            __fastOn: function(type, callback, target, eventTargets) {
-                var listeners = this._bubblingListeners;
-                listeners || (listeners = this._bubblingListeners = new EventListeners());
-                listeners.add(type, callback, target);
-                eventTargets.push(this);
-            },
             off: function(type, callback, target, useCapture) {
-                if ("boolean" == typeof target) {
+                if ("boolean" === typeof target) {
                     useCapture = target;
                     target = void 0;
                 } else {
@@ -13158,13 +14077,6 @@
                 if (listeners) {
                     listeners.remove(type, callback, target);
                     target && target.__eventTargets && fastRemove(target.__eventTargets, this);
-                }
-            },
-            __fastOff: function(type, callback, target, eventTargets) {
-                var listeners = this._bubblingListeners;
-                if (listeners) {
-                    listeners.remove(type, callback, target);
-                    fastRemove(eventTargets, this);
                 }
             },
             targetOff: function(target) {
@@ -13186,7 +14098,7 @@
             emit: function(message, detail) {
                 var caplisteners = this._capturingListeners && this._capturingListeners._callbackTable[message];
                 var bublisteners = this._bubblingListeners && this._bubblingListeners._callbackTable[message];
-                if (!(caplisteners && 0 !== caplisteners.length || bublisteners && 0 !== bublisteners.length)) {
+                if ((!caplisteners || 0 === caplisteners.length) && (!bublisteners || 0 === bublisteners.length)) {
                     return;
                 }
                 var event = cc.Event.EventCustom.get(message);
@@ -13209,19 +14121,19 @@
         EventTarget.prototype._EventTargetTargetOff = EventTarget.prototype.targetOff;
         cc.EventTarget = module.exports = EventTarget;
     }, {
-        "./event": 186,
-        "./event-listeners": 79
+        "./event": 213,
+        "./event-listeners": 81
     } ],
-    81: [ function(require, module, exports) {
+    83: [ function(require, module, exports) {
         require("./event.js");
         require("./event-listeners.js");
         require("./event-target.js");
     }, {
-        "./event-listeners.js": 79,
-        "./event-target.js": 80,
-        "./event.js": 186
+        "./event-listeners.js": 81,
+        "./event-target.js": 82,
+        "./event.js": 213
     } ],
-    82: [ function(require, module, exports) {
+    84: [ function(require, module, exports) {
         "use strict";
         module.exports = earcut;
         function earcut(data, holeIndices, dim) {
@@ -13558,7 +14470,7 @@
             if (equals(p1, q1) && equals(p2, q2) || equals(p1, q2) && equals(p2, q1)) {
                 return true;
             }
-            return area(p1, q1, p2) > 0 != area(p1, q1, q2) > 0 && area(p2, q2, p1) > 0 != area(p2, q2, q1) > 0;
+            return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 && area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
         }
         function intersectsPolygon(a, b) {
             var p = a;
@@ -13576,7 +14488,7 @@
         function middleInside(a, b) {
             var p = a, inside = false, px = (a.x + b.x) / 2, py = (a.y + b.y) / 2;
             do {
-                p.y > py != p.next.y > py && px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x && (inside = !inside);
+                p.y > py !== p.next.y > py && px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x && (inside = !inside);
                 p = p.next;
             } while (p !== a);
             return inside;
@@ -13671,7 +14583,7 @@
             return result;
         };
     }, {} ],
-    83: [ function(require, module, exports) {
+    85: [ function(require, module, exports) {
         var Js = cc.js;
         var LineCap = require("./types").LineCap;
         var LineJoin = require("./types").LineJoin;
@@ -13718,7 +14630,7 @@
                 } else {
                     "fill" !== ctxCmd && "stroke" !== ctxCmd && "fillRect" !== ctxCmd || (endPath = true);
                 }
-                "function" == typeof context[ctxCmd] ? context[ctxCmd].apply(context, args) : context[ctxCmd] = args;
+                "function" === typeof context[ctxCmd] ? context[ctxCmd].apply(context, args) : context[ctxCmd] = args;
             }
             context.restore();
         };
@@ -13807,10 +14719,10 @@
         });
         module.exports = CanvasRenderCmd;
     }, {
-        "./helper": 87,
-        "./types": 90
+        "./helper": 89,
+        "./types": 92
     } ],
-    84: [ function(require, module, exports) {
+    86: [ function(require, module, exports) {
         var CanvasRenderCmd = require("./graphics-canvas-cmd");
         var WebGLRenderCmd = require("./graphics-webgl-cmd");
         var LineCap = require("./types").LineCap;
@@ -13924,11 +14836,11 @@
         });
         module.exports = GraphicsNode;
     }, {
-        "./graphics-canvas-cmd": 83,
-        "./graphics-webgl-cmd": 85,
-        "./types": 90
+        "./graphics-canvas-cmd": 85,
+        "./graphics-webgl-cmd": 87,
+        "./types": 92
     } ],
-    85: [ function(require, module, exports) {
+    87: [ function(require, module, exports) {
         var Shader = require("./shader");
         var LineCap = require("./types").LineCap;
         var LineJoin = require("./types").LineJoin;
@@ -14674,17 +15586,17 @@
         });
         module.exports = WebGLRenderCmd;
     }, {
-        "./earcut": 82,
-        "./helper": 87,
-        "./shader": 89,
-        "./types": 90
+        "./earcut": 84,
+        "./helper": 89,
+        "./shader": 91,
+        "./types": 92
     } ],
-    86: [ function(require, module, exports) {
+    88: [ function(require, module, exports) {
         var LineCap = require("./types").LineCap;
         var LineJoin = require("./types").LineJoin;
         var Graphics = cc.Class({
             name: "cc.Graphics",
-            "extends": cc._RendererUnderSG,
+            extends: cc._RendererUnderSG,
             editor: false,
             properties: {
                 _lineWidth: 1,
@@ -14815,9 +15727,9 @@
         });
         cc.Graphics = module.exports = Graphics;
     }, {
-        "./types": 90
+        "./types": 92
     } ],
-    87: [ function(require, module, exports) {
+    89: [ function(require, module, exports) {
         var PI = Math.PI;
         var min = Math.min;
         var max = Math.max;
@@ -14900,7 +15812,7 @@
             roundRect: roundRect
         };
     }, {} ],
-    88: [ function(require, module, exports) {
+    90: [ function(require, module, exports) {
         "use strict";
         var GraphicsNode;
         GraphicsNode = cc.sys.isNative ? _ccsg.GraphicsNode = cc.GraphicsNode : _ccsg.GraphicsNode = require("./graphics-node");
@@ -14910,11 +15822,11 @@
         }
         require("./graphics");
     }, {
-        "../utils/misc": 130,
-        "./graphics": 86,
-        "./graphics-node": 84
+        "../utils/misc": 156,
+        "./graphics": 88,
+        "./graphics-node": 86
     } ],
-    89: [ function(require, module, exports) {
+    91: [ function(require, module, exports) {
         var vert = [ "attribute vec4 a_position;", "", "void main()", "{", "gl_Position = (CC_PMatrix * CC_MVMatrix) * a_position;", "}" ];
         var frag = [ "#ifdef GL_ES", "precision mediump float;", "#endif", "", "uniform vec4 color;", "", "void main(void) {", "gl_FragColor = color;", "}" ];
         module.exports = {
@@ -14922,7 +15834,7 @@
             frag: frag.join(" \n")
         };
     }, {} ],
-    90: [ function(require, module, exports) {
+    92: [ function(require, module, exports) {
         "use strict";
         var LineCap = cc.Enum({
             BUTT: 0,
@@ -14939,7 +15851,7 @@
             LineJoin: LineJoin
         };
     }, {} ],
-    91: [ function(require, module, exports) {
+    93: [ function(require, module, exports) {
         require("./platform");
         require("./assets");
         require("./CCNode");
@@ -14947,18 +15859,22 @@
         require("./components");
         require("./graphics");
         require("./collider");
+        require("./physics");
+        require("./camera/CCCamera");
         require("./base-ui/CCWidgetManager");
     }, {
         "./CCNode": 23,
         "./CCScene": 24,
         "./assets": 36,
         "./base-ui/CCWidgetManager": 37,
-        "./collider": 45,
-        "./components": 76,
-        "./graphics": 88,
-        "./platform": 118
+        "./camera/CCCamera": 38,
+        "./collider": 46,
+        "./components": 78,
+        "./graphics": 90,
+        "./physics": 120,
+        "./platform": 143
     } ],
-    92: [ function(require, module, exports) {
+    94: [ function(require, module, exports) {
         var eventRegx = /^(click)(\s)*=/;
         cc.HtmlTextParser = function() {
             this._parsedObject = {};
@@ -15204,7 +16120,7 @@
         };
         cc.htmlTextParser = new cc.HtmlTextParser();
     }, {} ],
-    93: [ function(require, module, exports) {
+    95: [ function(require, module, exports) {
         var CustomFontDescriptor = function() {
             this._status = "unloaded";
             this._observers = [];
@@ -15356,7 +16272,7 @@
                     var checkCount = 10;
                     while (width > maxWidth && checkWhile++ < checkCount) {
                         fuzzyLen *= maxWidth / width;
-                        fuzzyLen = 0 | fuzzyLen;
+                        fuzzyLen |= 0;
                         tmpText = text.substr(fuzzyLen);
                         width = allWidth - measureText(tmpText);
                     }
@@ -15403,7 +16319,7 @@
         cc.TextUtils = module.exports = TextUtils;
         cc.CustomFontLoader = module.exports = CustomFontLoader;
     }, {} ],
-    94: [ function(require, module, exports) {
+    96: [ function(require, module, exports) {
         var JS = require("../platform/js");
         var Pipeline = require("./pipeline");
         var LoadingItems = require("./loading-items");
@@ -15422,7 +16338,7 @@
         };
         function getResWithUrl(res) {
             var id, result, isUuid;
-            if ("object" == typeof res) {
+            if ("object" === typeof res) {
                 result = res;
                 if (res.url) {
                     return result;
@@ -15543,6 +16459,9 @@
             },
             _resources: resources,
             _getResUuid: function(url, type, quiet) {
+                if (!url) {
+                    return null;
+                }
                 var index = url.indexOf("?");
                 index !== -1 && (url = url.substr(0, index));
                 var uuid = resources.getUuid(url, type);
@@ -15558,70 +16477,123 @@
             },
             _getReferenceKey: function(assetOrUrlOrUuid) {
                 var key;
-                "object" == typeof assetOrUrlOrUuid ? key = assetOrUrlOrUuid._uuid || null : "string" == typeof assetOrUrlOrUuid && (key = this._getResUuid(assetOrUrlOrUuid, null, true) || assetOrUrlOrUuid);
+                "object" === typeof assetOrUrlOrUuid ? key = assetOrUrlOrUuid._uuid || null : "string" === typeof assetOrUrlOrUuid && (key = this._getResUuid(assetOrUrlOrUuid, null, true) || assetOrUrlOrUuid);
+                if (!key) {
+                    cc.warnID(4800, assetOrUrlOrUuid);
+                    return key;
+                }
                 _info.url = null;
                 _info.raw = false;
                 cc.AssetLibrary._getAssetInfoInRuntime(key, _info);
                 return this._cache[_info.url] ? _info.url : key;
             },
-            loadRes: function(url, type, completeCallback) {
-                if (!completeCallback && type && !cc.isChildClassOf(type, cc.RawAsset)) {
-                    completeCallback = type;
-                    type = null;
+            _urlNotFound: function(url, type, completeCallback) {
+                callInNextTick(function() {
+                    url = cc.url.normalize(url);
+                    var info = (type ? JS.getClassName(type) : "Asset") + ' in "resources/' + url + '" does not exist.';
+                    completeCallback && completeCallback(new Error(info), []);
+                });
+            },
+            _parseLoadResArgs: function(type, onProgress, onComplete) {
+                if (void 0 === onComplete) {
+                    var isValidType = cc.isChildClassOf(type, cc.RawAsset);
+                    if (onProgress) {
+                        onComplete = onProgress;
+                        isValidType && (onProgress = this.onProgress || null);
+                    } else {
+                        if (void 0 === onProgress && !isValidType) {
+                            onComplete = type;
+                            onProgress = this.onProgress || null;
+                            type = null;
+                        }
+                    }
+                    if (void 0 !== onProgress && !isValidType) {
+                        onProgress = type;
+                        type = null;
+                    }
                 }
+                return {
+                    type: type,
+                    onProgress: onProgress,
+                    onComplete: onComplete
+                };
+            },
+            loadRes: function(url, type, progressCallback, completeCallback) {
+                var args = this._parseLoadResArgs(type, progressCallback, completeCallback);
+                type = args.type;
+                progressCallback = args.onProgress;
+                completeCallback = args.onComplete;
                 var self = this;
                 var uuid = self._getResUuid(url, type);
                 uuid ? this.load({
                     type: "uuid",
                     uuid: uuid
-                }, function(err, asset) {
+                }, progressCallback, function(err, asset) {
                     asset && self.setAutoReleaseRecursively(uuid, false);
                     completeCallback && completeCallback(err, asset);
-                }) : callInNextTick(function() {
-                    var info;
-                    info = type ? JS.getClassName(type) + ' in "' + url + '" does not exist.' : 'Resources url "' + url + '" does not exist.';
-                    completeCallback && completeCallback(new Error(info), null);
-                });
+                }) : self._urlNotFound(url, type, completeCallback);
             },
-            loadResDir: function(url, type, completeCallback) {
-                if (!completeCallback && type && !cc.isChildClassOf(type, cc.RawAsset)) {
-                    completeCallback = type;
-                    type = null;
-                }
-                var self = this;
-                var uuids = resources.getUuidArray(url, type);
-                var remain = uuids.length;
-                if (remain > 0) {
-                    var res = [];
-                    for (var i = 0, len = remain; i < len; ++i) {
-                        var uuid = uuids[i];
-                        res.push({
+            _loadResUuids: function(uuids, progressCallback, completeCallback, urls) {
+                if (uuids.length > 0) {
+                    var self = this;
+                    var res = uuids.map(function(uuid) {
+                        return {
                             type: "uuid",
                             uuid: uuid
-                        });
-                    }
-                    this.load(res, function(errors, items) {
-                        var results = [];
-                        for (var i = 0; i < res.length; ++i) {
-                            var uuid = res[i].uuid;
-                            var id = this._getReferenceKey(uuid);
-                            var item = items.getContent(id);
-                            if (item) {
-                                self.setAutoReleaseRecursively(uuid, false);
-                                results.push(item);
+                        };
+                    });
+                    this.load(res, progressCallback, function(errors, items) {
+                        if (completeCallback) {
+                            var assetRes = [];
+                            var urlRes = urls && [];
+                            for (var i = 0; i < res.length; ++i) {
+                                var uuid = res[i].uuid;
+                                var id = this._getReferenceKey(uuid);
+                                var item = items.getContent(id);
+                                if (item) {
+                                    self.setAutoReleaseRecursively(uuid, false);
+                                    assetRes.push(item);
+                                    urlRes && urlRes.push(urls[i]);
+                                }
                             }
+                            urls ? completeCallback(errors, assetRes, urlRes) : completeCallback(errors, assetRes);
                         }
-                        completeCallback && completeCallback(errors, results);
                     });
                 } else {
-                    callInNextTick(function() {
-                        completeCallback && completeCallback(null, []);
+                    completeCallback && callInNextTick(function() {
+                        urls ? completeCallback(null, [], []) : completeCallback(null, []);
                     });
                 }
+            },
+            loadResArray: function(urls, type, progressCallback, completeCallback) {
+                var args = this._parseLoadResArgs(type, progressCallback, completeCallback);
+                type = args.type;
+                progressCallback = args.onProgress;
+                completeCallback = args.onComplete;
+                var uuids = [];
+                for (var i = 0; i < urls.length; i++) {
+                    var url = urls[i];
+                    var uuid = this._getResUuid(url, type);
+                    if (!uuid) {
+                        this._urlNotFound(url, type, completeCallback);
+                        return;
+                    }
+                    uuids.push(uuid);
+                }
+                this._loadResUuids(uuids, progressCallback, completeCallback);
+            },
+            loadResDir: function(url, type, progressCallback, completeCallback) {
+                var args = this._parseLoadResArgs(type, progressCallback, completeCallback);
+                type = args.type;
+                progressCallback = args.onProgress;
+                completeCallback = args.onComplete;
+                var urls = [];
+                var uuids = resources.getUuidArray(url, type, urls);
+                this._loadResUuids(uuids, progressCallback, completeCallback, urls);
             },
             getRes: function(url, type) {
                 var item = this._cache[url];
-                if (!item && type) {
+                if (!item) {
                     var uuid = this._getResUuid(url, type, true);
                     if (!uuid) {
                         return null;
@@ -15646,7 +16618,10 @@
             },
             release: function(asset) {
                 if (Array.isArray(asset)) {
-                    AutoReleaseUtils.autoRelease(this, asset);
+                    for (var i = 0; i < asset.length; i++) {
+                        var key = asset[i];
+                        this.release(key);
+                    }
                 } else {
                     if (asset) {
                         var id = this._getReferenceKey(asset);
@@ -15719,16 +16694,16 @@
         cc.loader = new CCLoader();
         module.exports = cc.loader;
     }, {
-        "../platform/js": 121,
-        "../platform/utils": 126,
-        "./asset-table": 95,
-        "./auto-release-utils": 96,
-        "./downloader": 97,
-        "./loader": 100,
-        "./loading-items": 101,
-        "./pipeline": 103
+        "../platform/js": 146,
+        "../platform/utils": 151,
+        "./asset-table": 97,
+        "./auto-release-utils": 98,
+        "./downloader": 99,
+        "./loader": 102,
+        "./loading-items": 103,
+        "./pipeline": 105
     } ],
-    95: [ function(require, module, exports) {
+    97: [ function(require, module, exports) {
         function Entry(uuid, type) {
             this.uuid = uuid;
             this.type = type;
@@ -15766,37 +16741,27 @@
                 }
                 return "";
             },
-            getUuidArray: function(path, type) {
+            getUuidArray: function(path, type, out_urls) {
                 path = cc.url.normalize(path);
                 "/" === path[path.length - 1] && (path = path.slice(0, -1));
                 var path2uuid = this._pathToUuid;
                 var uuids = [];
-                var p, i;
-                if (type) {
-                    var isChildClassOf = cc.isChildClassOf;
-                    for (p in path2uuid) {
-                        if (p.startsWith(path) && isMatchByWord(p, path)) {
-                            var item = path2uuid[p];
-                            if (Array.isArray(item)) {
-                                for (i = 0; i < item.length; i++) {
-                                    var entry = item[i];
-                                    isChildClassOf(entry.type, type) && uuids.push(entry.uuid);
+                var isChildClassOf = cc.isChildClassOf;
+                for (var p in path2uuid) {
+                    if (p.startsWith(path) && isMatchByWord(p, path) || !path) {
+                        var item = path2uuid[p];
+                        if (Array.isArray(item)) {
+                            for (var i = 0; i < item.length; i++) {
+                                var entry = item[i];
+                                if (!type || isChildClassOf(entry.type, type)) {
+                                    uuids.push(entry.uuid);
+                                    out_urls && out_urls.push(p);
                                 }
-                            } else {
-                                isChildClassOf(item.type, type) && uuids.push(item.uuid);
                             }
-                        }
-                    }
-                } else {
-                    for (p in path2uuid) {
-                        if (p.startsWith(path) && isMatchByWord(p, path)) {
-                            var item = path2uuid[p];
-                            if (Array.isArray(item)) {
-                                for (i = 0; i < item.length; i++) {
-                                    uuids.push(item[i].uuid);
-                                }
-                            } else {
+                        } else {
+                            if (!type || isChildClassOf(item.type, type)) {
                                 uuids.push(item.uuid);
+                                out_urls && out_urls.push(p);
                             }
                         }
                     }
@@ -15819,7 +16784,7 @@
         });
         module.exports = AssetTable;
     }, {} ],
-    96: [ function(require, module, exports) {
+    98: [ function(require, module, exports) {
         function parseDepends(key, parsed) {
             var item = cc.loader.getItem(key);
             if (item) {
@@ -15861,9 +16826,10 @@
             }
         };
     }, {} ],
-    97: [ function(require, module, exports) {
+    99: [ function(require, module, exports) {
         var JS = require("../platform/js");
         var Path = require("../utils/CCPath");
+        var misc = require("../utils/misc");
         var Pipeline = require("./pipeline");
         var LoadingItems = require("./loading-items");
         var PackDownloader = require("./pack-downloader");
@@ -15903,11 +16869,9 @@
         function downloadImage(item, callback, isCrossOrigin, img) {
             void 0 === isCrossOrigin && (isCrossOrigin = true);
             var url = urlAppendTimestamp(item.url);
-            img = img || new Image();
+            img = img || misc.imagePool.get();
             isCrossOrigin && "file:" !== window.location.protocol ? img.crossOrigin = "anonymous" : img.crossOrigin = null;
-            if (img.complete && img.naturalWidth > 0 && img.src === url) {
-                callback(null, img);
-            } else {
+            img.complete && img.naturalWidth > 0 && img.src === url ? callback(null, img) : function() {
                 function loadCallback() {
                     img.removeEventListener("load", loadCallback);
                     img.removeEventListener("error", errorCallback);
@@ -15921,7 +16885,7 @@
                 img.addEventListener("load", loadCallback);
                 img.addEventListener("error", errorCallback);
                 img.src = url;
-            }
+            }();
         }
         var FONT_TYPE = {
             ".eot": "embedded-opentype",
@@ -16044,7 +17008,7 @@
             svg: downloadFont,
             ttc: downloadFont,
             uuid: downloadUuid,
-            "default": downloadText
+            default: downloadText
         };
         var ID = "Downloader";
         var Downloader = function(extMap) {
@@ -16089,16 +17053,17 @@
         });
         Pipeline.Downloader = module.exports = Downloader;
     }, {
-        "../platform/js": 121,
-        "../utils/CCPath": 127,
-        "./audio-downloader": 186,
-        "./loading-items": 101,
-        "./pack-downloader": 102,
-        "./pipeline": 103,
-        "./text-downloader": 104,
-        "./utils": 105
+        "../platform/js": 146,
+        "../utils/CCPath": 152,
+        "../utils/misc": 156,
+        "./audio-downloader": 213,
+        "./loading-items": 103,
+        "./pack-downloader": 104,
+        "./pipeline": 105,
+        "./text-downloader": 106,
+        "./utils": 107
     } ],
-    98: [ function(require, module, exports) {
+    100: [ function(require, module, exports) {
         require("./downloader");
         require("./loader");
         require("./json-unpacker");
@@ -16106,20 +17071,20 @@
         require("./pipeline");
         require("./CCLoader");
     }, {
-        "./CCLoader": 94,
-        "./downloader": 97,
-        "./json-unpacker": 99,
-        "./loader": 100,
-        "./loading-items": 101,
-        "./pipeline": 103
+        "./CCLoader": 96,
+        "./downloader": 99,
+        "./json-unpacker": 101,
+        "./loader": 102,
+        "./loading-items": 103,
+        "./pipeline": 105
     } ],
-    99: [ function(require, module, exports) {
+    101: [ function(require, module, exports) {
         function JsonUnpacker() {
             this.jsons = {};
             this.state = -1;
         }
         JsonUnpacker.prototype.read = function(indices, data) {
-            var jsons = "string" == typeof data ? JSON.parse(data) : data;
+            var jsons = "string" === typeof data ? JSON.parse(data) : data;
             jsons.length !== indices.length && cc.errorID(4915);
             for (var i = 0; i < indices.length; i++) {
                 var key = indices[i];
@@ -16132,16 +17097,17 @@
         };
         module.exports = JsonUnpacker;
     }, {} ],
-    100: [ function(require, module, exports) {
+    102: [ function(require, module, exports) {
         var JS = require("../platform/js");
         var Pipeline = require("./pipeline");
         var Texture2D = require("../textures/CCTexture2D");
         var loadUuid = require("./uuid-loader");
+        var misc = require("../utils/misc");
         function loadNothing(item, callback) {
             callback(null, null);
         }
         function loadJSON(item, callback) {
-            "string" != typeof item.content && callback(new Error("JSON Loader: Input item doesn't contain string content"));
+            "string" !== typeof item.content && callback(new Error("JSON Loader: Input item doesn't contain string content"));
             try {
                 var result = JSON.parse(item.content);
                 callback(null, result);
@@ -16156,11 +17122,12 @@
             tex.url = url;
             tex.initWithElement(item.content);
             tex.handleLoadedTexture();
+            misc.imagePool.put(item.content);
             cc.textureCache.cacheImage(url, tex);
             callback(null, tex);
         }
         function loadPlist(item, callback) {
-            "string" != typeof item.content && callback(new Error("Plist Loader: Input item doesn't contain string content"));
+            "string" !== typeof item.content && callback(new Error("Plist Loader: Input item doesn't contain string content"));
             var result = cc.plistParser.parse(item.content);
             result ? callback(null, result) : callback(new Error("Plist Loader: Parse [" + item.id + "] failed"));
         }
@@ -16181,7 +17148,7 @@
             prefab: loadUuid,
             fire: loadUuid,
             scene: loadUuid,
-            "default": loadNothing
+            default: loadNothing
         };
         var ID = "Loader";
         var Loader = function(extMap) {
@@ -16204,12 +17171,13 @@
         });
         Pipeline.Loader = module.exports = Loader;
     }, {
-        "../platform/js": 121,
-        "../textures/CCTexture2D": 186,
-        "./pipeline": 103,
-        "./uuid-loader": 106
+        "../platform/js": 146,
+        "../textures/CCTexture2D": 213,
+        "../utils/misc": 156,
+        "./pipeline": 105,
+        "./uuid-loader": 108
     } ],
-    101: [ function(require, module, exports) {
+    103: [ function(require, module, exports) {
         var CallbacksInvoker = require("../platform/callbacks-invoker");
         var Path = require("../utils/CCPath");
         var JS = require("../platform/js");
@@ -16246,11 +17214,11 @@
         };
         function isIdValid(id) {
             var realId = id.url || id;
-            return "string" == typeof realId;
+            return "string" === typeof realId;
         }
         function createItem(id, queueId) {
             var result, urlItem;
-            if ("object" == typeof id) {
+            if ("object" === typeof id) {
                 id.url && !id.type && (id.type = Path.extname(id.url).toLowerCase().substr(1));
                 urlItem = _parseUrl(id.url);
                 result = {
@@ -16266,7 +17234,7 @@
                 };
                 JS.mixin(result, id);
             } else {
-                if ("string" == typeof id) {
+                if ("string" === typeof id) {
                     urlItem = _parseUrl(id);
                     result = {
                         queueId: queueId,
@@ -16332,18 +17300,18 @@
             this.totalCount = 0;
             this.completedCount = 0;
             this._pipeline ? this.active = true : this.active = false;
-            urlList && urlList.length > 0 && this.append(urlList);
+            urlList && (urlList.length > 0 ? this.append(urlList) : this.allComplete());
         };
         LoadingItems.ItemState = new cc.Enum(ItemState);
         LoadingItems.create = function(pipeline, urlList, onProgress, onComplete) {
             if (void 0 === onProgress) {
-                if ("function" == typeof urlList) {
+                if ("function" === typeof urlList) {
                     onComplete = urlList;
                     urlList = onProgress = null;
                 }
             } else {
                 if (void 0 === onComplete) {
-                    if ("function" == typeof urlList) {
+                    if ("function" === typeof urlList) {
                         onComplete = onProgress;
                         onProgress = urlList;
                         urlList = null;
@@ -16542,11 +17510,11 @@
         });
         cc.LoadingItems = module.exports = LoadingItems;
     }, {
-        "../platform/callbacks-invoker": 115,
-        "../platform/js": 121,
-        "../utils/CCPath": 127
+        "../platform/callbacks-invoker": 140,
+        "../platform/js": 146,
+        "../utils/CCPath": 152
     } ],
-    102: [ function(require, module, exports) {
+    104: [ function(require, module, exports) {
         var JsonUnpacker = require("./json-unpacker");
         var uuidToPack = {};
         var packIndices = {};
@@ -16648,9 +17616,9 @@
             }
         };
     }, {
-        "./json-unpacker": 99
+        "./json-unpacker": 101
     } ],
-    103: [ function(require, module, exports) {
+    105: [ function(require, module, exports) {
         var JS = require("../platform/js");
         var LoadingItems = require("./loading-items");
         var ItemState = LoadingItems.ItemState;
@@ -16807,29 +17775,29 @@
         });
         cc.Pipeline = module.exports = Pipeline;
     }, {
-        "../platform/js": 121,
-        "./loading-items": 101
+        "../platform/js": 146,
+        "./loading-items": 103
     } ],
-    104: [ function(require, module, exports) {
+    106: [ function(require, module, exports) {
         var urlAppendTimestamp;
         module.exports = function(item, callback) {
             var url = item.url;
             var result = jsb.fileUtils.getStringFromFile(url);
-            "string" == typeof result && result ? callback(null, result) : callback(new Error("Download text failed: " + url));
+            "string" === typeof result && result ? callback(null, result) : callback(new Error("Download text failed: " + url));
         };
     }, {
-        "./utils": 105
+        "./utils": 107
     } ],
-    105: [ function(require, module, exports) {
+    107: [ function(require, module, exports) {
         var _noCacheRex = /\?/;
         module.exports = {
             urlAppendTimestamp: function(url) {
-                cc.game.config["noCache"] && "string" == typeof url && (url += _noCacheRex.test(url) ? "&_t=" + (new Date() - 0) : "?_t=" + (new Date() - 0));
+                cc.game.config["noCache"] && "string" === typeof url && (url += _noCacheRex.test(url) ? "&_t=" + (new Date() - 0) : "?_t=" + (new Date() - 0));
                 return url;
             }
         };
     }, {} ],
-    106: [ function(require, module, exports) {
+    108: [ function(require, module, exports) {
         var JS = require("../platform/js");
         require("../platform/deserialize");
         var LoadingItems = require("./loading-items");
@@ -16936,14 +17904,13 @@
             });
         }
         function canDeferredLoad(asset, item, isScene) {
-            var res = item.deferredLoadRaw;
-            res ? asset instanceof cc.Asset && asset.constructor.preventDeferredLoadDependents && (res = false) : isScene && asset instanceof cc.SceneAsset && (res = asset.asyncLoadAssets);
-            return res;
+            return false;
+            var res;
         }
         var MissingClass;
         function loadUuid(item, callback) {
             var json;
-            if ("string" == typeof item.content) {
+            if ("string" === typeof item.content) {
                 try {
                     json = JSON.parse(item.content);
                 } catch (e) {
@@ -16951,7 +17918,7 @@
                     return;
                 }
             } else {
-                if ("object" != typeof item.content) {
+                if ("object" !== typeof item.content) {
                     callback(new Error("JSON Loader: Input item doesn't contain string content"));
                     return;
                 }
@@ -16989,11 +17956,2362 @@
         module.exports = loadUuid;
         loadUuid.isSceneObj = isSceneObj;
     }, {
-        "../platform/deserialize": 116,
-        "../platform/js": 121,
-        "./loading-items": 101
+        "../platform/deserialize": 141,
+        "../platform/js": 146,
+        "./loading-items": 103
     } ],
-    107: [ function(require, module, exports) {
+    109: [ function(require, module, exports) {
+        var CompScheduler = require("./component-scheduler");
+        var Flags = require("./platform/CCObject").Flags;
+        var JsArray = require("./platform/js").array;
+        var callerFunctor = false;
+        var MAX_POOL_SIZE = 4;
+        var IsOnLoadStarted = Flags.IsOnLoadStarted;
+        var IsOnLoadCalled = Flags.IsOnLoadCalled;
+        var Deactivating = Flags.Deactivating;
+        var callPreloadInTryCatch = false;
+        var callOnLoadInTryCatch = false;
+        var callOnDestroyInTryCatch = false;
+        var callResetInTryCatch = false;
+        var callOnFocusInTryCatch = false;
+        var callOnLostFocusInTryCatch = false;
+        var UnsortedInvoker = cc.Class({
+            extends: CompScheduler.LifeCycleInvoker,
+            add: function(comp) {
+                this._zero.array.push(comp);
+            },
+            remove: function(comp) {
+                this._zero.fastRemove(comp);
+            },
+            cancelInactive: function() {
+                CompScheduler.LifeCycleInvoker.stableRemoveInactive(this._zero);
+            },
+            invoke: function() {
+                this._invoke(this._zero);
+                this._zero.array.length = 0;
+            }
+        });
+        function createActivateTask() {
+            var invokePreload = CompScheduler.createInvokeImpl("c.__preload();");
+            var invokeOnLoad = CompScheduler.createInvokeImpl("c.onLoad();if(!c.node._activeInHierarchy)break;");
+            return {
+                preload: new UnsortedInvoker(invokePreload),
+                onLoad: new CompScheduler.OneOffInvoker(invokeOnLoad),
+                onEnable: new CompScheduler.OneOffInvoker(CompScheduler.invokeOnEnable)
+            };
+        }
+        var activateTasksPool = [];
+        function getActivateTask() {
+            return activateTasksPool.pop() || createActivateTask();
+        }
+        function putActivateTask(task) {
+            activateTasksPool.length < MAX_POOL_SIZE && activateTasksPool.push(task);
+        }
+        function _componentCorrupted(node, comp, index) {
+            comp ? node._removeComponent(comp) : JsArray.removeAt(node._components, index);
+        }
+        function ctor() {
+            this._activatingStack = [];
+        }
+        var NodeActivator = cc.Class({
+            ctor: ctor,
+            reset: ctor,
+            _activateNodeRecursively: function(node, preloadInvoker, onLoadInvoker, onEnableInvoker) {
+                if (node._objFlags & Deactivating) {
+                    cc.errorID(3816, node.name);
+                    return;
+                }
+                node._activeInHierarchy = true;
+                var originCount = node._components.length;
+                for (var i = 0; i < originCount; ++i) {
+                    var component = node._components[i];
+                    if (component instanceof cc.Component) {
+                        this.activateComp(component, preloadInvoker, onLoadInvoker, onEnableInvoker);
+                    } else {
+                        _componentCorrupted(node, component, i);
+                        --i;
+                        --originCount;
+                    }
+                }
+                for (var _i = 0, len = node._children.length; _i < len; ++_i) {
+                    var child = node._children[_i];
+                    child._active && this._activateNodeRecursively(child, preloadInvoker, onLoadInvoker, onEnableInvoker);
+                }
+                node._onPostActivated(true);
+            },
+            _deactivateNodeRecursively: function(node) {
+                node._objFlags |= Deactivating;
+                node._activeInHierarchy = false;
+                var originCount = node._components.length;
+                for (var c = 0; c < originCount; ++c) {
+                    var component = node._components[c];
+                    if (component._enabled) {
+                        cc.director._compScheduler.disableComp(component);
+                        if (node._activeInHierarchy) {
+                            node._objFlags &= ~Deactivating;
+                            return;
+                        }
+                    }
+                }
+                for (var i = 0, len = node._children.length; i < len; ++i) {
+                    var child = node._children[i];
+                    if (child._activeInHierarchy) {
+                        this._deactivateNodeRecursively(child);
+                        if (node._activeInHierarchy) {
+                            node._objFlags &= ~Deactivating;
+                            return;
+                        }
+                    }
+                }
+                node._onPostActivated(false);
+                node._objFlags &= ~Deactivating;
+            },
+            activateNode: function(node, active) {
+                if (active) {
+                    var task = getActivateTask(node);
+                    this._activatingStack.push(task);
+                    this._activateNodeRecursively(node, task.preload, task.onLoad, task.onEnable);
+                    task.preload.invoke();
+                    task.onLoad.invoke();
+                    task.onEnable.invoke();
+                    this._activatingStack.pop();
+                    putActivateTask(task);
+                } else {
+                    this._deactivateNodeRecursively(node);
+                    var stack = this._activatingStack;
+                    for (var i = 0; i < stack.length; i++) {
+                        var lastTask = stack[i];
+                        lastTask.preload.cancelInactive(node);
+                        lastTask.onLoad.cancelInactive(node);
+                        lastTask.onEnable.cancelInactive(node);
+                    }
+                }
+                node.emit("active-in-hierarchy-changed", node);
+            },
+            activateComp: function(comp, preloadInvoker, onLoadInvoker, onEnableInvoker) {
+                if (!(comp._objFlags & IsOnLoadStarted)) {
+                    comp._objFlags |= IsOnLoadStarted;
+                    "function" === typeof comp.__preload && (preloadInvoker ? preloadInvoker.add(comp) : comp.__preload());
+                    comp.onLoad && (onLoadInvoker ? onLoadInvoker.add(comp) : comp.onLoad());
+                    comp._objFlags |= IsOnLoadCalled;
+                }
+                if (comp._enabled) {
+                    var deactivatedOnLoading = !comp.node._activeInHierarchy;
+                    if (deactivatedOnLoading) {
+                        return;
+                    }
+                    cc.director._compScheduler.enableComp(comp, onEnableInvoker);
+                }
+            },
+            destroyComp: function(comp) {
+                cc.director._compScheduler.disableComp(comp);
+                comp.onDestroy && comp._objFlags & IsOnLoadCalled && comp.onDestroy();
+            },
+            resetComp: false
+        });
+        module.exports = NodeActivator;
+    }, {
+        "./component-scheduler": 47,
+        "./platform/CCObject": 135,
+        "./platform/js": 146,
+        "./utils/misc": 156
+    } ],
+    110: [ function(require, module, exports) {
+        var PTM_RATIO = require("./CCPhysicsTypes").PTM_RATIO;
+        var ContactType = require("./CCPhysicsTypes").ContactType;
+        var pools = [];
+        var pointCache = [ cc.v2(), cc.v2() ];
+        var b2worldmanifold;
+        var worldmanifold = {
+            points: [],
+            separations: [],
+            normal: cc.v2()
+        };
+        function ManifoldPoint() {
+            this.localPoint = cc.v2();
+            this.normalImpulse = 0;
+            this.tangentImpulse = 0;
+        }
+        var manifoldPointCache = [ new ManifoldPoint(), new ManifoldPoint() ];
+        var b2manifold;
+        var manifold = {
+            type: 0,
+            localPoint: cc.v2(),
+            localNormal: cc.v2(),
+            points: []
+        };
+        var impulse = {
+            normalImpulses: [],
+            tangentImpulses: []
+        };
+        function PhysicsContact() {}
+        PhysicsContact.prototype.init = function(b2contact) {
+            this.colliderA = b2contact.GetFixtureA().collider;
+            this.colliderB = b2contact.GetFixtureB().collider;
+            this.disabled = false;
+            this.disabledOnce = false;
+            this._impulse = null;
+            this._inverted = false;
+            this._b2contact = b2contact;
+            b2contact._contact = this;
+        };
+        PhysicsContact.prototype.reset = function() {
+            this.colliderA = null;
+            this.colliderB = null;
+            this.disabled = false;
+            this._impulse = null;
+            this._b2contact._contact = null;
+            this._b2contact = null;
+        };
+        PhysicsContact.prototype.getWorldManifold = function() {
+            var points = worldmanifold.points;
+            var separations = worldmanifold.separations;
+            var normal = worldmanifold.normal;
+            var b2points;
+            var b2separations;
+            var count;
+            var i;
+            var p;
+            var wrapper = cc.PhysicsUtils.getContactWorldManifoldWrapper(this._b2contact);
+            var count = wrapper.getCount();
+            points.length = separations.length = count;
+            for (var i = 0; i < count; i++) {
+                var _p = pointCache[i];
+                _p.x = wrapper.getX(i);
+                _p.y = wrapper.getY(i);
+                points[i] = _p;
+                separations[i] = wrapper.getSeparation(i);
+            }
+            normal.x = wrapper.getNormalX();
+            normal.y = wrapper.getNormalY();
+            if (this._inverted) {
+                normal.x *= -1;
+                normal.y *= -1;
+            }
+            return worldmanifold;
+        };
+        PhysicsContact.prototype.getManifold = function() {
+            var points = manifold.points;
+            var localNormal = manifold.localNormal;
+            var localPoint = manifold.localPoint;
+            var b2manifold;
+            var b2points;
+            var count;
+            var i;
+            var p;
+            var b2p;
+            var wrapper = cc.PhysicsUtils.getContactManifoldWrapper();
+            var count = points.length = wrapper.getCount();
+            for (var i = 0; i < count; i++) {
+                var p = manifoldPointCache[i];
+                p.localPoint.x = wrapper.getX(i);
+                p.localPoint.y = wrapper.getX(i);
+                p.normalImpulse = wrapper.getNormalImpulse(i);
+                p.tangentImpulse = wrapper.getTangentImpulse(i);
+                points[i] = p;
+            }
+            localNormal.x = wrapper.getLocalNormalX();
+            localNormal.y = wrapper.getLocalNormalY();
+            localPoint.x = wrapper.getLocalPointX();
+            localPoint.y = wrapper.getLocalPointY();
+            manifold.type = wrapper.getType();
+            if (this._inverted) {
+                localNormal.x *= -1;
+                localNormal.y *= -1;
+            }
+            return manifold;
+        };
+        PhysicsContact.prototype.getImpulse = function() {
+            var b2impulse = this._impulse;
+            if (!b2impulse) {
+                return null;
+            }
+            var normalImpulses = impulse.normalImpulses;
+            var tangentImpulses = impulse.tangentImpulses;
+            var count;
+            var i;
+            count = b2impulse.getCount();
+            for (var i = 0; i < count; i++) {
+                normalImpulses[i] = b2impulse.getNormalImpulse(i);
+                tangentImpulses[i] = b2impulse.getTangentImpulse(i);
+            }
+            tangentImpulses.length = normalImpulses.length = count;
+            return impulse;
+        };
+        PhysicsContact.prototype.emit = function(contactType) {
+            var func;
+            switch (contactType) {
+              case ContactType.BEGIN_CONTACT:
+                func = "onBeginContact";
+                break;
+
+              case ContactType.END_CONTACT:
+                func = "onEndContact";
+                break;
+
+              case ContactType.PRE_SOLVE:
+                func = "onPreSolve";
+                break;
+
+              case ContactType.POST_SOLVE:
+                func = "onPostSolve";
+            }
+            var colliderA = this.colliderA;
+            var colliderB = this.colliderB;
+            var bodyA = colliderA.body;
+            var bodyB = colliderB.body;
+            var comps;
+            var i, l, comp;
+            if (bodyA.enabledContactListener) {
+                comps = bodyA.node._components;
+                this._inverted = false;
+                for (i = 0, l = comps.length; i < l; i++) {
+                    comp = comps[i];
+                    comp[func] && comp[func](this, colliderA, colliderB);
+                }
+            }
+            if (bodyB.enabledContactListener) {
+                comps = bodyB.node._components;
+                this._inverted = true;
+                for (i = 0, l = comps.length; i < l; i++) {
+                    comp = comps[i];
+                    comp[func] && comp[func](this, colliderB, colliderA);
+                }
+            }
+            if (this.disabled || this.disabledOnce) {
+                this.setEnabled(false);
+                this.disabledOnce = false;
+            }
+        };
+        PhysicsContact.get = function(b2contact) {
+            var c;
+            c = 0 === pools.length ? new cc.PhysicsContact() : pools.pop();
+            c.init(b2contact);
+            return c;
+        };
+        PhysicsContact.put = function(b2contact) {
+            var c = b2contact._contact;
+            if (!c) {
+                return;
+            }
+            pools.push(c);
+            c.reset();
+        };
+        [ "IsTouching", "IsEnabled", "GetFriction", "ResetFriction", "GetRestitution", "ResetRestitution", "GetTangentSpeed" ].forEach(function(name) {
+            var funcName = name[0].toLowerCase() + name.substr(1, name.length - 1);
+            PhysicsContact.prototype[funcName] = function() {
+                return this._b2contact[name]();
+            };
+        });
+        [ "SetEnabled", "SetFriction", "SetRestitution", "SetTangentSpeed" ].forEach(function(name) {
+            var funcName = name[0].toLowerCase() + name.substr(1, name.length - 1);
+            PhysicsContact.prototype[funcName] = function(arg) {
+                this._b2contact[name](arg);
+            };
+        });
+        PhysicsContact.ContactType = ContactType;
+        cc.PhysicsContact = module.exports = PhysicsContact;
+    }, {
+        "./CCPhysicsTypes": 112
+    } ],
+    111: [ function(require, module, exports) {
+        var ContactType = require("./CCPhysicsTypes").ContactType;
+        var BodyType = require("./CCPhysicsTypes").BodyType;
+        var RayCastType = require("./CCPhysicsTypes").RayCastType;
+        var PTM_RATIO = require("./CCPhysicsTypes").PTM_RATIO;
+        var ANGLE_TO_PHYSICS_ANGLE = require("./CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
+        var PHYSICS_ANGLE_TO_ANGLE = require("./CCPhysicsTypes").PHYSICS_ANGLE_TO_ANGLE;
+        var tempB2AABB = new b2.AABB();
+        var tempB2Vec21 = new b2.Vec2();
+        var tempB2Vec22 = new b2.Vec2();
+        var PhysicsManager = cc.Class({
+            mixins: [ cc.EventTarget ],
+            statics: {
+                DrawBits: b2.Draw,
+                PTM_RATIO: PTM_RATIO
+            },
+            ctor: function() {
+                this.__instanceId = cc.ClassManager.getNewInstanceId();
+                this._debugDrawFlags = 0;
+                this._debugDrawer = null;
+                this._world = null;
+                this._bodies = [];
+                this._contactMap = {};
+                this._contactID = 0;
+                this._delayEvents = [];
+            },
+            pushDelayEvent: function(target, func, args) {
+                this._steping ? this._delayEvents.push({
+                    target: target,
+                    func: func,
+                    args: args
+                }) : target[func].apply(target, args);
+            },
+            update: function(dt) {
+                var world = this._world;
+                if (!world || !this.enabled) {
+                    return;
+                }
+                this.emit("before-step");
+                this._steping = true;
+                var timeStep = 1 / cc.game.config["frameRate"];
+                world.Step(timeStep, 10, 10);
+                world.DrawDebugData();
+                this._steping = false;
+                var events = this._delayEvents;
+                for (var i = 0, l = events.length; i < l; i++) {
+                    var event = events[i];
+                    event.target[event.func].apply(event.target, event.args);
+                }
+                events.length = 0;
+                this._syncNode();
+            },
+            testPoint: function(point) {
+                var x = tempB2Vec21.x = point.x / PTM_RATIO;
+                var y = tempB2Vec21.y = point.y / PTM_RATIO;
+                var d = .2 / PTM_RATIO;
+                tempB2AABB.lowerBound.x = x - d;
+                tempB2AABB.lowerBound.y = y - d;
+                tempB2AABB.upperBound.x = x + d;
+                tempB2AABB.upperBound.y = y + d;
+                var callback = this._aabbQueryCallback;
+                callback.init(tempB2Vec21);
+                this._world.QueryAABB(callback, tempB2AABB);
+                var fixture = callback.getFixture();
+                if (fixture) {
+                    return fixture.collider;
+                }
+                return null;
+            },
+            testAABB: function(rect) {
+                tempB2AABB.lowerBound.x = rect.xMin / PTM_RATIO;
+                tempB2AABB.lowerBound.y = rect.yMin / PTM_RATIO;
+                tempB2AABB.upperBound.x = rect.xMax / PTM_RATIO;
+                tempB2AABB.upperBound.y = rect.yMax / PTM_RATIO;
+                var callback = this._aabbQueryCallback;
+                callback.init();
+                this._world.QueryAABB(callback, tempB2AABB);
+                var fixtures = callback.getFixtures();
+                var colliders = fixtures.map(function(fixture) {
+                    return fixture.collider;
+                });
+                return colliders;
+            },
+            rayCast: function(p1, p2, type) {
+                if (p1.equals(p2)) {
+                    return [];
+                }
+                type = type || RayCastType.Closest;
+                tempB2Vec21.x = p1.x / PTM_RATIO;
+                tempB2Vec21.y = p1.y / PTM_RATIO;
+                tempB2Vec22.x = p2.x / PTM_RATIO;
+                tempB2Vec22.y = p2.y / PTM_RATIO;
+                var callback = this._raycastQueryCallback;
+                callback.init(type);
+                this._world.RayCast(callback, tempB2Vec21, tempB2Vec22);
+                var fixtures = callback.getFixtures();
+                if (fixtures.length > 0) {
+                    var points = callback.getPoints();
+                    var normals = callback.getNormals();
+                    var fractions = callback.getFractions();
+                    var results = [];
+                    for (var i = 0, l = fixtures.length; i < l; i++) {
+                        var fixture = fixtures[i];
+                        var collider = fixture.collider;
+                        if (type === RayCastType.AllClosest) {
+                            var result = results.find(function(result) {
+                                return result.collider === collider;
+                            });
+                            if (result) {
+                                if (fractions[i] < result.fraction) {
+                                    result.fixtureIndex = collider._getFixtureIndex(fixture);
+                                    result.point.x = points[i].x * PTM_RATIO;
+                                    result.point.y = points[i].y * PTM_RATIO;
+                                    result.normal.x = normals[i].x;
+                                    result.normal.y = normals[i].y;
+                                    result.fraction = fractions[i];
+                                }
+                                continue;
+                            }
+                        }
+                        results.push({
+                            collider: collider,
+                            fixtureIndex: collider._getFixtureIndex(fixture),
+                            point: cc.v2(points[i].x * PTM_RATIO, points[i].y * PTM_RATIO),
+                            normal: cc.v2(normals[i]),
+                            fraction: fractions[i]
+                        });
+                    }
+                    return results;
+                }
+                return [];
+            },
+            syncPosition: function() {
+                var bodies = this._bodies;
+                for (var i = 0; i < bodies.length; i++) {
+                    bodies[i].syncPosition();
+                }
+            },
+            syncRotation: function() {
+                var bodies = this._bodies;
+                for (var i = 0; i < bodies.length; i++) {
+                    bodies[i].syncRotation();
+                }
+            },
+            attachDebugDrawToCamera: function(camera) {
+                if (!this._debugDrawer) {
+                    return;
+                }
+                camera.addTarget(this._debugDrawer.getDrawer());
+            },
+            detachDebugDrawFromCamera: function(camera) {
+                if (!this._debugDrawer) {
+                    return;
+                }
+                camera.removeTarget(this._debugDrawer.getDrawer());
+            },
+            _registerContactFixture: function(fixture) {
+                this._contactListener.registerContactFixture(fixture);
+            },
+            _unregisterContactFixture: function(fixture) {
+                this._contactListener.unregisterContactFixture(fixture);
+            },
+            _addBody: function(body, bodyDef) {
+                var world = this._world;
+                var node = body.node;
+                if (!world || !node) {
+                    return;
+                }
+                body._b2Body = world.CreateBody(bodyDef);
+                body._b2Body.SetUserData(node._sgNode);
+                body._b2Body.body = body;
+                this._utils.addB2Body(body._b2Body);
+                this._bodies.push(body);
+            },
+            _removeBody: function(body) {
+                var world = this._world;
+                if (!world) {
+                    return;
+                }
+                body._b2Body.SetUserData(null);
+                body._b2Body.body = null;
+                this._utils.removeB2Body(body._b2Body);
+                world.DestroyBody(body._b2Body);
+                body._b2Body = null;
+                var index = this._bodies.indexOf(body);
+                index !== -1 && this._bodies.splice(index, 1);
+            },
+            _initCallback: function() {
+                if (!this._world) {
+                    cc.warn("Please init PhysicsManager first");
+                    return;
+                }
+                if (this._contactListener) {
+                    return;
+                }
+                var listener = new cc.PhysicsContactListener();
+                listener.setBeginContact(this._onBeginContact);
+                listener.setEndContact(this._onEndContact);
+                listener.setPreSolve(this._onPreSolve);
+                listener.setPostSolve(this._onPostSolve);
+                this._world.SetContactListener(listener);
+                this._contactListener = listener;
+                this._aabbQueryCallback = new cc.PhysicsAABBQueryCallback();
+                this._raycastQueryCallback = new cc.PhysicsRayCastCallback();
+            },
+            _init: function() {
+                this.enabled = true;
+                this.debugDrawFlags = b2.Draw.e_shapeBit;
+            },
+            _getWorld: function() {
+                return this._world;
+            },
+            _syncNode: function() {
+                this._utils.syncNode();
+                var bodies = this._bodies;
+                for (var i = 0, l = bodies.length; i < l; i++) {
+                    var body = bodies[i];
+                    var node = body.node;
+                    node._position.x = node._sgNode.getPositionX();
+                    node._position.y = node._sgNode.getPositionY();
+                    node._rotationX = node._rotationY = node._sgNode.getRotation();
+                    body.type === BodyType.Animated && body.resetVelocity();
+                }
+            },
+            _onSceneLaunched: function() {
+                this._debugDrawer.AddDrawerToNode(cc.director.getScene()._sgNode);
+            },
+            _onBeginContact: function(b2contact) {
+                var c = cc.PhysicsContact.get(b2contact);
+                c.emit(ContactType.BEGIN_CONTACT);
+            },
+            _onEndContact: function(b2contact) {
+                var c = b2contact._contact;
+                if (!c) {
+                    return;
+                }
+                c.emit(ContactType.END_CONTACT);
+                cc.PhysicsContact.put(b2contact);
+            },
+            _onPreSolve: function(b2contact) {
+                var c = b2contact._contact;
+                if (!c) {
+                    return;
+                }
+                c.emit(ContactType.PRE_SOLVE);
+            },
+            _onPostSolve: function(b2contact, impulse) {
+                var c = b2contact._contact;
+                if (!c) {
+                    return;
+                }
+                c._impulse = impulse;
+                c.emit(ContactType.POST_SOLVE);
+                c._impulse = null;
+            }
+        });
+        cc.js.getset(PhysicsManager.prototype, "enabled", function() {
+            return this._enabled;
+        }, function(value) {
+            if (value && !this._world) {
+                var world = new b2.World(new b2.Vec2(0, -10));
+                world.SetAllowSleeping(true);
+                this._world = world;
+                this._utils = new cc.PhysicsUtils();
+                this._initCallback();
+            }
+            this._enabled = value;
+        });
+        cc.js.getset(PhysicsManager.prototype, "debugDrawFlags", function() {
+            return this._debugDrawFlags;
+        }, function(value) {
+            if (value && !this._debugDrawFlags) {
+                if (!this._debugDrawer) {
+                    this._debugDrawer = new cc.PhysicsDebugDraw(PTM_RATIO);
+                    this._world.SetDebugDraw(this._debugDrawer);
+                }
+                var scene = cc.director.getScene();
+                scene && this._debugDrawer.AddDrawerToNode(cc.director.getScene()._sgNode);
+                cc.director.on(cc.Director.EVENT_AFTER_SCENE_LAUNCH, this._onSceneLaunched, this);
+            } else {
+                !value && this._debugDrawFlags && cc.director.off(cc.Director.EVENT_AFTER_SCENE_LAUNCH, this._onSceneLaunched, this);
+            }
+            this._debugDrawFlags = value;
+            this._debugDrawer && this._debugDrawer.SetFlags(value);
+        });
+        cc.js.getset(PhysicsManager.prototype, "gravity", function() {
+            if (this._world) {
+                var g = this._world.GetGravity();
+                return cc.v2(g.x * PTM_RATIO, g.y * PTM_RATIO);
+            }
+            return cc.v2();
+        }, function(value) {
+            this._world && this._world.SetGravity(new b2.Vec2(value.x / PTM_RATIO, value.y / PTM_RATIO));
+        });
+        cc.PhysicsManager = module.exports = PhysicsManager;
+    }, {
+        "./CCPhysicsTypes": 112
+    } ],
+    112: [ function(require, module, exports) {
+        var ContactType = {
+            BEGIN_CONTACT: "begin-contact",
+            END_CONTACT: "end-contact",
+            PRE_SOLVE: "pre-solve",
+            POST_SOLVE: "post-solve"
+        };
+        var BodyType = cc.Enum({
+            Static: 0,
+            Kinematic: 1,
+            Dynamic: 2,
+            Animated: 3
+        });
+        cc.RigidBodyType = BodyType;
+        var RayCastType = cc.Enum({
+            Closest: 0,
+            Any: 1,
+            AllClosest: 2,
+            All: 3
+        });
+        cc.RayCastType = RayCastType;
+        module.exports = {
+            BodyType: BodyType,
+            ContactType: ContactType,
+            RayCastType: RayCastType,
+            PTM_RATIO: 32,
+            ANGLE_TO_PHYSICS_ANGLE: -Math.PI / 180,
+            PHYSICS_ANGLE_TO_ANGLE: -180 / Math.PI
+        };
+    }, {} ],
+    113: [ function(require, module, exports) {
+        var validate = function(verticesArray) {
+            var i, n = verticesArray.length, j, j2, i2, i3, d, ret = 0;
+            var fl, fl2 = false;
+            for (i = 0; i < n; i++) {
+                i2 = i < n - 1 ? i + 1 : 0;
+                i3 = i > 0 ? i - 1 : n - 1;
+                fl = false;
+                for (j = 0; j < n; j++) {
+                    if (j != i && j != i2) {
+                        if (!fl) {
+                            d = det(verticesArray[i].x, verticesArray[i].y, verticesArray[i2].x, verticesArray[i2].y, verticesArray[j].x, verticesArray[j].y);
+                            d > 0 && (fl = true);
+                        }
+                        if (j != i3) {
+                            j2 = j < n - 1 ? j + 1 : 0;
+                            hitSegment(verticesArray[i].x, verticesArray[i].y, verticesArray[i2].x, verticesArray[i2].y, verticesArray[j].x, verticesArray[j].y, verticesArray[j2].x, verticesArray[j2].y) && (ret = 1);
+                        }
+                    }
+                }
+                fl || (fl2 = true);
+            }
+            fl2 && (ret = 1 == ret ? 3 : 2);
+            return ret;
+        };
+        function calcShapes(verticesArray) {
+            var vec;
+            var i, n, j;
+            var d, t, dx, dy, minLen;
+            var i1, i2, i3, p1, p2, p3;
+            var j1, j2, v1, v2, k, h;
+            var vec1, vec2;
+            var v, hitV;
+            var isConvex;
+            var figsVec = [], queue = [];
+            queue.push(verticesArray);
+            while (queue.length) {
+                vec = queue[0];
+                n = vec.length;
+                isConvex = true;
+                for (i = 0; i < n; i++) {
+                    i1 = i;
+                    i2 = i < n - 1 ? i + 1 : i + 1 - n;
+                    i3 = i < n - 2 ? i + 2 : i + 2 - n;
+                    p1 = vec[i1];
+                    p2 = vec[i2];
+                    p3 = vec[i3];
+                    d = det(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+                    if (d < 0) {
+                        isConvex = false;
+                        minLen = Number.MAX_VALUE;
+                        for (j = 0; j < n; j++) {
+                            if (j != i1 && j != i2) {
+                                j1 = j;
+                                j2 = j < n - 1 ? j + 1 : 0;
+                                v1 = vec[j1];
+                                v2 = vec[j2];
+                                v = hitRay(p1.x, p1.y, p2.x, p2.y, v1.x, v1.y, v2.x, v2.y);
+                                if (v) {
+                                    dx = p2.x - v.x;
+                                    dy = p2.y - v.y;
+                                    t = dx * dx + dy * dy;
+                                    if (t < minLen) {
+                                        h = j1;
+                                        k = j2;
+                                        hitV = v;
+                                        minLen = t;
+                                    }
+                                }
+                            }
+                        }
+                        minLen == Number.MAX_VALUE && err();
+                        vec1 = new Array();
+                        vec2 = new Array();
+                        j1 = h;
+                        j2 = k;
+                        v1 = vec[j1];
+                        v2 = vec[j2];
+                        pointsMatch(hitV.x, hitV.y, v2.x, v2.y) || vec1.push(hitV);
+                        pointsMatch(hitV.x, hitV.y, v1.x, v1.y) || vec2.push(hitV);
+                        h = -1;
+                        k = i1;
+                        while (true) {
+                            if (k == j2) {
+                                (h < 0 || h >= n) && err();
+                                isOnSegment(v2.x, v2.y, vec[h].x, vec[h].y, p1.x, p1.y) || vec1.push(vec[k]);
+                                break;
+                            }
+                            vec1.push(vec[k]);
+                            h = k;
+                            k - 1 < 0 ? k = n - 1 : k--;
+                        }
+                        vec1 = vec1.reverse();
+                        h = -1;
+                        k = i2;
+                        while (true) {
+                            if (k == j1) {
+                                (h < 0 || h >= n) && err();
+                                k != j1 || isOnSegment(v1.x, v1.y, vec[h].x, vec[h].y, p2.x, p2.y) || vec2.push(vec[k]);
+                                break;
+                            }
+                            vec2.push(vec[k]);
+                            h = k;
+                            k + 1 > n - 1 ? k = 0 : k++;
+                        }
+                        queue.push(vec1, vec2);
+                        queue.shift();
+                        break;
+                    }
+                }
+                isConvex && figsVec.push(queue.shift());
+            }
+            return figsVec;
+        }
+        function hitRay(x1, y1, x2, y2, x3, y3, x4, y4) {
+            var t1 = x3 - x1, t2 = y3 - y1, t3 = x2 - x1, t4 = y2 - y1, t5 = x4 - x3, t6 = y4 - y3, t7 = t4 * t5 - t3 * t6, a;
+            a = (t5 * t2 - t6 * t1) / t7;
+            var px = x1 + a * t3, py = y1 + a * t4;
+            var b1 = isOnSegment(x2, y2, x1, y1, px, py);
+            var b2 = isOnSegment(px, py, x3, y3, x4, y4);
+            if (b1 && b2) {
+                return cc.v2(px, py);
+            }
+            return null;
+        }
+        function hitSegment(x1, y1, x2, y2, x3, y3, x4, y4) {
+            var t1 = x3 - x1, t2 = y3 - y1, t3 = x2 - x1, t4 = y2 - y1, t5 = x4 - x3, t6 = y4 - y3, t7 = t4 * t5 - t3 * t6, a;
+            a = (t5 * t2 - t6 * t1) / t7;
+            var px = x1 + a * t3, py = y1 + a * t4;
+            var b1 = isOnSegment(px, py, x1, y1, x2, y2);
+            var b2 = isOnSegment(px, py, x3, y3, x4, y4);
+            if (b1 && b2) {
+                return cc.v2(px, py);
+            }
+            return null;
+        }
+        function isOnSegment(px, py, x1, y1, x2, y2) {
+            var b1 = x1 + .1 >= px && px >= x2 - .1 || x1 - .1 <= px && px <= x2 + .1;
+            var b2 = y1 + .1 >= py && py >= y2 - .1 || y1 - .1 <= py && py <= y2 + .1;
+            return b1 && b2 && isOnLine(px, py, x1, y1, x2, y2);
+        }
+        function pointsMatch(x1, y1, x2, y2) {
+            var dx = x2 >= x1 ? x2 - x1 : x1 - x2, dy = y2 >= y1 ? y2 - y1 : y1 - y2;
+            return dx < .1 && dy < .1;
+        }
+        function isOnLine(px, py, x1, y1, x2, y2) {
+            if (x2 - x1 > .1 || x1 - x2 > .1) {
+                var a = (y2 - y1) / (x2 - x1), possibleY = a * (px - x1) + y1, diff = possibleY > py ? possibleY - py : py - possibleY;
+                return diff < .1;
+            }
+            return px - x1 < .1 || x1 - px < .1;
+        }
+        function det(x1, y1, x2, y2, x3, y3) {
+            return x1 * y2 + x2 * y3 + x3 * y1 - y1 * x2 - y2 * x3 - y3 * x1;
+        }
+        function err() {
+            throw new Error("A problem has occurred. Use the Validate() method to see where the problem is.");
+        }
+        exports.calcShapes = calcShapes;
+        exports.validate = validate;
+    }, {} ],
+    114: [ function(require, module, exports) {
+        var PTM_RATIO = require("./CCPhysicsTypes").PTM_RATIO;
+        var ANGLE_TO_PHYSICS_ANGLE = require("./CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
+        var PHYSICS_ANGLE_TO_ANGLE = require("./CCPhysicsTypes").PHYSICS_ANGLE_TO_ANGLE;
+        var getWorldRotation = require("./utils").getWorldRotation;
+        var BodyType = require("./CCPhysicsTypes").BodyType;
+        var tempb2Vec21 = new b2.Vec2();
+        var tempb2Vec22 = new b2.Vec2();
+        var VEC2_ZERO = cc.Vec2.ZERO;
+        var RigidBody = cc.Class({
+            name: "cc.RigidBody",
+            extends: cc.Component,
+            editor: false,
+            properties: {
+                _type: BodyType.Dynamic,
+                _allowSleep: true,
+                _gravityScale: 1,
+                _linearDamping: 0,
+                _angularDamping: 0,
+                _linearVelocity: cc.v2(0, 0),
+                _angularVelocity: 0,
+                _fixedRotation: false,
+                enabled: {
+                    get: function() {
+                        return this._enabled;
+                    },
+                    set: function() {
+                        cc.warnID("8200");
+                    },
+                    visible: false,
+                    override: true
+                },
+                enabledContactListener: {
+                    default: false,
+                    tooltip: false
+                },
+                bullet: {
+                    default: false,
+                    tooltip: false
+                },
+                type: {
+                    type: BodyType,
+                    tooltip: false,
+                    get: function() {
+                        return this._type;
+                    },
+                    set: function(value) {
+                        this._type = value;
+                        this._b2Body && (value === BodyType.Animated ? this._b2Body.SetType(BodyType.Kinematic) : this._b2Body.SetType(value));
+                    }
+                },
+                allowSleep: {
+                    tooltip: false,
+                    get: function() {
+                        if (this._b2Body) {
+                            return this._b2Body.IsSleepingAllowed();
+                        }
+                        return this._allowSleep;
+                    },
+                    set: function(value) {
+                        this._allowSleep = value;
+                        this._b2Body && this._b2Body.SetAllowSleeping(value);
+                    }
+                },
+                gravityScale: {
+                    tooltip: false,
+                    get: function() {
+                        return this._gravityScale;
+                    },
+                    set: function(value) {
+                        this._gravityScale = value;
+                        this._b2Body && this._b2Body.SetGravityScale(value);
+                    }
+                },
+                linearDamping: {
+                    tooltip: false,
+                    get: function() {
+                        return this._linearDamping;
+                    },
+                    set: function(value) {
+                        this._linearDamping = value;
+                        this._b2Body && this._b2Body.SetLinearDamping(this._linearDamping);
+                    }
+                },
+                angularDamping: {
+                    tooltip: false,
+                    get: function() {
+                        return this._angularDamping;
+                    },
+                    set: function(value) {
+                        this._angularDamping = value;
+                        this._b2Body && this._b2Body.SetAngularDamping(value);
+                    }
+                },
+                linearVelocity: {
+                    tooltip: false,
+                    type: cc.Vec2,
+                    get: function() {
+                        var lv = this._linearVelocity;
+                        if (this._b2Body) {
+                            var velocity = this._b2Body.GetLinearVelocity();
+                            lv.x = velocity.x * PTM_RATIO;
+                            lv.y = velocity.y * PTM_RATIO;
+                        }
+                        return lv;
+                    },
+                    set: function(value) {
+                        this._linearVelocity = value;
+                        var b2body = this._b2Body;
+                        if (b2body) {
+                            var temp = tempb2Vec21;
+                            temp.Set(value.x / PTM_RATIO, value.y / PTM_RATIO);
+                            b2body.SetLinearVelocity(temp);
+                        }
+                    }
+                },
+                angularVelocity: {
+                    tooltip: false,
+                    get: function() {
+                        if (this._b2Body) {
+                            return this._b2Body.GetAngularVelocity() * PHYSICS_ANGLE_TO_ANGLE;
+                        }
+                        return this._angularVelocity;
+                    },
+                    set: function(value) {
+                        this._angularVelocity = value;
+                        this._b2Body && this._b2Body.SetAngularVelocity(value * ANGLE_TO_PHYSICS_ANGLE);
+                    }
+                },
+                fixedRotation: {
+                    tooltip: false,
+                    get: function() {
+                        return this._fixedRotation;
+                    },
+                    set: function(value) {
+                        this._fixedRotation = value;
+                        this._b2Body && this._b2Body.SetFixedRotation(value);
+                    }
+                },
+                awake: {
+                    tooltip: false,
+                    get: function() {
+                        return !!this._b2Body && this._b2Body.IsAwake();
+                    },
+                    set: function(value) {
+                        this._b2Body && this._b2Body.SetAwake(value);
+                    }
+                },
+                active: {
+                    visible: false,
+                    get: function() {
+                        return !!this._b2Body && this._b2Body.IsActive();
+                    },
+                    set: function(value) {
+                        this._b2Body && this._b2Body.SetActive(value);
+                    }
+                }
+            },
+            getLocalPoint: function(worldPoint, out) {
+                out = out || cc.v2();
+                if (this._b2Body) {
+                    tempb2Vec21.Set(worldPoint.x / PTM_RATIO, worldPoint.y / PTM_RATIO);
+                    var pos = this._b2Body.GetLocalPoint(tempb2Vec21);
+                    out.x = pos.x * PTM_RATIO;
+                    out.y = pos.y * PTM_RATIO;
+                }
+                return out;
+            },
+            getWorldPoint: function(localPoint, out) {
+                out = out || cc.v2();
+                if (this._b2Body) {
+                    tempb2Vec21.Set(localPoint.x / PTM_RATIO, localPoint.y / PTM_RATIO);
+                    var pos = this._b2Body.GetWorldPoint(tempb2Vec21);
+                    out.x = pos.x * PTM_RATIO;
+                    out.y = pos.y * PTM_RATIO;
+                }
+                return out;
+            },
+            getWorldVector: function(localVector, out) {
+                out = out || cc.v2();
+                if (this._b2Body) {
+                    tempb2Vec21.Set(localVector.x / PTM_RATIO, localVector.y / PTM_RATIO);
+                    var vector = this._b2Body.GetWorldVector(tempb2Vec21);
+                    out.x = vector.x * PTM_RATIO;
+                    out.y = vector.y * PTM_RATIO;
+                }
+                return out;
+            },
+            getLocalVector: function(worldVector, out) {
+                out = out || cc.v2();
+                if (this._b2Body) {
+                    tempb2Vec21.Set(worldVector.x / PTM_RATIO, worldVector.y / PTM_RATIO);
+                    var vector = this._b2Body.GetLocalVector(tempb2Vec21);
+                    out.x = vector.x * PTM_RATIO;
+                    out.y = vector.y * PTM_RATIO;
+                }
+                return out;
+            },
+            getWorldPosition: function(out) {
+                out = out || cc.v2();
+                if (this._b2Body) {
+                    var pos = this._b2Body.GetPosition();
+                    out.x = pos.x * PTM_RATIO;
+                    out.y = pos.y * PTM_RATIO;
+                }
+                return out;
+            },
+            getWorldRotation: function() {
+                if (this._b2Body) {
+                    return this._b2Body.GetAngle() * PHYSICS_ANGLE_TO_ANGLE;
+                }
+                return 0;
+            },
+            getLocalCenter: function(out) {
+                out = out || cc.v2();
+                if (this._b2Body) {
+                    var pos = this._b2Body.GetLocalCenter();
+                    out.x = pos.x * PTM_RATIO;
+                    out.y = pos.y * PTM_RATIO;
+                }
+                return out;
+            },
+            getWorldCenter: function(out) {
+                out = out || cc.v2();
+                if (this._b2Body) {
+                    var pos = this._b2Body.GetWorldCenter();
+                    out.x = pos.x * PTM_RATIO;
+                    out.y = pos.y * PTM_RATIO;
+                }
+                return out;
+            },
+            getLinearVelocityFromWorldPoint: function(worldPoint, out) {
+                out = out || cc.v2();
+                if (this._b2Body) {
+                    tempb2Vec21.Set(worldPoint.x / PTM_RATIO, worldPoint.y / PTM_RATIO);
+                    var velocity = this._b2Body.GetLinearVelocityFromWorldPoint(tempb2Vec21);
+                    out.x = velocity.x * PTM_RATIO;
+                    out.y = velocity.y * PTM_RATIO;
+                }
+                return out;
+            },
+            getMass: function() {
+                return this._b2Body ? this._b2Body.GetMass() : 0;
+            },
+            getInertia: function() {
+                return this._b2Body ? this._b2Body.GetInertia() * PTM_RATIO * PTM_RATIO : 0;
+            },
+            applyForce: function(force, point, wake) {
+                if (this._b2Body) {
+                    tempb2Vec21.Set(force.x / PTM_RATIO, force.y / PTM_RATIO);
+                    tempb2Vec22.Set(point.x / PTM_RATIO, point.y / PTM_RATIO);
+                    this._b2Body.ApplyForce(tempb2Vec21, tempb2Vec22, wake);
+                }
+            },
+            applyForceToCenter: function(force, wake) {
+                if (this._b2Body) {
+                    tempb2Vec21.Set(force.x / PTM_RATIO, force.y / PTM_RATIO);
+                    this._b2Body.ApplyForceToCenter(tempb2Vec21, wake);
+                }
+            },
+            applyTorque: function(torque, wake) {
+                this._b2Body && this._b2Body.ApplyTorque(torque / PTM_RATIO, wake);
+            },
+            applyLinearImpulse: function(impulse, point, wake) {
+                if (this._b2Body) {
+                    tempb2Vec21.Set(impulse.x / PTM_RATIO, impulse.y / PTM_RATIO);
+                    tempb2Vec22.Set(point.x / PTM_RATIO, point.y / PTM_RATIO);
+                    this._b2Body.ApplyLinearImpulse(tempb2Vec21, tempb2Vec22, wake);
+                }
+            },
+            applyAngularImpulse: function(impulse, wake) {
+                this._b2Body && this._b2Body.ApplyAngularImpulse(impulse / PTM_RATIO / PTM_RATIO, wake);
+            },
+            syncPosition: function(enableAnimated) {
+                var b2body = this._b2Body;
+                if (!b2body) {
+                    return;
+                }
+                var pos = this.node.convertToWorldSpaceAR(VEC2_ZERO);
+                var temp;
+                temp = tempb2Vec21;
+                temp.x = pos.x / PTM_RATIO;
+                temp.y = pos.y / PTM_RATIO;
+                if (this.type === BodyType.Animated && enableAnimated) {
+                    var b2Pos = b2body.GetPosition();
+                    var timeStep = cc.game.config["frameRate"];
+                    temp.x = (temp.x - b2Pos.x) * timeStep;
+                    temp.y = (temp.y - b2Pos.y) * timeStep;
+                    b2body.SetAwake(true);
+                    b2body.SetLinearVelocity(temp);
+                } else {
+                    b2body.SetTransform(temp, b2body.GetAngle());
+                }
+            },
+            syncRotation: function(enableAnimated) {
+                var b2body = this._b2Body;
+                if (!b2body) {
+                    return;
+                }
+                var node = this.node;
+                var rotation = ANGLE_TO_PHYSICS_ANGLE * getWorldRotation(node);
+                b2body.SetTransform(b2body.GetPosition(), rotation);
+                var rotation = ANGLE_TO_PHYSICS_ANGLE * getWorldRotation(node);
+                if (this.type === BodyType.Animated && enableAnimated) {
+                    var b2Rotation = b2body.GetAngle();
+                    var timeStep = cc.game.config["frameRate"];
+                    b2body.SetAwake(true);
+                    b2body.SetAngularVelocity((rotation - b2Rotation) * timeStep);
+                } else {
+                    b2body.SetTransform(b2body.GetPosition(), rotation);
+                }
+            },
+            resetVelocity: function() {
+                var b2body = this._b2Body;
+                if (!b2body) {
+                    return;
+                }
+                var temp = tempb2Vec21;
+                temp.Set(0, 0);
+                b2body.SetLinearVelocity(temp);
+                b2body.SetAngularVelocity(0);
+            },
+            onEnable: function() {
+                this._init();
+            },
+            onDisable: function() {
+                this._destroy();
+            },
+            onLoad: function() {
+                this._ignoreNodeChanges = false;
+                var node = this.node;
+                node.on("position-changed", function() {
+                    this._ignoreNodeChanges || this.syncPosition(true);
+                }, this);
+                node.on("rotation-changed", function() {
+                    var b2body = this._b2Body;
+                    !this._ignoreNodeChanges && b2body && this.syncRotation(true);
+                }, this);
+                node.on("scale-changed", function() {
+                    if (!this._ignoreNodeChanges) {
+                        var colliders = this.getComponents(cc.Collider);
+                        for (var i = 0; i < colliders.length; i++) {
+                            colliders[i].apply();
+                        }
+                    }
+                }, this);
+            },
+            _init: function() {
+                cc.director.getPhysicsManager().pushDelayEvent(this, "__init", []);
+            },
+            _destroy: function() {
+                cc.director.getPhysicsManager().pushDelayEvent(this, "__destroy", []);
+            },
+            __init: function() {
+                if (this._inited) {
+                    return;
+                }
+                var bodyDef = new b2.BodyDef();
+                this.type === BodyType.Animated ? bodyDef.type = BodyType.Kinematic : bodyDef.type = this.type;
+                bodyDef.allowSleep = this.allowSleep;
+                bodyDef.gravityScale = this.gravityScale;
+                bodyDef.linearDamping = this.linearDamping;
+                bodyDef.angularDamping = this.angularDamping;
+                var linearVelocity = this.linearVelocity;
+                bodyDef.linearVelocity = new b2.Vec2(linearVelocity.x / PTM_RATIO, linearVelocity.y / PTM_RATIO);
+                bodyDef.angularVelocity = this.angularVelocity * ANGLE_TO_PHYSICS_ANGLE;
+                bodyDef.fixedRotation = this.fixedRotation;
+                bodyDef.bullet = this.bullet;
+                var node = this.node;
+                var pos = node.convertToWorldSpaceAR(VEC2_ZERO);
+                bodyDef.position = new b2.Vec2(pos.x / PTM_RATIO, pos.y / PTM_RATIO);
+                bodyDef.angle = -(Math.PI / 180) * getWorldRotation(node);
+                cc.director.getPhysicsManager()._addBody(this, bodyDef);
+                this._inited = true;
+            },
+            __destroy: function() {
+                if (!this._inited) {
+                    return;
+                }
+                cc.director.getPhysicsManager()._removeBody(this);
+                this._inited = false;
+            },
+            _getBody: function() {
+                return this._b2Body;
+            }
+        });
+        cc.RigidBody = module.exports = RigidBody;
+    }, {
+        "./CCPhysicsTypes": 112,
+        "./utils": 130
+    } ],
+    115: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var PhysicsBoxCollider = cc.Class({
+            name: "cc.PhysicsBoxCollider",
+            extends: cc.BoxCollider,
+            mixins: [ cc.PhysicsCollider ],
+            editor: {
+                menu: false,
+                requireComponent: cc.RigidBody
+            },
+            properties: cc.PhysicsCollider.properties,
+            _createShape: function(scale) {
+                var scaleX = Math.abs(scale.x);
+                var scaleY = Math.abs(scale.y);
+                var width = this.size.width / 2 / PTM_RATIO * scaleX;
+                var height = this.size.height / 2 / PTM_RATIO * scaleY;
+                var offsetX = this.offset.x / PTM_RATIO * scaleX;
+                var offsetY = this.offset.y / PTM_RATIO * scaleY;
+                var shape = new b2.PolygonShape();
+                shape.SetAsBox(width, height, new b2.Vec2(offsetX, offsetY), 0);
+                return shape;
+            }
+        });
+        cc.PhysicsBoxCollider = module.exports = PhysicsBoxCollider;
+    }, {
+        "../CCPhysicsTypes": 112
+    } ],
+    116: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var PhysicsChainCollider = cc.Class({
+            name: "cc.PhysicsChainCollider",
+            extends: cc.Collider,
+            mixins: [ cc.PhysicsCollider ],
+            editor: {
+                menu: false,
+                inspector: false,
+                requireComponent: cc.RigidBody
+            },
+            properties: cc.js.mixin({
+                loop: false,
+                points: {
+                    default: function() {
+                        return [ cc.v2(-50, 0), cc.v2(50, 0) ];
+                    },
+                    type: [ cc.Vec2 ]
+                },
+                threshold: {
+                    default: 1,
+                    serializable: false,
+                    visible: false
+                }
+            }, cc.PhysicsCollider.properties),
+            _createShape: function(scale) {
+                var shape = new b2.ChainShape();
+                var points = this.points;
+                var vertices = [];
+                for (var i = 0; i < points.length; i++) {
+                    var p = points[i];
+                    vertices.push(new b2.Vec2(p.x / PTM_RATIO * scale.x, p.y / PTM_RATIO * scale.y));
+                }
+                this.loop ? shape.CreateLoop(vertices, vertices.length) : shape.CreateChain(vertices, vertices.length);
+                return shape;
+            },
+            resetInEditor: false,
+            resetPointsByContour: false
+        });
+        cc.PhysicsChainCollider = module.exports = PhysicsChainCollider;
+    }, {
+        "../CCPhysicsTypes": 112
+    } ],
+    117: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var PhysicsCircleCollider = cc.Class({
+            name: "cc.PhysicsCircleCollider",
+            extends: cc.CircleCollider,
+            mixins: [ cc.PhysicsCollider ],
+            editor: {
+                menu: false,
+                requireComponent: cc.RigidBody
+            },
+            properties: cc.PhysicsCollider.properties,
+            _createShape: function(scale) {
+                var scaleX = Math.abs(scale.x);
+                var scaleY = Math.abs(scale.y);
+                var offsetX = this.offset.x / PTM_RATIO * scaleX;
+                var offsetY = this.offset.y / PTM_RATIO * scaleY;
+                var shape = new b2.CircleShape();
+                shape.m_radius = this.radius / PTM_RATIO * scaleX;
+                shape.m_p = new b2.Vec2(offsetX, offsetY);
+                return shape;
+            }
+        });
+        cc.PhysicsCircleCollider = module.exports = PhysicsCircleCollider;
+    }, {
+        "../CCPhysicsTypes": 112
+    } ],
+    118: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var getWorldScale = require("../utils").getWorldScale;
+        function PhysicsCollider() {
+            this._fixtures = [];
+            this._shapes = [];
+            this._inited = false;
+            this._rect = cc.rect();
+            this.body = null;
+        }
+        PhysicsCollider.prototype.onDisable = function() {
+            this._destroy();
+        };
+        PhysicsCollider.prototype.onEnable = function() {
+            this._init();
+        };
+        PhysicsCollider.prototype.start = function() {
+            this._init();
+        };
+        PhysicsCollider.prototype.apply = function() {
+            this._destroy();
+            this._init();
+        };
+        PhysicsCollider.prototype.getAABB = function() {
+            var MAX = 1e7;
+            var minX = MAX, minY = MAX;
+            var maxX = -MAX, maxY = -MAX;
+            var fixtures = this._fixtures;
+            for (var i = 0; i < fixtures.length; i++) {
+                var fixture = fixtures[i];
+                var count = fixture.GetShape().GetChildCount();
+                for (var j = 0; j < count; j++) {
+                    var aabb = fixture.GetAABB(j);
+                    aabb.lowerBound.x < minX && (minX = aabb.lowerBound.x);
+                    aabb.lowerBound.y < minY && (minY = aabb.lowerBound.y);
+                    aabb.upperBound.x > maxX && (maxX = aabb.upperBound.x);
+                    aabb.upperBound.y > maxY && (maxY = aabb.upperBound.y);
+                }
+            }
+            minX *= PTM_RATIO;
+            minY *= PTM_RATIO;
+            maxX *= PTM_RATIO;
+            maxY *= PTM_RATIO;
+            var r = this._rect;
+            r.x = minX;
+            r.y = minY;
+            r.width = maxX - minX;
+            r.height = maxY - minY;
+            return r;
+        };
+        PhysicsCollider.prototype._getFixtureIndex = function(fixture) {
+            return this._fixtures.indexOf(fixture);
+        };
+        PhysicsCollider.prototype._init = function() {
+            cc.director.getPhysicsManager().pushDelayEvent(this, "__init", []);
+        };
+        PhysicsCollider.prototype._destroy = function() {
+            cc.director.getPhysicsManager().pushDelayEvent(this, "__destroy", []);
+        };
+        PhysicsCollider.prototype.__init = function() {
+            if (this._inited) {
+                return;
+            }
+            var body = this.body || this.getComponent(cc.RigidBody);
+            if (!body) {
+                return;
+            }
+            var innerBody = body._getBody();
+            if (!innerBody) {
+                return;
+            }
+            var node = body.node;
+            var scale = getWorldScale(node);
+            var shapes = 0 === scale.x && 0 === scale.y ? [] : this._createShape(scale);
+            shapes instanceof Array || (shapes = [ shapes ]);
+            var categoryBits = 1 << node.groupIndex;
+            var maskBits = 0;
+            var bits = cc.game.collisionMatrix[node.groupIndex];
+            for (var i = 0; i < bits.length; i++) {
+                if (!bits[i]) {
+                    continue;
+                }
+                maskBits |= 1 << i;
+            }
+            var filter = {
+                categoryBits: categoryBits,
+                maskBits: maskBits,
+                groupIndex: 0
+            };
+            var manager = cc.director.getPhysicsManager();
+            for (var i = 0; i < shapes.length; i++) {
+                var shape = shapes[i];
+                var fixDef = new b2.FixtureDef();
+                fixDef.density = this.density;
+                fixDef.isSensor = this.sensor;
+                fixDef.friction = this.friction;
+                fixDef.restitution = this.restitution;
+                fixDef.shape = shape;
+                fixDef.filter = filter;
+                var fixture = innerBody.CreateFixture(fixDef);
+                fixture.collider = this;
+                body.enabledContactListener && manager._registerContactFixture(fixture);
+                this._shapes.push(shape);
+                this._fixtures.push(fixture);
+            }
+            this.body = body;
+            this._inited = true;
+        };
+        PhysicsCollider.prototype.__destroy = function() {
+            if (!this._inited) {
+                return;
+            }
+            var fixtures = this._fixtures;
+            var body = this.body._getBody();
+            var manager = cc.director.getPhysicsManager();
+            for (var i = fixtures.length - 1; i >= 0; i--) {
+                var fixture = fixtures[i];
+                fixture.collider = null;
+                manager._unregisterContactFixture(fixture);
+                body && body.DestroyFixture(fixture);
+            }
+            this.body = null;
+            this._fixtures.length = 0;
+            this._shapes.length = 0;
+            this._inited = false;
+        };
+        PhysicsCollider.prototype._createShape = function() {};
+        PhysicsCollider.properties = {
+            _density: 1,
+            _sensor: false,
+            _friction: .2,
+            _restitution: 0,
+            density: {
+                tooltip: false,
+                get: function() {
+                    return this._density;
+                },
+                set: function(value) {
+                    this._density = value;
+                }
+            },
+            sensor: {
+                tooltip: false,
+                get: function() {
+                    return this._sensor;
+                },
+                set: function(value) {
+                    this._sensor = value;
+                }
+            },
+            friction: {
+                tooltip: false,
+                get: function() {
+                    return this._friction;
+                },
+                set: function(value) {
+                    this._friction = value;
+                }
+            },
+            restitution: {
+                tooltip: false,
+                get: function() {
+                    return this._restitution;
+                },
+                set: function(value) {
+                    this._restitution = value;
+                }
+            }
+        };
+        cc.PhysicsCollider = module.exports = PhysicsCollider;
+    }, {
+        "../CCPhysicsTypes": 112,
+        "../utils": 130
+    } ],
+    119: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var PolygonSeprator = require("../CCPolygonSeprator");
+        var PhysicsPolygonCollider = cc.Class({
+            name: "cc.PhysicsPolygonCollider",
+            extends: cc.PolygonCollider,
+            mixins: [ cc.PhysicsCollider ],
+            editor: {
+                menu: false,
+                inspector: false,
+                requireComponent: cc.RigidBody
+            },
+            properties: cc.PhysicsCollider.properties,
+            _createShape: function(scale) {
+                var shapes = [];
+                var points = this.points;
+                var ret = PolygonSeprator.validate(points);
+                if (2 === ret) {
+                    points = points.reverse();
+                    ret = PolygonSeprator.validate(points);
+                }
+                if (0 === ret) {
+                    var polys = PolygonSeprator.calcShapes(points);
+                    var offset = this.offset;
+                    for (var i = 0; i < polys.length; i++) {
+                        var poly = polys[i];
+                        var shape = null, vertices = [];
+                        var firstVertice;
+                        for (var j = 0, l = poly.length; j < l; j++) {
+                            shape || (shape = new b2.PolygonShape());
+                            var p = poly[j];
+                            var x = (p.x + offset.x) / PTM_RATIO * scale.x;
+                            var y = (p.y + offset.y) / PTM_RATIO * scale.y;
+                            var v = new b2.Vec2(x, y);
+                            vertices.push(v);
+                            firstVertice || (firstVertice = v);
+                            if (vertices.length === b2.maxPolygonVertices) {
+                                shape.Set(vertices, vertices.length);
+                                shapes.push(shape);
+                                shape = null;
+                                j < l - 1 && (vertices = [ firstVertice, vertices[vertices.length - 1] ]);
+                            }
+                        }
+                        if (shape) {
+                            shape.Set(vertices, vertices.length);
+                            shapes.push(shape);
+                        }
+                    }
+                } else {
+                    console.log("Failed to create convex polygon : " + ret);
+                }
+                return shapes;
+            }
+        });
+        cc.PhysicsPolygonCollider = module.exports = PhysicsPolygonCollider;
+    }, {
+        "../CCPhysicsTypes": 112,
+        "../CCPolygonSeprator": 113
+    } ],
+    120: [ function(require, module, exports) {
+        require("./CCPhysicsManager");
+        require("./CCRigidBody");
+        require("./CCPhysicsContact");
+        require("./collider/CCPhysicsCollider");
+        require("./collider/CCPhysicsChainCollider");
+        require("./collider/CCPhysicsCircleCollider");
+        require("./collider/CCPhysicsBoxCollider");
+        require("./collider/CCPhysicsPolygonCollider");
+        require("./joint/CCJoint");
+        require("./joint/CCDistanceJoint");
+        require("./joint/CCRevoluteJoint");
+        require("./joint/CCMouseJoint");
+        require("./joint/CCMotorJoint");
+        require("./joint/CCPrismaticJoint");
+        require("./joint/CCWeldJoint");
+        require("./joint/CCWheelJoint");
+        require("./joint/CCRopeJoint");
+    }, {
+        "../../../external/box2d/box2d": 213,
+        "./CCPhysicsContact": 110,
+        "./CCPhysicsManager": 111,
+        "./CCRigidBody": 114,
+        "./collider/CCPhysicsBoxCollider": 115,
+        "./collider/CCPhysicsChainCollider": 116,
+        "./collider/CCPhysicsCircleCollider": 117,
+        "./collider/CCPhysicsCollider": 118,
+        "./collider/CCPhysicsPolygonCollider": 119,
+        "./joint/CCDistanceJoint": 121,
+        "./joint/CCJoint": 122,
+        "./joint/CCMotorJoint": 123,
+        "./joint/CCMouseJoint": 124,
+        "./joint/CCPrismaticJoint": 125,
+        "./joint/CCRevoluteJoint": 126,
+        "./joint/CCRopeJoint": 127,
+        "./joint/CCWeldJoint": 128,
+        "./joint/CCWheelJoint": 129,
+        "./platform/CCPhysicsAABBQueryCallback": 213,
+        "./platform/CCPhysicsContactListner": 213,
+        "./platform/CCPhysicsDebugDraw": 213,
+        "./platform/CCPhysicsRayCastCallback": 213,
+        "./platform/CCPhysicsUtils": 213
+    } ],
+    121: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var DistanceJoint = cc.Class({
+            name: "cc.DistanceJoint",
+            extends: cc.Joint,
+            editor: false,
+            properties: {
+                _distance: 1,
+                _frequency: 0,
+                _dampingRatio: 0,
+                distance: {
+                    tooltip: false,
+                    get: function() {
+                        return this._distance;
+                    },
+                    set: function(value) {
+                        this._distance = value;
+                        this._joint && this._joint.SetLength(value);
+                    }
+                },
+                frequency: {
+                    tooltip: false,
+                    get: function() {
+                        return this._frequency;
+                    },
+                    set: function(value) {
+                        this._frequency = value;
+                        this._joint && this._joint.SetFrequency(value);
+                    }
+                },
+                dampingRatio: {
+                    tooltip: false,
+                    get: function() {
+                        return this._dampingRatio;
+                    },
+                    set: function(value) {
+                        this._dampingRatio = value;
+                        this._joint && this._joint.SetDampingRatio(value);
+                    }
+                }
+            },
+            _createJointDef: function() {
+                var def = new b2.DistanceJointDef();
+                def.localAnchorA = new b2.Vec2(this.anchor.x / PTM_RATIO, this.anchor.y / PTM_RATIO);
+                def.localAnchorB = new b2.Vec2(this.connectedAnchor.x / PTM_RATIO, this.connectedAnchor.y / PTM_RATIO);
+                def.length = this.distance / PTM_RATIO;
+                def.dampingRatio = this.dampingRatio;
+                def.frequencyHz = this.frequency;
+                return def;
+            }
+        });
+        cc.DistanceJoint = module.exports = DistanceJoint;
+    }, {
+        "../CCPhysicsTypes": 112
+    } ],
+    122: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var Joint = cc.Class({
+            name: "cc.Joint",
+            extends: cc.Component,
+            editor: {
+                requireComponent: cc.RigidBody
+            },
+            properties: {
+                anchor: {
+                    default: cc.v2(0, 0),
+                    tooltip: false
+                },
+                connectedAnchor: {
+                    default: cc.v2(0, 0),
+                    tooltip: false
+                },
+                connectedBody: {
+                    default: null,
+                    type: cc.RigidBody,
+                    tooltip: false
+                },
+                collideConnected: {
+                    default: false,
+                    tooltip: false
+                }
+            },
+            onDisable: function() {
+                this._destroy();
+            },
+            onEnable: function() {
+                this._init();
+            },
+            start: function() {
+                this._init();
+            },
+            apply: function() {
+                this._destroy();
+                this._init();
+            },
+            getWorldAnchor: function() {
+                if (this._joint) {
+                    var anchor = this._joint.GetAnchorA();
+                    return cc.v2(anchor.x * PTM_RATIO, anchor.y * PTM_RATIO);
+                }
+                return cc.Vec2.ZERO;
+            },
+            getWorldConnectedAnchor: function() {
+                if (this._joint) {
+                    var anchor = this._joint.GetAnchorB();
+                    return cc.v2(anchor.x * PTM_RATIO, anchor.y * PTM_RATIO);
+                }
+                return cc.Vec2.ZERO;
+            },
+            getReactionForce: function(timeStep) {
+                if (this._joint) {
+                    return this._joint.GetReactionForce(timeStep);
+                }
+                return 0;
+            },
+            getReactionTorque: function(timeStep) {
+                if (this._joint) {
+                    return this._joint.GetReactionTorque(timeStep);
+                }
+                return 0;
+            },
+            _init: function() {
+                cc.director.getPhysicsManager().pushDelayEvent(this, "__init", []);
+            },
+            _destroy: function() {
+                cc.director.getPhysicsManager().pushDelayEvent(this, "__destroy", []);
+            },
+            __init: function() {
+                if (this._inited) {
+                    return;
+                }
+                this.body = this.getComponent(cc.RigidBody);
+                if (this.body && this.body._getBody() && this.connectedBody && this.connectedBody._getBody()) {
+                    var world = cc.director.getPhysicsManager()._getWorld();
+                    var def = this._createJointDef();
+                    if (!def) {
+                        return;
+                    }
+                    def.bodyA = this.body._getBody();
+                    def.bodyB = this.connectedBody._getBody();
+                    def.collideConnected = this.collideConnected;
+                    this._joint = world.CreateJoint(def);
+                    this._inited = true;
+                }
+            },
+            __destroy: function() {
+                if (!this._inited) {
+                    return;
+                }
+                this.body && this.body._getBody() && cc.director.getPhysicsManager()._getWorld().DestroyJoint(this._joint);
+                this._joint = null;
+                this._inited = false;
+            },
+            _createJointDef: function() {
+                return null;
+            }
+        });
+        cc.Joint = module.exports = Joint;
+    }, {
+        "../CCPhysicsTypes": 112
+    } ],
+    123: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
+        var MotorJoint = cc.Class({
+            name: "cc.MotorJoint",
+            extends: cc.Joint,
+            editor: false,
+            properties: {
+                _linearOffset: cc.v2(0, 0),
+                _angularOffset: 0,
+                _maxForce: 1,
+                _maxTorque: 1,
+                _correctionFactor: .3,
+                anchor: {
+                    tooltip: false,
+                    default: cc.v2(0, 0),
+                    override: true,
+                    visible: false
+                },
+                connectedAnchor: {
+                    tooltip: false,
+                    default: cc.v2(0, 0),
+                    override: true,
+                    visible: false
+                },
+                linearOffset: {
+                    tooltip: false,
+                    get: function() {
+                        return this._linearOffset;
+                    },
+                    set: function(value) {
+                        this._linearOffset = value;
+                        this._joint && this._joint.SetLinearOffset(new b2.Vec2(value.x / PTM_RATIO, value.y / PTM_RATIO));
+                    }
+                },
+                angularOffset: {
+                    tooltip: false,
+                    get: function() {
+                        return this._angularOffset;
+                    },
+                    set: function(value) {
+                        this._angularOffset = value;
+                        this._joint && this._joint.SetAngularOffset(value);
+                    }
+                },
+                maxForce: {
+                    tooltip: false,
+                    get: function() {
+                        return this._maxForce;
+                    },
+                    set: function(value) {
+                        this._maxForce = value;
+                        this._joint && this._joint.SetMaxForce(value);
+                    }
+                },
+                maxTorque: {
+                    tooltip: false,
+                    get: function() {
+                        return this._maxTorque;
+                    },
+                    set: function(value) {
+                        this._maxTorque = value;
+                        this._joint && this._joint.SetMaxTorque(value);
+                    }
+                },
+                correctionFactor: {
+                    tooltip: false,
+                    get: function() {
+                        return this._correctionFactor;
+                    },
+                    set: function(value) {
+                        this._correctionFactor = value;
+                        this._joint && this._joint.SetCorrectionFactor(value);
+                    }
+                }
+            },
+            _createJointDef: function() {
+                var def = new b2.MotorJointDef();
+                def.linearOffset = new b2.Vec2(this.linearOffset.x / PTM_RATIO, this.linearOffset.y / PTM_RATIO);
+                def.angularOffset = this.angularOffset * ANGLE_TO_PHYSICS_ANGLE;
+                def.maxForce = this.maxForce;
+                def.maxTorque = this.maxTorque;
+                def.correctionFactor = this.correctionFactor;
+                return def;
+            }
+        });
+        cc.MotorJoint = module.exports = MotorJoint;
+    }, {
+        "../CCPhysicsTypes": 112
+    } ],
+    124: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var tempB2Vec2 = new b2.Vec2();
+        var MouseJoint = cc.Class({
+            name: "cc.MouseJoint",
+            extends: cc.Joint,
+            editor: false,
+            properties: {
+                _target: 1,
+                _frequency: 5,
+                _dampingRatio: .7,
+                _maxForce: 0,
+                connectedBody: {
+                    default: null,
+                    type: cc.RigidBody,
+                    visible: false,
+                    override: true
+                },
+                collideConnected: {
+                    default: true,
+                    visible: false,
+                    override: true
+                },
+                anchor: {
+                    tooltip: false,
+                    default: cc.v2(0, 0),
+                    override: true,
+                    visible: false
+                },
+                connectedAnchor: {
+                    tooltip: false,
+                    default: cc.v2(0, 0),
+                    override: true,
+                    visible: false
+                },
+                mouseRegion: {
+                    tooltip: false,
+                    default: null,
+                    type: cc.Node
+                },
+                target: {
+                    tooltip: false,
+                    visible: false,
+                    get: function() {
+                        return this._target;
+                    },
+                    set: function(value) {
+                        this._target = value;
+                        if (this._joint) {
+                            tempB2Vec2.x = value.x / PTM_RATIO;
+                            tempB2Vec2.y = value.y / PTM_RATIO;
+                            this._joint.SetTarget(tempB2Vec2);
+                        }
+                    }
+                },
+                frequency: {
+                    tooltip: false,
+                    get: function() {
+                        return this._frequency;
+                    },
+                    set: function(value) {
+                        this._frequency = value;
+                        this._joint && this._joint.SetFrequency(value);
+                    }
+                },
+                dampingRatio: {
+                    tooltip: false,
+                    get: function() {
+                        return this._dampingRatio;
+                    },
+                    set: function(value) {
+                        this._dampingRatio = value;
+                        this._joint && this._joint.SetDampingRatio(value);
+                    }
+                },
+                maxForce: {
+                    tooltip: false,
+                    visible: false,
+                    get: function() {
+                        return this._maxForce;
+                    },
+                    set: function(value) {
+                        this._maxForce = value;
+                        this._joint && this._joint.SetMaxForce(value);
+                    }
+                }
+            },
+            onLoad: function() {
+                var mouseRegion = this.mouseRegion || this.node;
+                mouseRegion.on(cc.Node.EventType.TOUCH_START, this.onTouchBegan, this);
+                mouseRegion.on(cc.Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
+                mouseRegion.on(cc.Node.EventType.TOUCH_END, this.onTouchEnd, this);
+            },
+            onEnable: function() {},
+            start: function() {},
+            onTouchBegan: function(event) {
+                var manager = cc.director.getPhysicsManager();
+                var target = event.touch.getLocation();
+                var collider = manager.testPoint(target);
+                if (!collider) {
+                    return;
+                }
+                var body = this.connectedBody = collider.body;
+                body.awake = true;
+                this.maxForce = 1e3 * this.connectedBody.getMass();
+                this.target = target;
+                this._init();
+            },
+            onTouchMove: function(event) {
+                this.target = event.touch.getLocation();
+            },
+            onTouchEnd: function(event) {
+                this._destroy();
+            },
+            _createJointDef: function() {
+                var def = new b2.MouseJointDef();
+                tempB2Vec2.x = this.target.x / PTM_RATIO;
+                tempB2Vec2.y = this.target.y / PTM_RATIO;
+                def.target = tempB2Vec2;
+                def.maxForce = this.maxForce;
+                def.dampingRatio = this.dampingRatio;
+                def.frequencyHz = this.frequency;
+                return def;
+            }
+        });
+        cc.MouseJoint = module.exports = MouseJoint;
+    }, {
+        "../CCPhysicsTypes": 112
+    } ],
+    125: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
+        var PrismaticJoint = cc.Class({
+            name: "cc.PrismaticJoint",
+            extends: cc.Joint,
+            editor: false,
+            properties: {
+                localAxisA: {
+                    default: cc.v2(1, 0),
+                    tooltip: false
+                },
+                referenceAngle: {
+                    default: 0,
+                    tooltip: false
+                },
+                enableLimit: {
+                    default: false,
+                    tooltip: false
+                },
+                enableMotor: {
+                    default: false,
+                    tooltip: false
+                },
+                lowerLimit: {
+                    default: 0,
+                    tooltip: false
+                },
+                upperLimit: {
+                    default: 0,
+                    tooltip: false
+                },
+                _maxMotorForce: 0,
+                _motorSpeed: 0,
+                maxMotorForce: {
+                    tooltip: false,
+                    get: function() {
+                        return this._maxMotorForce;
+                    },
+                    set: function(value) {
+                        this._maxMotorForce = value;
+                        this._joint && this._joint.SetMaxMotorForce(value);
+                    }
+                },
+                motorSpeed: {
+                    tooltip: false,
+                    get: function() {
+                        return this._motorSpeed;
+                    },
+                    set: function(value) {
+                        this._motorSpeed = value;
+                        this._joint && this._joint.SetMotorSpeed(value);
+                    }
+                }
+            },
+            _createJointDef: function() {
+                var def = new b2.PrismaticJointDef();
+                def.localAnchorA = new b2.Vec2(this.anchor.x / PTM_RATIO, this.anchor.y / PTM_RATIO);
+                def.localAnchorB = new b2.Vec2(this.connectedAnchor.x / PTM_RATIO, this.connectedAnchor.y / PTM_RATIO);
+                def.localAxisA = new b2.Vec2(this.localAxisA.x, this.localAxisA.y);
+                def.referenceAngle = this.referenceAngle * ANGLE_TO_PHYSICS_ANGLE;
+                def.enableLimit = this.enableLimit;
+                def.lowerTranslation = this.lowerLimit / PTM_RATIO;
+                def.upperTranslation = this.upperLimit / PTM_RATIO;
+                def.enableMotor = this.enableMotor;
+                def.maxMotorForce = this.maxMotorForce;
+                def.motorSpeed = this.motorSpeed;
+                return def;
+            }
+        });
+        cc.PrismaticJoint = module.exports = PrismaticJoint;
+    }, {
+        "../CCPhysicsTypes": 112
+    } ],
+    126: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
+        var PHYSICS_ANGLE_TO_ANGLE = require("../CCPhysicsTypes").PHYSICS_ANGLE_TO_ANGLE;
+        var RevoluteJoint = cc.Class({
+            name: "cc.RevoluteJoint",
+            extends: cc.Joint,
+            editor: false,
+            properties: {
+                _maxMotorTorque: 0,
+                _motorSpeed: 0,
+                _enableLimit: false,
+                _enableMotor: false,
+                referenceAngle: {
+                    default: 0,
+                    tooltip: false
+                },
+                lowerAngle: {
+                    default: 0,
+                    tooltip: false
+                },
+                upperAngle: {
+                    default: 0,
+                    tooltip: false
+                },
+                maxMotorTorque: {
+                    tooltip: false,
+                    get: function() {
+                        return this._maxMotorTorque;
+                    },
+                    set: function(value) {
+                        this._maxMotorTorque = value;
+                        this._joint && this._joint.SetMaxMotorTorque(value);
+                    }
+                },
+                motorSpeed: {
+                    tooltip: false,
+                    get: function() {
+                        return this._motorSpeed;
+                    },
+                    set: function(value) {
+                        this._motorSpeed = value;
+                        this._joint && this._joint.SetMotorSpeed(value * ANGLE_TO_PHYSICS_ANGLE);
+                    }
+                },
+                enableLimit: {
+                    tooltip: false,
+                    get: function() {
+                        return this._enableLimit;
+                    },
+                    set: function(value) {
+                        this._enableLimit = value;
+                        this._joint && this._joint.EnableLimit(value);
+                    }
+                },
+                enableMotor: {
+                    tooltip: false,
+                    get: function() {
+                        return this._enableMotor;
+                    },
+                    set: function(value) {
+                        this._enableMotor = value;
+                        this._joint && this._joint.EnableMotor(value);
+                    }
+                }
+            },
+            getJointAngle: function() {
+                if (this._joint) {
+                    return this._joint.GetJointAngle() * PHYSICS_ANGLE_TO_ANGLE;
+                }
+                return 0;
+            },
+            _createJointDef: function() {
+                var def = new b2.RevoluteJointDef();
+                def.localAnchorA = new b2.Vec2(this.anchor.x / PTM_RATIO, this.anchor.y / PTM_RATIO);
+                def.localAnchorB = new b2.Vec2(this.connectedAnchor.x / PTM_RATIO, this.connectedAnchor.y / PTM_RATIO);
+                def.lowerAngle = (this.upperAngle + 90) * ANGLE_TO_PHYSICS_ANGLE;
+                def.upperAngle = (this.lowerAngle + 90) * ANGLE_TO_PHYSICS_ANGLE;
+                def.maxMotorTorque = this.maxMotorTorque;
+                def.motorSpeed = this.motorSpeed * ANGLE_TO_PHYSICS_ANGLE;
+                def.enableLimit = this.enableLimit;
+                def.enableMotor = this.enableMotor;
+                def.referenceAngle = this.referenceAngle * ANGLE_TO_PHYSICS_ANGLE;
+                return def;
+            }
+        });
+        cc.RevoluteJoint = module.exports = RevoluteJoint;
+    }, {
+        "../CCPhysicsTypes": 112
+    } ],
+    127: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var RopeJoint = cc.Class({
+            name: "cc.RopeJoint",
+            extends: cc.Joint,
+            editor: false,
+            properties: {
+                _maxLength: 1,
+                maxLength: {
+                    tooltip: false,
+                    get: function() {
+                        return this._maxLength;
+                    },
+                    set: function(value) {
+                        this._maxLength = value;
+                        this._joint && this._joint.SetMaxLength(value);
+                    }
+                }
+            },
+            _createJointDef: function() {
+                var def = new b2.RopeJointDef();
+                def.localAnchorA = new b2.Vec2(this.anchor.x / PTM_RATIO, this.anchor.y / PTM_RATIO);
+                def.localAnchorB = new b2.Vec2(this.connectedAnchor.x / PTM_RATIO, this.connectedAnchor.y / PTM_RATIO);
+                def.maxLength = this.maxLength / PTM_RATIO;
+                return def;
+            }
+        });
+        cc.RopeJoint = module.exports = RopeJoint;
+    }, {
+        "../CCPhysicsTypes": 112
+    } ],
+    128: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
+        var WeldJoint = cc.Class({
+            name: "cc.WeldJoint",
+            extends: cc.Joint,
+            editor: false,
+            properties: {
+                referenceAngle: {
+                    default: 0,
+                    tooltip: false
+                },
+                _frequency: 0,
+                _dampingRatio: 0,
+                frequency: {
+                    tooltip: false,
+                    get: function() {
+                        return this._frequency;
+                    },
+                    set: function(value) {
+                        this._frequency = value;
+                        this._joint && this._joint.SetFrequency(value);
+                    }
+                },
+                dampingRatio: {
+                    tooltip: false,
+                    get: function() {
+                        return this._dampingRatio;
+                    },
+                    set: function(value) {
+                        this._dampingRatio = value;
+                        this._joint && this._joint.SetDampingRatio(value);
+                    }
+                }
+            },
+            _createJointDef: function() {
+                var def = new b2.WeldJointDef();
+                def.localAnchorA = new b2.Vec2(this.anchor.x / PTM_RATIO, this.anchor.y / PTM_RATIO);
+                def.localAnchorB = new b2.Vec2(this.connectedAnchor.x / PTM_RATIO, this.connectedAnchor.y / PTM_RATIO);
+                def.referenceAngle = this.referenceAngle * ANGLE_TO_PHYSICS_ANGLE;
+                def.frequencyHz = this.frequency;
+                def.dampingRatio = this.dampingRatio;
+                return def;
+            }
+        });
+        cc.WeldJoint = module.exports = WeldJoint;
+    }, {
+        "../CCPhysicsTypes": 112
+    } ],
+    129: [ function(require, module, exports) {
+        var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
+        var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
+        var WheelJoint = cc.Class({
+            name: "cc.WheelJoint",
+            extends: cc.Joint,
+            editor: false,
+            properties: {
+                _maxMotorTorque: 0,
+                _motorSpeed: 0,
+                _enableMotor: false,
+                _frequency: 2,
+                _dampingRatio: .7,
+                localAxisA: {
+                    default: cc.v2(1, 0),
+                    tooltip: false
+                },
+                maxMotorTorque: {
+                    tooltip: false,
+                    get: function() {
+                        return this._maxMotorTorque;
+                    },
+                    set: function(value) {
+                        this._maxMotorTorque = value;
+                        this._joint && this._joint.SetMaxMotorTorque(value);
+                    }
+                },
+                motorSpeed: {
+                    tooltip: false,
+                    get: function() {
+                        return this._motorSpeed;
+                    },
+                    set: function(value) {
+                        this._motorSpeed = value;
+                        this._joint && this._joint.SetMotorSpeed(value * ANGLE_TO_PHYSICS_ANGLE);
+                    }
+                },
+                enableMotor: {
+                    tooltip: false,
+                    get: function() {
+                        return this._enableMotor;
+                    },
+                    set: function(value) {
+                        this._enableMotor = value;
+                        this._joint && this._joint.EnableMotor(value);
+                    }
+                },
+                frequency: {
+                    tooltip: false,
+                    get: function() {
+                        return this._frequency;
+                    },
+                    set: function(value) {
+                        this._frequency = value;
+                        this._joint && this._joint.SetFrequency(value);
+                    }
+                },
+                dampingRatio: {
+                    tooltip: false,
+                    get: function() {
+                        return this._dampingRatio;
+                    },
+                    set: function(value) {
+                        this._dampingRatio = value;
+                        this._joint && this._joint.SetDampingRatio(value);
+                    }
+                }
+            },
+            _createJointDef: function() {
+                var def = new b2.WheelJointDef();
+                def.localAnchorA = new b2.Vec2(this.anchor.x / PTM_RATIO, this.anchor.y / PTM_RATIO);
+                def.localAnchorB = new b2.Vec2(this.connectedAnchor.x / PTM_RATIO, this.connectedAnchor.y / PTM_RATIO);
+                def.localAxisA = new b2.Vec2(this.localAxisA.x, this.localAxisA.y);
+                def.maxMotorTorque = this.maxMotorTorque;
+                def.motorSpeed = this.motorSpeed * ANGLE_TO_PHYSICS_ANGLE;
+                def.enableMotor = this.enableMotor;
+                def.dampingRatio = this.dampingRatio;
+                def.frequencyHz = this.frequency;
+                return def;
+            }
+        });
+        cc.WheelJoint = module.exports = WheelJoint;
+    }, {
+        "../CCPhysicsTypes": 112
+    } ],
+    130: [ function(require, module, exports) {
+        function getWorldRotation(node) {
+            var rot = node.rotationX;
+            var parent = node.parent;
+            while (parent.parent) {
+                rot += parent.rotationX;
+                parent = parent.parent;
+            }
+            return rot;
+        }
+        function getWorldScale(node) {
+            var scaleX = node.scaleX;
+            var scaleY = node.scaleY;
+            var parent = node.parent;
+            while (parent.parent) {
+                scaleX *= parent.scaleX;
+                scaleY *= parent.scaleY;
+                parent = parent.parent;
+            }
+            return cc.v2(scaleX, scaleY);
+        }
+        function convertToNodeRotation(node, rotation) {
+            rotation -= node.rotationX;
+            var parent = node.parent;
+            while (parent.parent) {
+                rotation -= parent.rotationX;
+                parent = parent.parent;
+            }
+            return rotation;
+        }
+        module.exports = {
+            getWorldRotation: getWorldRotation,
+            getWorldScale: getWorldScale,
+            convertToNodeRotation: convertToNodeRotation
+        };
+    }, {} ],
+    131: [ function(require, module, exports) {
         var Asset = require("../assets/CCAsset");
         var callInNextTick = require("./utils").callInNextTick;
         var Loader = require("../load-pipeline/CCLoader");
@@ -17007,7 +20325,7 @@
         }
         var AssetLibrary = {
             loadAsset: function(uuid, callback, options) {
-                if ("string" != typeof uuid) {
+                if ("string" !== typeof uuid) {
                     return callInNextTick(callback, new Error("[AssetLibrary] uuid must be string"), null);
                 }
                 var item = {
@@ -17147,12 +20465,12 @@
         module.exports = cc.AssetLibrary = AssetLibrary;
     }, {
         "../assets/CCAsset": 25,
-        "../load-pipeline/CCLoader": 94,
-        "../load-pipeline/auto-release-utils": 96,
-        "../load-pipeline/pack-downloader": 102,
-        "./utils": 126
+        "../load-pipeline/CCLoader": 96,
+        "../load-pipeline/auto-release-utils": 98,
+        "../load-pipeline/pack-downloader": 104,
+        "./utils": 151
     } ],
-    108: [ function(require, module, exports) {
+    132: [ function(require, module, exports) {
         var JS = require("./js");
         var Enum = require("../value-types/CCEnum");
         var Utils = require("./utils");
@@ -17162,9 +20480,12 @@
         var getTypeChecker = Attr.getTypeChecker;
         var preprocess = require("./preprocess-class");
         var Misc = require("../utils/misc");
-        var BUILTIN_ENTRIES = [ "name", "extends", "mixins", "ctor", "properties", "statics", "editor" ];
+        require("./requiring-frame");
+        var BUILTIN_ENTRIES = [ "name", "extends", "mixins", "ctor", "__ctor__", "properties", "statics", "editor", "__ES6__" ];
         var INVALID_STATICS_DEV = false;
-        var _args = [];
+        function pushUnique(array, item) {
+            array.indexOf(item) < 0 && array.push(item);
+        }
         var deferredInitializer = {
             datas: null,
             push: function(data) {
@@ -17185,7 +20506,7 @@
                         var data = datas[i];
                         var cls = data.cls;
                         var properties = data.props;
-                        "function" == typeof properties && (properties = properties());
+                        "function" === typeof properties && (properties = properties());
                         var name = JS.getClassName(cls);
                         properties ? declareProperties(cls, name, properties, cls.$super, data.mixins) : cc.errorID(3633, name);
                     }
@@ -17194,10 +20515,9 @@
             }
         };
         function appendProp(cls, name) {
-            cls.__props__.indexOf(name) < 0 && cls.__props__.push(name);
+            pushUnique(cls.__props__, name);
         }
-        function defineProp(cls, className, propName, defaultValue, attrs) {
-            var base;
+        function defineProp(cls, className, propName, defaultValue, attrs, es6) {
             Attr.setClassAttr(cls, propName, "default", defaultValue);
             appendProp(cls, propName);
             if (attrs) {
@@ -17217,7 +20537,7 @@
                 }
             }
         }
-        function defineGetSet(cls, name, propName, val, attrs) {
+        function defineGetSet(cls, name, propName, val, attrs, es6) {
             var getter = val.get;
             var setter = val.set;
             var proto = cls.prototype;
@@ -17232,79 +20552,123 @@
                 var ForceSerializable = false;
                 ForceSerializable || Attr.attr(cls, propName, Attr.NonSerialized);
                 (ForceSerializable || false) && appendProp(cls, propName);
-                d ? Object.defineProperty(proto, propName, {
+                es6 || (d ? Object.defineProperty(proto, propName, {
                     get: getter
                 }) : Object.defineProperty(proto, propName, {
                     get: getter,
                     configurable: true,
                     enumerable: true
-                });
+                }));
             }
-            setter && (d ? Object.defineProperty(proto, propName, {
+            setter && (es6 || (d ? Object.defineProperty(proto, propName, {
                 set: setter
             }) : Object.defineProperty(proto, propName, {
                 set: setter,
                 configurable: true,
                 enumerable: true
-            }));
+            })));
         }
         function getDefault(defaultVal) {
-            if ("function" == typeof defaultVal) {
+            if ("function" === typeof defaultVal) {
                 return defaultVal();
             }
             return defaultVal;
         }
-        function doDefine(className, baseClass, mixins, constructor, options) {
+        function mixinWithInherited(dest, src, filter) {
+            for (var prop in src) {
+                dest.hasOwnProperty(prop) || filter && !filter(prop) || Object.defineProperty(dest, prop, JS.getPropertyDescriptor(src, prop));
+            }
+        }
+        function doDefine(className, baseClass, mixins, options) {
             var shouldAddProtoCtor;
-            var fireClass = _createCtor(constructor, baseClass, mixins, className, options);
-            Object.defineProperty(fireClass, "extend", {
-                value: function(options) {
-                    options["extends"] = this;
-                    return CCClass(options);
-                },
-                writable: true,
-                configurable: true
+            var __ctor__ = options.__ctor__;
+            var ctor = options.ctor;
+            var __es6__ = options.__ES6__;
+            var ctorToUse;
+            var ctors;
+            var fireClass;
+            if (__es6__) {
+                ctors = [ ctor ];
+                fireClass = ctor;
+            } else {
+                ctors = __ctor__ ? [ __ctor__ ] : _getAllCtors(baseClass, mixins, options);
+                fireClass = _createCtor(ctors, baseClass, className, options);
+                Object.defineProperty(fireClass, "extend", {
+                    value: function(options) {
+                        options.extends = this;
+                        return CCClass(options);
+                    },
+                    writable: true,
+                    configurable: true
+                });
+            }
+            Object.defineProperty(fireClass, "__ctors__", {
+                value: ctors.length > 0 ? ctors : null,
+                writable: true
             });
+            var prototype = fireClass.prototype;
             if (baseClass) {
-                JS.extend(fireClass, baseClass);
+                if (!__es6__) {
+                    JS.extend(fireClass, baseClass);
+                    prototype = fireClass.prototype;
+                }
                 fireClass.$super = baseClass;
             }
             if (mixins) {
-                for (var m = 0; m < mixins.length; ++m) {
+                for (var m = mixins.length - 1; m >= 0; m--) {
                     var mixin = mixins[m];
-                    JS.mixin(fireClass.prototype, mixin.prototype);
-                    for (var p in mixin) {
-                        mixin.hasOwnProperty(p) && true && (fireClass[p] = mixin[p]);
-                    }
-                    CCClass._isCCClass(mixin) && JS.mixin(Attr.getClassAttrs(fireClass).constructor.prototype, Attr.getClassAttrs(mixin).constructor.prototype);
+                    mixinWithInherited(prototype, mixin.prototype);
+                    mixinWithInherited(fireClass, mixin, function(prop) {
+                        return mixin.hasOwnProperty(prop) && true;
+                    });
+                    CCClass._isCCClass(mixin) && mixinWithInherited(Attr.getClassAttrs(fireClass).constructor.prototype, Attr.getClassAttrs(mixin).constructor.prototype);
                 }
-                fireClass.prototype.constructor = fireClass;
+                prototype.constructor = fireClass;
             }
-            fireClass.prototype.__initProps__ = compileProps;
+            __es6__ || (prototype.__initProps__ = compileProps);
             JS.setClassName(className, fireClass);
             return fireClass;
         }
-        function define(className, baseClasses, mixins, constructor, options) {
-            if (cc.isChildClassOf(baseClasses, cc.Component)) {
-                var frame = cc._RFpeek();
-                if (frame) {
-                    if (frame.beh) {
-                        cc.errorID(3615);
-                        return cls;
-                    }
+        function define(className, baseClass, mixins, options) {
+            var Component = cc.Component;
+            var frame = cc._RF.peek();
+            if (frame && cc.isChildClassOf(baseClass, Component)) {
+                if (cc.isChildClassOf(frame.cls, Component)) {
+                    cc.errorID(3615);
+                    return null;
+                }
+                className = className || frame.script;
+            }
+            var cls = doDefine(className, baseClass, mixins, options);
+            if (frame) {
+                if (cc.isChildClassOf(baseClass, Component)) {
                     var uuid = frame.uuid;
-                    uuid;
-                    className = className || frame.script;
-                    var cls = doDefine(className, baseClasses, mixins, constructor, options);
                     uuid && JS._setClassId(uuid, cls);
-                    frame.beh = cls;
-                    return cls;
+                    frame.cls = cls;
+                } else {
+                    cc.isChildClassOf(frame.cls, Component) || (frame.cls = cls);
                 }
             }
-            return doDefine(className, baseClasses, mixins, constructor, options);
+            return cls;
         }
-        function normalizeClassName(className) {
-            var DefaultName;
+        function normalizeClassName_DEV(className) {
+            var DefaultName = "CCClass";
+            if (className) {
+                className = Array.prototype.map.call(className, function(x) {
+                    return /^[a-zA-Z0-9_$]/.test(x) ? x : "_";
+                }).join("");
+                try {
+                    Function("function " + className + "(){}")();
+                    return className;
+                } catch (e) {
+                    className = DefaultName + "_" + className;
+                }
+                try {
+                    Function("function " + className + "(){}")();
+                    return className;
+                } catch (e) {}
+            }
+            return DefaultName;
         }
         function getNewValueTypeCode(value) {
             var clsName = JS.getClassName(value);
@@ -17321,7 +20685,7 @@
                 for (i = 0; i < type.__props__.length; i++) {
                     var prop = type.__props__[i];
                     var propVal = value[prop];
-                    if ("object" == typeof propVal) {
+                    if ("object" === typeof propVal) {
                         cc.errorID(3641, clsName);
                         return "new " + clsName + "()";
                     }
@@ -17334,7 +20698,7 @@
         function escapeForJS(s) {
             return JSON.stringify(s).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
         }
-        var VAR_REG = /^[$A-Za-z_][0-9A-Za-z_$]*$/;
+        var IDENTIFIER_RE = /^[$A-Za-z_][0-9A-Za-z_$]*$/;
         function compileProps(actualClass) {
             var attrs = Attr.getClassAttrs(actualClass);
             var propList = actualClass.__props__;
@@ -17349,18 +20713,18 @@
                 var attrKey = prop + Attr.DELIMETER + "default";
                 if (attrKey in attrs) {
                     var statement;
-                    statement = VAR_REG.test(prop) ? "this." + prop + "=" : "this[" + escapeForJS(prop) + "]=";
+                    statement = IDENTIFIER_RE.test(prop) ? "this." + prop + "=" : "this[" + escapeForJS(prop) + "]=";
                     var expression;
                     var def = attrs[attrKey];
-                    if ("object" == typeof def && def) {
+                    if ("object" === typeof def && def) {
                         expression = def instanceof cc.ValueType ? getNewValueTypeCode(def) : Array.isArray(def) ? "[]" : "{}";
                     } else {
-                        if ("function" == typeof def) {
+                        if ("function" === typeof def) {
                             var index = F.length;
                             F.push(def);
                             expression = "F[" + index + "]()";
                         } else {
-                            expression = "string" == typeof def ? escapeForJS(def) : def;
+                            expression = "string" === typeof def ? escapeForJS(def) : def;
                         }
                     }
                     statement = statement + expression + ";\n";
@@ -17368,60 +20732,61 @@
                 }
             }
             func += "})";
-            actualClass.prototype.__initProps__ = Misc.cleanEval_F(func, F);
-            this.__initProps__();
+            var initProps = actualClass.prototype.__initProps__ = Misc.cleanEval_F(func, F);
+            initProps.call(this);
         }
-        function _createCtor(ctor, baseClass, mixins, className, options) {
-            var useTryCatch = !(className && className.startsWith("cc."));
+        function _createCtor(ctors, baseClass, className, options) {
+            var superCallBounded = baseClass && boundSuperCalls(baseClass, options, className);
+            var body;
+            var args = "...args";
+            body = "(function(" + args + "){\n";
+            superCallBounded && (body += "this._super=null;\n");
+            body += "this.__initProps__(fireClass);\n";
+            var ctorLen = ctors.length;
+            if (ctorLen > 0) {
+                var useTryCatch = !(className && className.startsWith("cc."));
+                useTryCatch && (body += "try{\n");
+                var SNIPPET = "].apply(this,args);\n";
+                if (1 === ctorLen) {
+                    body += "fireClass.__ctors__[0" + SNIPPET;
+                } else {
+                    body += "var cs=fireClass.__ctors__;\n";
+                    for (var i = 0; i < ctorLen; i++) {
+                        body += "cs[" + i + SNIPPET;
+                    }
+                }
+                useTryCatch && (body += "}catch(e){\ncc._throw(e);\n}\n");
+            }
+            body += "})";
+            return Misc.cleanEval_fireClass(body);
+        }
+        function _validateCtor_DEV(ctor, baseClass, className, options) {
             var originCtor;
-            var superCallBounded = options && baseClass && boundSuperCalls(baseClass, options, className);
+            !(ctor.length > 0) || className && className.startsWith("cc.") || cc.warnID(3617, className);
+            return ctor;
+        }
+        function _getAllCtors(baseClass, mixins, options) {
+            function getCtors(cls) {
+                return CCClass._isCCClass(cls) ? cls.__ctors__ || [] : [ cls ];
+            }
             var ctors = [];
             var baseOrMixins = [ baseClass ].concat(mixins);
             for (var b = 0; b < baseOrMixins.length; b++) {
                 var baseOrMixin = baseOrMixins[b];
                 if (baseOrMixin) {
-                    if (CCClass._isCCClass(baseOrMixin)) {
-                        var baseCtors = baseOrMixin.__ctors__;
-                        if (baseCtors) {
-                            for (var c = 0; c < baseCtors.length; c++) {
-                                ctors.indexOf(baseCtors[c]) < 0 && ctors.push(baseCtors[c]);
-                            }
-                        }
-                    } else {
-                        ctors.indexOf(baseOrMixin) < 0 && ctors.push(baseOrMixin);
+                    var baseCtors = getCtors(baseOrMixin);
+                    for (var c = 0; c < baseCtors.length; c++) {
+                        pushUnique(ctors, baseCtors[c]);
                     }
                 }
             }
+            var ctor = options.ctor;
             ctor && ctors.push(ctor);
-            var body;
-            body = "(function(){\n";
-            superCallBounded && (body += "this._super=null;\n");
-            body += "this.__initProps__(fireClass);\n";
-            if (ctors.length > 0) {
-                body += "var cs=fireClass.__ctors__;\n";
-                body += "var args = new Array(arguments.length);\n";
-                body += "for (var i = 0, l = arguments.length; i < l; i++) {args[i] = arguments[i];}\n";
-                useTryCatch && (body += "try{\n");
-                if (ctors.length <= 5) {
-                    for (var i = 0; i < ctors.length; i++) {
-                        body += "(cs[" + i + "]).apply(this,args);\n";
-                    }
-                } else {
-                    body += "for(i=0,l=cs.length;i<l;++i){\n";
-                    body += "(cs[i]).apply(this,args);\n}\n";
-                }
-                useTryCatch && (body += "}catch(e){\ncc._throw(e);\n}\n");
-            }
-            body += "})";
-            var fireClass = Misc.cleanEval_fireClass(body);
-            Object.defineProperty(fireClass, "__ctors__", {
-                value: ctors.length > 0 ? ctors : null
-            });
-            return fireClass;
+            return ctors;
         }
         var SuperCallReg = /xyz/.test(function() {
             xyz;
-        }) ? /\b_super\b/ : /.*/;
+        }) ? /\b\._super\b/ : /.*/;
         var SuperCallRegStrict = /xyz/.test(function() {
             xyz;
         }) ? /this\._super\s*\(/ : /(NONE){99}/;
@@ -17432,23 +20797,19 @@
                     continue;
                 }
                 var func = options[funcName];
-                if ("function" != typeof func) {
+                if ("function" !== typeof func) {
                     continue;
                 }
                 var pd = JS.getPropertyDescriptor(baseClass.prototype, funcName);
                 if (pd) {
                     var superFunc = pd.value;
-                    if ("function" == typeof superFunc) {
+                    if ("function" === typeof superFunc) {
                         if (SuperCallReg.test(func)) {
                             hasSuperCall = true;
                             options[funcName] = function(superFunc, func) {
-                                return function() {
+                                return function(...args) {
                                     var tmp = this._super;
                                     this._super = superFunc;
-                                    var args = new Array(arguments.length);
-                                    for (var i = 0, l = args.length; i < l; i++) {
-                                        args[i] = arguments[i];
-                                    }
                                     var ret = func.apply(this, args);
                                     this._super = tmp;
                                     return ret;
@@ -17461,7 +20822,7 @@
             }
             return hasSuperCall;
         }
-        function declareProperties(cls, className, properties, baseClass, mixins) {
+        function declareProperties(cls, className, properties, baseClass, mixins, es6) {
             cls.__props__ = [];
             baseClass && baseClass.__props__ && (cls.__props__ = baseClass.__props__.slice());
             if (mixins) {
@@ -17473,26 +20834,23 @@
                 }
             }
             if (properties) {
-                preprocess.preprocessAttrs(properties, className, cls);
+                preprocess.preprocessAttrs(properties, className, cls, es6);
                 for (var propName in properties) {
                     var val = properties[propName];
                     var attrs = parseAttributes(val, className, propName);
-                    "default" in val ? defineProp(cls, className, propName, val["default"], attrs) : defineGetSet(cls, className, propName, val, attrs);
+                    "default" in val ? defineProp(cls, className, propName, val.default, attrs, es6) : defineGetSet(cls, className, propName, val, attrs, es6);
                 }
             }
         }
         function CCClass(options) {
-            if (!options) {
-                return define();
-            }
+            options = options || {};
             var name = options.name;
-            var base = options["extends"];
+            var base = options.extends;
             var mixins = options.mixins;
-            var cls;
-            cls = define(name, base, mixins, options.ctor, options);
+            var cls = define(name, base, mixins, options);
             name || (name = cc.js.getClassName(cls));
             var properties = options.properties;
-            if ("function" == typeof properties || base && null === base.__props__ || mixins && mixins.some(function(x) {
+            if ("function" === typeof properties || base && null === base.__props__ || mixins && mixins.some(function(x) {
                 return null === x.__props__;
             })) {
                 deferredInitializer.push({
@@ -17502,7 +20860,7 @@
                 });
                 cls.__props__ = null;
             } else {
-                declareProperties(cls, name, properties, base, options.mixins);
+                declareProperties(cls, name, properties, base, options.mixins, options.__ES6__);
             }
             var statics = options.statics;
             if (statics) {
@@ -17526,11 +20884,12 @@
                     writable: true
                 });
             }
-            var editor;
+            var editor = options.editor;
+            editor && cc.isChildClassOf(base, cc.Component) && cc.Component._registerEditorProps(cls, editor);
             return cls;
         }
         CCClass._isCCClass = function(constructor) {
-            return !!constructor && "undefined" != typeof constructor.__ctors__;
+            return constructor && constructor.hasOwnProperty("__ctors__");
         };
         CCClass._fastDefine = function(className, constructor, serializableFields) {
             JS.setClassName(className, constructor);
@@ -17546,23 +20905,17 @@
         CCClass.attr = Attr.attr;
         cc.isChildClassOf = function(subclass, superclass) {
             if (subclass && superclass) {
-                if ("function" != typeof subclass) {
+                if ("function" !== typeof subclass) {
                     return false;
                 }
-                if ("function" != typeof superclass) {
+                if ("function" !== typeof superclass) {
                     return false;
                 }
                 if (subclass === superclass) {
                     return true;
                 }
                 for (;;) {
-                    if (subclass.$super) {
-                        subclass = subclass.$super;
-                    } else {
-                        var proto = subclass.prototype;
-                        var dunderProto = proto && Object.getPrototypeOf(proto);
-                        subclass = dunderProto && dunderProto.constructor;
-                    }
+                    subclass = JS.getSuper(subclass);
                     if (!subclass) {
                         return false;
                     }
@@ -17576,12 +20929,7 @@
         CCClass.getInheritanceChain = function(klass) {
             var chain = [];
             for (;;) {
-                if (klass.$super) {
-                    klass = klass.$super;
-                } else {
-                    var dunderProto = Object.getPrototypeOf(klass.prototype);
-                    klass = dunderProto && dunderProto.constructor;
-                }
+                klass = JS.getSuper(klass);
                 if (!klass) {
                     break;
                 }
@@ -17617,14 +20965,17 @@
                             attr.type = "Script";
                             result.push(attr);
                         } else {
-                            "object" == typeof type ? Enum.isEnum(type) && result.push({
+                            "object" === typeof type ? Enum.isEnum(type) && result.push({
                                 type: "Enum",
                                 enumList: Enum.getList(type)
-                            }) : "function" == typeof type && (attrs.url ? result.push({
+                            }) : "function" === typeof type && (attrs.url ? result.push({
                                 type: "Object",
                                 ctor: type,
                                 _onAfterProp: getTypeChecker("String", "cc.String")
-                            }) : result.push(Attr.ObjectType(type)));
+                            }) : result.push(attrs._short ? {
+                                type: "Object",
+                                ctor: type
+                            } : Attr.ObjectType(type)));
                         }
                     }
                 }
@@ -17634,7 +20985,7 @@
                     var val = attrs[attrName];
                     if (typeof val === expectType) {
                         if (attrCreater) {
-                            result.push("function" == typeof attrCreater ? attrCreater(val) : attrCreater);
+                            result.push("function" === typeof attrCreater ? attrCreater(val) : attrCreater);
                         } else {
                             var attr = {};
                             attr[attrName] = val;
@@ -17670,18 +21021,159 @@
             },
             fastDefine: CCClass._fastDefine,
             getNewValueTypeCode: getNewValueTypeCode,
-            VAR_REG: VAR_REG,
+            IDENTIFIER_RE: IDENTIFIER_RE,
             escapeForJS: escapeForJS
         };
     }, {
-        "../utils/misc": 130,
-        "../value-types/CCEnum": 136,
-        "./attribute": 114,
-        "./js": 121,
-        "./preprocess-class": 123,
-        "./utils": 126
+        "../utils/misc": 156,
+        "../value-types/CCEnum": 162,
+        "./attribute": 139,
+        "./js": 146,
+        "./preprocess-class": 148,
+        "./requiring-frame": 149,
+        "./utils": 151
     } ],
-    109: [ function(require, module, exports) {
+    133: [ function(require, module, exports) {
+        require("./CCClass");
+        var Preprocess = require("./preprocess-class");
+        var JS = require("./js");
+        var isPlainEmptyObj_DEV = false;
+        function fNOP() {}
+        function dNOP() {
+            return fNOP;
+        }
+        function getSubDict(obj, key) {
+            var res = obj[key];
+            res || (res = obj[key] = {});
+            return res;
+        }
+        function checkCtorArgument(decorate) {
+            return function(target) {
+                if ("function" === typeof target) {
+                    return decorate(target);
+                }
+                return function(ctor) {
+                    return decorate(ctor, target);
+                };
+            };
+        }
+        function _checkNormalArgument(validator_DEV, decorate, decoratorName) {
+            return function(target) {
+                return function(ctor) {
+                    return decorate(ctor, target);
+                };
+            };
+        }
+        var checkCompArgument = _checkNormalArgument.bind(null, false);
+        function _checkArgumentType(type) {
+            return _checkNormalArgument.bind(null, false);
+        }
+        var checkStringArgument = _checkArgumentType("string");
+        var checkNumberArgument = _checkArgumentType("number");
+        function getClassProto(ctor, decoratorName) {
+            return getSubDict(ctor, "__ccclassProto__");
+        }
+        function getDefaultFromInitializer(initializer) {
+            var value;
+            try {
+                value = initializer();
+            } catch (e) {
+                return initializer;
+            }
+            return "object" !== typeof value || null === value ? value : initializer;
+        }
+        var ccclass = checkCtorArgument(function(ctor, name) {
+            var base = JS.getSuper(ctor);
+            base === Object && (base = null);
+            var proto = {
+                name: name,
+                extends: base,
+                ctor: ctor,
+                __ES6__: true
+            };
+            var decoratedProto = ctor.__ccclassProto__;
+            if (decoratedProto) {
+                JS.mixin(proto, decoratedProto);
+                ctor.__ccclassProto__ = void 0;
+            }
+            var res = cc.Class(proto);
+            return res;
+        });
+        function property(ctorProtoOrOptions, propName, desc) {
+            var options = null;
+            function normalized(ctorProto, propName, desc) {
+                var ccclassProto = getClassProto(ctorProto.constructor);
+                if (ccclassProto) {
+                    var props = getSubDict(ccclassProto, "properties");
+                    var prop = props[propName];
+                    var fullOptions = options && (Preprocess.getFullFormOfProperty(options) || options);
+                    prop = JS.mixin(prop || {}, fullOptions || {});
+                    if (desc) {
+                        if (desc.initializer) {
+                            prop.default = getDefaultFromInitializer(desc.initializer);
+                        } else {
+                            desc.get && (prop.get = desc.get);
+                            desc.set && (prop.set = desc.set);
+                        }
+                    }
+                    props[propName] = prop;
+                }
+            }
+            if ("undefined" === typeof propName) {
+                options = ctorProtoOrOptions;
+                return normalized;
+            }
+            normalized(ctorProtoOrOptions, propName, desc);
+        }
+        function createEditorDecorator(argCheckFunc, editorPropName, staticValue) {
+            return argCheckFunc(function(ctor, decoratedValue) {
+                var proto = getClassProto(ctor, editorPropName);
+                if (proto) {
+                    var value = void 0 !== staticValue ? staticValue : decoratedValue;
+                    getSubDict(proto, "editor")[editorPropName] = value;
+                }
+            }, editorPropName);
+        }
+        var executeInEditMode = dNOP;
+        var requireComponent = createEditorDecorator(checkCompArgument, "requireComponent");
+        var menu = dNOP;
+        var executionOrder = dNOP;
+        var disallowMultiple = dNOP;
+        var playOnFocus = dNOP;
+        var inspector = dNOP;
+        var icon = dNOP;
+        var help = dNOP;
+        function mixins() {
+            var mixins = [];
+            for (var i = 0; i < arguments.length; i++) {
+                mixins[i] = arguments[i];
+            }
+            return function(ctor) {
+                var proto = getClassProto(ctor, "mixins");
+                proto && (proto.mixins = mixins);
+            };
+        }
+        cc._decorator = module.exports = {
+            ccclass: ccclass,
+            property: property,
+            executeInEditMode: executeInEditMode,
+            requireComponent: requireComponent,
+            menu: menu,
+            executionOrder: executionOrder,
+            disallowMultiple: disallowMultiple,
+            playOnFocus: playOnFocus,
+            inspector: inspector,
+            icon: icon,
+            help: help,
+            mixins: mixins
+        };
+    }, {
+        "./CCClass": 132,
+        "./js": 146,
+        "./preprocess-class": 148,
+        "./utils": 151
+    } ],
+    134: [ function(require, module, exports) {
         require("./_CCClass");
         cc._tmp = cc._tmp || {};
         cc.KEY = {
@@ -17905,7 +21397,7 @@
             NORMAL_TAG: 8801,
             SELECTED_TAG: 8802,
             DISABLE_TAG: 8803,
-            FIX_ARTIFACTS_BY_STRECHING_TEXEL: 1,
+            FIX_ARTIFACTS_BY_STRECHING_TEXEL: 0,
             DIRECTOR_STATS_POSITION: cc.p(0, 0),
             DIRECTOR_FPS_INTERVAL: .5,
             COCOSNODE_RENDER_SUBPIXEL: 1,
@@ -17923,7 +21415,8 @@
             ENABLE_GL_STATE_CACHE: 1,
             TOUCH_TIMEOUT: 5e3,
             BATCH_VERTEX_COUNT: 2e3,
-            ENABLE_GC_FOR_NATIVE_OBJECTS: true
+            ENABLE_GC_FOR_NATIVE_OBJECTS: true,
+            ENABLE_TILEDMAP_CULLING: true
         };
         cc.defineGetterSetter(cc.macro, "BLEND_SRC", function() {
             return cc._renderType === cc.game.RENDER_TYPE_WEBGL && cc.macro.OPTIMIZE_BLEND_FUNC_FOR_PREMULTIPLIED_ALPHA ? cc.macro.ONE : cc.macro.SRC_ALPHA;
@@ -17961,12 +21454,11 @@
         };
         module.exports = cc.macro;
     }, {
-        "./_CCClass": 113
+        "./_CCClass": 138
     } ],
-    110: [ function(require, module, exports) {
+    135: [ function(require, module, exports) {
         var JS = require("./js");
         var CCClass = require("./CCClass");
-        var cleanEval = require("../utils/misc").cleanEval;
         var Destroyed = 1;
         var RealDestroyed = 2;
         var ToDestroy = 4;
@@ -17975,10 +21467,9 @@
         var Dirty = 32;
         var DontDestroy = 64;
         var Destroying = 128;
-        var Activating = 256;
+        var Deactivating = 256;
         var IsOnEnableCalled = 2048;
         var IsEditorOnEnableCalled = 4096;
-        var IsPreloadCalled = 8192;
         var IsOnLoadCalled = 16384;
         var IsOnLoadStarted = 32768;
         var IsStartCalled = 65536;
@@ -17987,7 +21478,7 @@
         var IsAnchorLocked = 1 << 19;
         var IsSizeLocked = 1 << 20;
         var IsPositionLocked = 1 << 21;
-        var PersistentMask = ~(ToDestroy | Dirty | Destroying | DontDestroy | Activating | IsPreloadCalled | IsOnLoadStarted | IsOnLoadCalled | IsStartCalled | IsOnEnableCalled | IsEditorOnEnableCalled | IsRotationLocked | IsScaleLocked | IsAnchorLocked | IsSizeLocked | IsPositionLocked);
+        var PersistentMask = ~(ToDestroy | Dirty | Destroying | DontDestroy | Deactivating | IsOnLoadStarted | IsOnLoadCalled | IsStartCalled | IsOnEnableCalled | IsEditorOnEnableCalled | IsRotationLocked | IsScaleLocked | IsAnchorLocked | IsSizeLocked | IsPositionLocked);
         function CCObject() {
             this._name = "";
             this._objFlags = 0;
@@ -18010,8 +21501,7 @@
             DontDestroy: DontDestroy,
             PersistentMask: PersistentMask,
             Destroying: Destroying,
-            Activating: Activating,
-            IsPreloadCalled: IsPreloadCalled,
+            Deactivating: Deactivating,
             IsOnLoadCalled: IsOnLoadCalled,
             IsOnLoadStarted: IsOnLoadStarted,
             IsOnEnableCalled: IsOnEnableCalled,
@@ -18094,19 +21584,18 @@
                 }
             }
             var skipId = obj instanceof cc._BaseNode || obj instanceof cc.Component;
-            var func = "(function(o){\n";
+            var func = "";
             for (key in propsToReset) {
                 if (skipId && "_id" === key) {
                     continue;
                 }
                 var statement;
-                statement = CCClass.VAR_REG.test(key) ? "o." + key + "=" : "o[" + CCClass.escapeForJS(key) + "]=";
+                statement = CCClass.IDENTIFIER_RE.test(key) ? "o." + key + "=" : "o[" + CCClass.escapeForJS(key) + "]=";
                 var val = propsToReset[key];
                 "" === val && (val = '""');
                 func += statement + val + ";\n";
             }
-            func += "})";
-            return cleanEval(func);
+            return Function("o", func);
         }
         prototype._destruct = function() {
             var ctor = this.constructor;
@@ -18129,15 +21618,14 @@
         };
         prototype._deserialize = null;
         cc.isValid = function(value) {
-            return "object" == typeof value ? !(!value || value._objFlags & Destroyed) : "undefined" != typeof value;
+            return "object" === typeof value ? !!value && !(value._objFlags & Destroyed) : "undefined" !== typeof value;
         };
         cc.Object = module.exports = CCObject;
     }, {
-        "../utils/misc": 130,
-        "./CCClass": 108,
-        "./js": 121
+        "./CCClass": 132,
+        "./js": 146
     } ],
-    111: [ function(require, module, exports) {
+    136: [ function(require, module, exports) {
         if (cc.sys) {
             return;
         }
@@ -18212,7 +21700,7 @@
         sys.BROWSER_TYPE_SOUGOU = "sogou";
         sys.BROWSER_TYPE_UNKNOWN = "unknown";
         sys.isNative = false;
-        sys.isBrowser = "object" == typeof window && "object" == typeof document;
+        sys.isBrowser = "object" === typeof window && "object" === typeof document;
         var win = window, nav = win.navigator, doc = document, docEle = doc.documentElement;
         var ua = nav.userAgent.toLowerCase();
         sys.isMobile = /mobile|android|iphone|ipad/.test(ua);
@@ -18247,8 +21735,8 @@
         sys.osMainVersion = osMainVersion;
         sys.browserType = sys.BROWSER_TYPE_UNKNOWN;
         (function() {
-            var typeReg1 = /mqqbrowser|sogou|qzone|liebao|micromessenger|ucbrowser|360 aphone|360browser|baiduboxapp|baidubrowser|maxthon|mxbrowser|trident|miuibrowser/i;
-            var typeReg2 = /qqbrowser|qq|chrome|safari|firefox|opr|oupeng|opera/i;
+            var typeReg1 = /mqqbrowser|micromessenger|qq|sogou|qzone|liebao|maxthon|ucbrowser|360 aphone|360browser|baiduboxapp|baidubrowser|maxthon|mxbrowser|miuibrowser/i;
+            var typeReg2 = /qqbrowser|chrome|safari|firefox|trident|opera|opr|oupeng/i;
             var browserTypes = typeReg1.exec(ua);
             browserTypes || (browserTypes = typeReg2.exec(ua));
             var browserType = browserTypes ? browserTypes[0].toLowerCase() : sys.BROWSER_TYPE_UNKNOWN;
@@ -18257,8 +21745,8 @@
         })();
         sys.browserVersion = "";
         (function() {
-            var versionReg1 = /(micromessenger|qq|maxthon|baidu|sogou)(mobile)?(browser)?\/?([\d.]+)/i;
-            var versionReg2 = /(msie |rv:|firefox|chrome|ucbrowser|oupeng|opera|opr|safari|miui)(mobile)?(browser)?\/?([\d.]+)/i;
+            var versionReg1 = /(mqqbrowser|micromessenger|qq|sogou|qzone|liebao|maxthon|uc|360 aphone|360|baiduboxapp|baidu|maxthon|mxbrowser|miui)(mobile)?(browser)?\/?([\d.]+)/i;
+            var versionReg2 = /(qqbrowser|chrome|safari|firefox|trident|opera|opr|oupeng)(mobile)?(browser)?\/?([\d.]+)/i;
             var tmp = ua.match(versionReg1);
             tmp || (tmp = ua.match(versionReg2));
             sys.browserVersion = tmp ? tmp[4] : "";
@@ -18453,7 +21941,7 @@
         };
         module.exports = sys;
     }, {} ],
-    112: [ function(require, module, exports) {
+    137: [ function(require, module, exports) {
         cc.visibleRect = {
             topLeft: cc.p(0, 0),
             topRight: cc.p(0, 0),
@@ -18491,7 +21979,7 @@
             }
         };
     }, {} ],
-    113: [ function(require, module, exports) {
+    138: [ function(require, module, exports) {
         var ClassManager = cc.ClassManager = {
             id: 0 | 998 * Math.random(),
             instanceId: 0 | 998 * Math.random(),
@@ -18506,7 +21994,7 @@
         var Class = function() {};
         Class.extend = function(props) {
             var _super = this.prototype;
-            var prototype = Object.create(_super);
+            var proto = Object.create(_super);
             var desc = {
                 writable: true,
                 enumerable: false,
@@ -18514,117 +22002,76 @@
             };
             var TheClass;
             if (cc.game && cc.game.config && cc.game.config[cc.game.CONFIG_KEY.exposeClassName]) {
-                var constructor = "(function " + (props._className || "Class") + " (arg0, arg1, arg2, arg3, arg4) {\n";
-                constructor += "    this.__instanceId = ClassManager.getNewInstanceId();\n";
-                constructor += "    if (this.ctor) {\n";
-                constructor += "        switch (arguments.length) {\n";
-                constructor += "        case 0: this.ctor(); break;\n";
-                constructor += "        case 1: this.ctor(arg0); break;\n";
-                constructor += "        case 2: this.ctor(arg0, arg1); break;\n";
-                constructor += "        case 3: this.ctor(arg0, arg1, arg2); break;\n";
-                constructor += "        case 4: this.ctor(arg0, arg1, arg2, arg3); break;\n";
-                constructor += "        case 5: this.ctor(arg0, arg1, arg2, arg3, arg4); break;\n";
-                constructor += "        default: this.ctor.apply(this, arguments);\n";
-                constructor += "        }\n";
-                constructor += "    }\n";
-                constructor += "})";
-                TheClass = eval(constructor);
+                var ctor = "return (function " + (props._className || "Class") + "(arg0,arg1,arg2,arg3,arg4) {\nthis.__instanceId = cc.ClassManager.getNewInstanceId();\nif (this.ctor) {\nswitch (arguments.length) {\ncase 0: this.ctor(); break;\ncase 1: this.ctor(arg0); break;\ncase 2: this.ctor(arg0,arg1); break;\ncase 3: this.ctor(arg0,arg1,arg2); break;\ncase 4: this.ctor(arg0,arg1,arg2,arg3); break;\ncase 5: this.ctor(arg0,arg1,arg2,arg3,arg4); break;\ndefault: this.ctor.apply(this, arguments);\n}\n}\n});";
+                TheClass = Function(ctor)();
             } else {
-                TheClass = function(arg0, arg1, arg2, arg3, arg4) {
+                TheClass = function(...args) {
                     this.__instanceId = ClassManager.getNewInstanceId();
                     if (this.ctor) {
-                        switch (arguments.length) {
+                        switch (args.length) {
                           case 0:
                             this.ctor();
                             break;
 
                           case 1:
-                            this.ctor(arg0);
+                            this.ctor(args[0]);
                             break;
 
                           case 2:
-                            this.ctor(arg0, arg1);
+                            this.ctor(args[0], args[1]);
                             break;
 
                           case 3:
-                            this.ctor(arg0, arg1, arg2);
+                            this.ctor(args[0], args[1], args[2]);
                             break;
 
                           case 4:
-                            this.ctor(arg0, arg1, arg2, arg3);
+                            this.ctor(args[0], args[1], args[2], args[3]);
                             break;
 
                           case 5:
-                            this.ctor(arg0, arg1, arg2, arg3, arg4);
+                            this.ctor(args[0], args[1], args[2], args[3], args[4]);
                             break;
 
                           default:
-                            this.ctor.apply(this, arguments);
+                            this.ctor.apply(this, args);
                         }
                     }
                 };
             }
             desc.value = ClassManager.getNewID();
-            Object.defineProperty(prototype, "__pid", desc);
-            TheClass.prototype = prototype;
+            Object.defineProperty(proto, "__pid", desc);
+            TheClass.prototype = proto;
             desc.value = TheClass;
-            Object.defineProperty(prototype, "constructor", desc);
-            this.__getters__ && (TheClass.__getters__ = cc.clone(this.__getters__));
-            this.__setters__ && (TheClass.__setters__ = cc.clone(this.__setters__));
-            for (var idx = 0, li = arguments.length; idx < li; ++idx) {
-                var prop = arguments[idx];
-                for (var name in prop) {
-                    var isFunc = "function" == typeof prop[name];
-                    var override = "function" == typeof _super[name];
-                    var hasSuperCall = fnTest.test(prop[name]);
-                    if (isFunc && override && hasSuperCall) {
-                        desc.value = function(name, fn) {
-                            return function() {
-                                var tmp = this._super;
-                                this._super = _super[name];
-                                var ret = fn.apply(this, arguments);
-                                this._super = tmp;
-                                return ret;
-                            };
-                        }(name, prop[name]);
-                        Object.defineProperty(prototype, name, desc);
-                    } else {
-                        if (isFunc) {
-                            desc.value = prop[name];
-                            Object.defineProperty(prototype, name, desc);
-                        } else {
-                            prototype[name] = prop[name];
-                        }
-                    }
+            Object.defineProperty(proto, "constructor", desc);
+            for (var name in props) {
+                var isFunc = "function" === typeof props[name];
+                var override = "function" === typeof _super[name];
+                var hasSuperCall = fnTest.test(props[name]);
+                if (isFunc && override && hasSuperCall) {
+                    desc.value = function(name, fn) {
+                        return function(...args) {
+                            var tmp = this._super;
+                            this._super = _super[name];
+                            var ret = fn.apply(this, args);
+                            this._super = tmp;
+                            return ret;
+                        };
+                    }(name, props[name]);
+                    Object.defineProperty(proto, name, desc);
+                } else {
                     if (isFunc) {
-                        var getter, setter, propertyName;
-                        if (this.__getters__ && this.__getters__[name]) {
-                            propertyName = this.__getters__[name];
-                            for (var i in this.__setters__) {
-                                if (this.__setters__[i] === propertyName) {
-                                    setter = i;
-                                    break;
-                                }
-                            }
-                            cc.defineGetterSetter(prototype, propertyName, prop[name], prop[setter] ? prop[setter] : prototype[setter], name, setter);
-                        }
-                        if (this.__setters__ && this.__setters__[name]) {
-                            propertyName = this.__setters__[name];
-                            for (var i in this.__getters__) {
-                                if (this.__getters__[i] === propertyName) {
-                                    getter = i;
-                                    break;
-                                }
-                            }
-                            cc.defineGetterSetter(prototype, propertyName, prop[getter] ? prop[getter] : prototype[getter], prop[name], getter, name);
-                        }
+                        desc.value = props[name];
+                        Object.defineProperty(proto, name, desc);
+                    } else {
+                        proto[name] = props[name];
                     }
                 }
             }
             TheClass.extend = Class.extend;
             TheClass.implement = function(prop) {
                 for (var name in prop) {
-                    prototype[name] = prop[name];
+                    proto[name] = prop[name];
                 }
             };
             return TheClass;
@@ -18649,13 +22096,13 @@
             var newObj = obj.constructor ? new obj.constructor() : {};
             for (var key in obj) {
                 var copy = obj[key];
-                "object" != typeof copy || !copy || copy instanceof _ccsg.Node || false ? newObj[key] = copy : newObj[key] = cc.clone(copy);
+                "object" !== typeof copy || !copy || copy instanceof _ccsg.Node || false ? newObj[key] = copy : newObj[key] = cc.clone(copy);
             }
             return newObj;
         };
         cc._Class = module.exports = Class;
     }, {} ],
-    114: [ function(require, module, exports) {
+    139: [ function(require, module, exports) {
         var JS = require("./js");
         var isPlainEmptyObj = require("./utils").isPlainEmptyObj_DEV;
         function createAttrsSingle(owner, ownerCtor, superAttrs) {
@@ -18674,7 +22121,7 @@
             var chains = cc.Class.getInheritanceChain(subclass);
             for (var i = chains.length - 1; i >= 0; i--) {
                 var cls = chains[i];
-                var attrs = cls.__attrs__;
+                var attrs = cls.hasOwnProperty("__attrs__") && cls.__attrs__;
                 if (!attrs) {
                     superClass = chains[i + 1];
                     createAttrsSingle(cls, cls, superClass && superClass.__attrs__);
@@ -18687,20 +22134,20 @@
         var DELIMETER = "$_$";
         function attr(ctor, propName, newAttrs) {
             var attrs, setter, key;
-            if ("function" == typeof ctor) {
-                attrs = ctor.__attrs__ || createAttrs(ctor);
+            if ("function" === typeof ctor) {
+                attrs = getClassAttrs(ctor);
                 setter = attrs.constructor.prototype;
             } else {
                 var instance = ctor;
                 attrs = instance.__attrs__;
                 if (!attrs) {
                     ctor = instance.constructor;
-                    var clsAttrs = ctor.__attrs__ || createAttrs(ctor);
+                    var clsAttrs = getClassAttrs(ctor);
                     attrs = createAttrsSingle(instance, ctor, clsAttrs);
                 }
                 setter = attrs;
             }
-            if ("undefined" == typeof newAttrs) {
+            if ("undefined" === typeof newAttrs) {
                 var prefix = propName + DELIMETER;
                 var ret = {};
                 for (key in attrs) {
@@ -18708,17 +22155,17 @@
                 }
                 return ret;
             }
-            if ("object" == typeof newAttrs) {
+            if ("object" === typeof newAttrs) {
                 for (key in newAttrs) {
                     95 !== key.charCodeAt(0) && (setter[propName + DELIMETER + key] = newAttrs[key]);
                 }
             }
         }
         function getClassAttrs(ctor) {
-            return ctor.__attrs__ || createAttrs(ctor);
+            return ctor.hasOwnProperty("__attrs__") && ctor.__attrs__ || createAttrs(ctor);
         }
         function setClassAttr(ctor, propName, key, value) {
-            var attrs = ctor.__attrs__ || createAttrs(ctor);
+            var attrs = getClassAttrs(ctor);
             attrs.constructor.prototype[propName + DELIMETER + key] = value;
         }
         cc.Integer = "Integer";
@@ -18765,10 +22212,11 @@
             ScriptUuid: {}
         };
     }, {
-        "./js": 121,
-        "./utils": 126
+        "./CCClass": 132,
+        "./js": 146,
+        "./utils": 151
     } ],
-    115: [ function(require, module, exports) {
+    140: [ function(require, module, exports) {
         var JS = require("./js");
         var CallbacksHandler = function() {
             this._callbackTable = {};
@@ -18800,11 +22248,11 @@
         };
         CallbacksHandler.prototype.add = function(key, callback, target) {
             var list = this._callbackTable[key];
-            if ("undefined" != typeof list) {
-                "object" == typeof target ? list.push(callback, target) : list.push(callback);
+            if ("undefined" !== typeof list) {
+                "object" === typeof target ? list.push(callback, target) : list.push(callback);
                 return false;
             }
-            list = "object" == typeof target ? [ callback, target ] : [ callback ];
+            list = "object" === typeof target ? [ callback, target ] : [ callback ];
             this._callbackTable[key] = list;
             return true;
         };
@@ -18827,13 +22275,13 @@
                 }
                 return list.length > 0;
             }
-            if ("function" != typeof callback) {
+            if ("function" !== typeof callback) {
                 return false;
             }
             index = list.indexOf(callback);
             while (index !== -1) {
                 callbackTarget = list[index + 1];
-                "object" != typeof callbackTarget && (callbackTarget = void 0);
+                "object" !== typeof callbackTarget && (callbackTarget = void 0);
                 if (callbackTarget === target) {
                     return true;
                 }
@@ -18846,14 +22294,14 @@
                 this._toRemoveAll = key;
                 return;
             }
-            if ("object" == typeof key) {
+            if ("object" === typeof key) {
                 var target = key, list, index, callback;
                 for (key in this._callbackTable) {
                     list = this._callbackTable[key];
                     index = list.lastIndexOf(target);
                     while (index !== -1) {
                         callback = list[index - 1];
-                        "function" == typeof callback ? list.splice(index - 1, 2) : list.splice(index, 1);
+                        "function" === typeof callback ? list.splice(index - 1, 2) : list.splice(index, 1);
                         index = list.lastIndexOf(target);
                     }
                 }
@@ -18868,7 +22316,7 @@
                 index = list.indexOf(callback);
                 while (index !== -1) {
                     callbackTarget = list[index + 1];
-                    "object" != typeof callbackTarget && (callbackTarget = void 0);
+                    "object" !== typeof callbackTarget && (callbackTarget = void 0);
                     if (callbackTarget === target) {
                         list[index] = REMOVE_PLACEHOLDER;
                         callbackTarget && (list[index + 1] = REMOVE_PLACEHOLDER);
@@ -18895,7 +22343,7 @@
                     var increment = 1;
                     if (callingFunc !== REMOVE_PLACEHOLDER) {
                         var target = list[i + 1];
-                        var hasTarget = target && "object" == typeof target;
+                        var hasTarget = target && "object" === typeof target;
                         if (hasTarget) {
                             callingFunc.call(target, p1, p2, p3, p4, p5);
                             increment = 2;
@@ -18918,7 +22366,7 @@
                     increment = 1;
                     if (callingFunc !== REMOVE_PLACEHOLDER) {
                         target = list[i + 1];
-                        if (target && "object" == typeof target) {
+                        if (target && "object" === typeof target) {
                             callingFunc.call(target, p1, p2, p3, p4, p5);
                             increment = 2;
                         } else {
@@ -18939,7 +22387,7 @@
                 if (list) {
                     for (i = 0, l = list.length; i < l; ) {
                         target = list[i + 1];
-                        if (target && "object" == typeof target) {
+                        if (target && "object" === typeof target) {
                             list[i].call(target, p1, p2, p3, p4, p5);
                             i += 2;
                         } else {
@@ -18954,14 +22402,13 @@
         CallbacksInvoker.CallbacksHandler = CallbacksHandler;
         module.exports = CallbacksInvoker;
     }, {
-        "./js": 121
+        "./js": 146
     } ],
-    116: [ function(require, module, exports) {
+    141: [ function(require, module, exports) {
         var JS = require("./js");
         var CCObject = require("./CCObject");
         var Attr = require("./attribute");
         var CCClass = require("./CCClass");
-        var cleanEval = require("../utils/misc").cleanEval;
         var Details = function() {
             this.uuidList = [];
             this.uuidObjList = [];
@@ -19029,7 +22476,7 @@
             var prototype = _Deserializer.prototype;
             prototype._deserializeObjField = function(obj, jsonObj, propName, target) {
                 var id = jsonObj.__id__;
-                if ("undefined" == typeof id) {
+                if ("undefined" === typeof id) {
                     var uuid = jsonObj.__uuid__;
                     if (uuid) {
                         this.result.uuidList.push(uuid);
@@ -19054,7 +22501,7 @@
                 for (var propName in serialized) {
                     if (serialized.hasOwnProperty(propName)) {
                         var prop = serialized[propName];
-                        "object" != typeof prop ? "__type__" !== propName && (instance[propName] = prop) : prop ? self._deserializeObjField(instance, prop, propName) : instance[propName] = null;
+                        "object" !== typeof prop ? "__type__" !== propName && (instance[propName] = prop) : prop ? self._deserializeObjField(instance, prop, propName) : instance[propName] = null;
                     }
                 }
             };
@@ -19064,7 +22511,7 @@
                 for (var i = 0; i < fastDefinedProps.length; i++) {
                     var propName = fastDefinedProps[i];
                     var prop = serialized[propName];
-                    "undefined" != typeof prop && serialized.hasOwnProperty(propName) && ("object" != typeof prop ? instance[propName] = prop : prop ? self._deserializeObjField(instance, prop, propName) : instance[propName] = null);
+                    "undefined" !== typeof prop && serialized.hasOwnProperty(propName) && ("object" !== typeof prop ? instance[propName] = prop : prop ? self._deserializeObjField(instance, prop, propName) : instance[propName] = null);
                 }
             }
             function compileDeserialize(self, klass) {
@@ -19073,13 +22520,13 @@
                 var SERIALIZABLE = Attr.DELIMETER + "serializable";
                 var attrs = Attr.getClassAttrs(klass);
                 var props = klass.__props__;
-                var sources = [ "(function(s,o,d,k,t){", "var prop;" ];
+                var sources = [ "var prop;" ];
                 for (var p = 0; p < props.length; p++) {
                     var propName = props[p];
                     var propNameLiteral;
                     var rawType = attrs[propName + RAW_TYPE];
                     if (rawType) {
-                        propNameLiteral = CCClass.VAR_REG.test(propName) ? '"' + propName + '"' : CCClass.escapeForJS(propName);
+                        propNameLiteral = CCClass.IDENTIFIER_RE.test(propName) ? '"' + propName + '"' : CCClass.escapeForJS(propName);
                         sources.push('if(s.result.rawProp)\ncc.error("not support multi raw object in a file");');
                         sources.push("s.result.rawProp=" + propNameLiteral + ";");
                     } else {
@@ -19088,7 +22535,7 @@
                             continue;
                         }
                         var accessor;
-                        if (CCClass.VAR_REG.test(propName)) {
+                        if (CCClass.IDENTIFIER_RE.test(propName)) {
                             propNameLiteral = '"' + propName + '"';
                             accessor = "." + propName;
                         } else {
@@ -19107,8 +22554,7 @@
                     sources.push("o._$erialized=JSON.parse(JSON.stringify(d));");
                     sources.push("s._deserializePrimitiveObject(o._$erialized,d);");
                 }
-                sources.push("})");
-                return cleanEval(sources.join(""));
+                return Function("s", "o", "d", "k", "t", sources.join(""));
             }
             function unlinkUnusedPrefab(self, serialized, obj) {
                 var uuid = serialized["asset"] && serialized["asset"].__uuid__;
@@ -19175,7 +22621,7 @@
                         obj = new Array(serialized.length);
                         for (var i = 0; i < serialized.length; i++) {
                             prop = serialized[i];
-                            "object" == typeof prop && prop ? self._deserializeObjField(obj, prop, "" + i) : obj[i] = prop;
+                            "object" === typeof prop && prop ? self._deserializeObjField(obj, prop, "" + i) : obj[i] = prop;
                         }
                     } else {
                         obj = {};
@@ -19193,7 +22639,7 @@
             var target = false;
             var customEnv = options.customEnv;
             var ignoreEditorOnly = options.ignoreEditorOnly;
-            "string" == typeof data && (data = JSON.parse(data));
+            "string" === typeof data && (data = JSON.parse(data));
             createAssetRefs && !result && (result = new Details());
             cc.game._isCloning = true;
             var deserializer = new _Deserializer(data, result, target, classFinder, customEnv, ignoreEditorOnly);
@@ -19206,17 +22652,16 @@
             cc.warnID(5302, id);
         };
     }, {
-        "../utils/misc": 130,
-        "./CCClass": 108,
-        "./CCObject": 110,
-        "./attribute": 114,
-        "./js": 121
+        "./CCClass": 132,
+        "./CCObject": 135,
+        "./attribute": 139,
+        "./js": 146
     } ],
-    117: [ function(require, module, exports) {
+    142: [ function(require, module, exports) {
         var NonUuidMark = ".";
         function IdGenerater(category) {
             this.id = 0 | 998 * Math.random();
-            this.prefix = category ? "" + category + NonUuidMark : "";
+            this.prefix = category ? category + NonUuidMark : "";
         }
         IdGenerater.prototype.getNewId = function() {
             return this.prefix + ++this.id;
@@ -19224,9 +22669,10 @@
         IdGenerater.global = new IdGenerater("global");
         module.exports = IdGenerater;
     }, {} ],
-    118: [ function(require, module, exports) {
+    143: [ function(require, module, exports) {
         require("./js");
         require("./CCClass");
+        require("./CCClassDecorator");
         require("./CCObject");
         require("./callbacks-invoker");
         require("./url");
@@ -19238,32 +22684,32 @@
         require("./CCMacro");
         require("./CCAssetLibrary");
     }, {
-        "./CCAssetLibrary": 107,
-        "./CCClass": 108,
-        "./CCMacro": 109,
-        "./CCObject": 110,
-        "./CCSys": 111,
-        "./CCVisibleRect": 112,
-        "./callbacks-invoker": 115,
-        "./deserialize": 116,
-        "./instantiate": 120,
-        "./instantiate-jit": 119,
-        "./js": 121,
-        "./miniFramework": 122,
-        "./requiring-frame": 124,
-        "./url": 125
+        "./CCAssetLibrary": 131,
+        "./CCClass": 132,
+        "./CCClassDecorator": 133,
+        "./CCMacro": 134,
+        "./CCObject": 135,
+        "./CCSys": 136,
+        "./CCVisibleRect": 137,
+        "./callbacks-invoker": 140,
+        "./deserialize": 141,
+        "./instantiate": 145,
+        "./instantiate-jit": 144,
+        "./js": 146,
+        "./miniFramework": 147,
+        "./requiring-frame": 149,
+        "./url": 150
     } ],
-    119: [ function(require, module, exports) {
+    144: [ function(require, module, exports) {
         var CCObject = require("./CCObject");
         var Destroyed = CCObject.Flags.Destroyed;
         var PersistentMask = CCObject.Flags.PersistentMask;
         var Attr = require("./attribute");
         var JS = require("./js");
-        var cleanEval = require("../utils/misc").cleanEval;
         var CCClass = require("./CCClass");
         var SERIALIZABLE = Attr.DELIMETER + "serializable";
         var DEFAULT = Attr.DELIMETER + "default";
-        var VAR_REG = CCClass.VAR_REG;
+        var IDENTIFIER_RE = CCClass.IDENTIFIER_RE;
         var escapeForJS = CCClass.escapeForJS;
         var VAR = "var ";
         var LOCAL_OBJ = "o";
@@ -19279,7 +22725,7 @@
             return expression instanceof Declaration ? new Declaration(expression.varName, statement + expression.expression) : statement + expression;
         }
         function equalsToDefault(def, value) {
-            if ("function" == typeof def) {
+            if ("function" === typeof def) {
                 try {
                     def = def();
                 } catch (e) {
@@ -19328,8 +22774,8 @@
             this.enumerateObject(this.codeArray, obj);
             var globalVariablesDeclaration;
             this.globalVariables.length > 0 && (globalVariablesDeclaration = VAR + this.globalVariables.join(",") + ";");
-            var code = flattenCodeArray([ "(function(O,F,R){", globalVariablesDeclaration || [], this.codeArray, "return o;})" ], "");
-            var createFunction = cleanEval(code);
+            var code = flattenCodeArray([ globalVariablesDeclaration || [], this.codeArray, "return o;" ], "");
+            var createFunction = Function("O", "F", "R", code);
             this.result = createFunction.bind(null, this.objs, this.funcs);
             for (var i = 0, len = this.objsToClear_iN$t.length; i < len; ++i) {
                 this.objsToClear_iN$t[i]._iN$t = null;
@@ -19342,7 +22788,7 @@
                 var clsNameIsModule = clsName.indexOf(".") !== -1;
                 if (clsNameIsModule) {
                     try {
-                        clsNameIsModule = func === cleanEval(clsName);
+                        clsNameIsModule = func === Function("return " + clsName)();
                         if (clsNameIsModule) {
                             return clsName;
                         }
@@ -19397,7 +22843,7 @@
                 return codeArray;
             },
             enumerateField: function(obj, key, value) {
-                if ("object" == typeof value && value) {
+                if ("object" === typeof value && value) {
                     var _iN$t = value._iN$t;
                     if (_iN$t) {
                         var globalVar = _iN$t.globalVar;
@@ -19411,10 +22857,10 @@
                     }
                     return Array.isArray(value) ? this.instantiateArray(value) : this.instantiateObj(value);
                 }
-                if ("function" == typeof value) {
+                if ("function" === typeof value) {
                     return this.getFuncModule(value);
                 }
-                if ("string" == typeof value) {
+                if ("string" === typeof value) {
                     return escapeForJS(value);
                 }
                 "_objFlags" === key && obj instanceof CCObject && (value &= PersistentMask);
@@ -19422,7 +22868,7 @@
             },
             writeObjectField: function(codeArray, obj, key, value) {
                 var statement;
-                statement = VAR_REG.test(key) ? LOCAL_OBJ + "." + key + "=" : LOCAL_OBJ + "[" + escapeForJS(key) + "]=";
+                statement = IDENTIFIER_RE.test(key) ? LOCAL_OBJ + "." + key + "=" : LOCAL_OBJ + "[" + escapeForJS(key) + "]=";
                 this.writeFiled(codeArray, statement, obj, key, value);
             },
             writeFiled: function(codeArray, statement, obj, key, value) {
@@ -19444,7 +22890,7 @@
                             continue;
                         }
                         var value = obj[key];
-                        if ("object" == typeof value && value && value === obj._iN$t) {
+                        if ("object" === typeof value && value && value === obj._iN$t) {
                             continue;
                         }
                         this.writeObjectField(codeArray, obj, key, value);
@@ -19510,20 +22956,19 @@
             equalsToDefault: equalsToDefault
         };
     }, {
-        "../utils/misc": 130,
-        "./CCClass": 108,
-        "./CCObject": 110,
-        "./attribute": 114,
-        "./js": 121
+        "./CCClass": 132,
+        "./CCObject": 135,
+        "./attribute": 139,
+        "./js": 146
     } ],
-    120: [ function(require, module, exports) {
+    145: [ function(require, module, exports) {
         var CCObject = require("./CCObject");
         var Destroyed = CCObject.Flags.Destroyed;
         var PersistentMask = CCObject.Flags.PersistentMask;
         var Attr = require("./attribute");
         var _isDomNode = require("./utils").isDomNode;
         function instantiate(original) {
-            if ("object" != typeof original || Array.isArray(original)) {
+            if ("object" !== typeof original || Array.isArray(original)) {
                 return null;
             }
             if (!original) {
@@ -19576,7 +23021,7 @@
                 var key = props[p];
                 if (false !== attrs[key + SERIALIZABLE]) {
                     var value = obj[key];
-                    "object" == typeof value && value ? clone[key] = value._iN$t || instantiateObj(value, parent) : clone[key] = value;
+                    "object" === typeof value && value ? clone[key] = value._iN$t || instantiateObj(value, parent) : clone[key] = value;
                 }
             }
         }
@@ -19592,7 +23037,7 @@
                         continue;
                     }
                     var value = obj[key];
-                    if ("object" == typeof value && value) {
+                    if ("object" === typeof value && value) {
                         if (value === clone) {
                             continue;
                         }
@@ -19618,7 +23063,7 @@
                 obj._iN$t = clone;
                 for (var i = 0; i < len; ++i) {
                     var value = obj[i];
-                    "object" == typeof value && value ? clone[i] = value._iN$t || instantiateObj(value, parent) : clone[i] = value;
+                    "object" === typeof value && value ? clone[i] = value._iN$t || instantiateObj(value, parent) : clone[i] = value;
                 }
                 objsToClearTmpVar.push(obj);
                 return clone;
@@ -19660,11 +23105,12 @@
         cc.instantiate = instantiate;
         module.exports = instantiate;
     }, {
-        "./CCObject": 110,
-        "./attribute": 114,
-        "./utils": 126
+        "./CCObject": 135,
+        "./attribute": 139,
+        "./utils": 151
     } ],
-    121: [ function(require, module, exports) {
+    146: [ function(require, module, exports) {
+        var tempCIDGenerater = new (require("./id-generater"))("cc.TmpCId.");
         function _getPropertyDescriptor(obj, name) {
             while (obj) {
                 var pd = Object.getOwnPropertyDescriptor(obj, name);
@@ -19681,18 +23127,17 @@
         }
         var js = {
             isNumber: function(obj) {
-                return "number" == typeof obj || obj instanceof Number;
+                return "number" === typeof obj || obj instanceof Number;
             },
             isString: function(obj) {
-                return "string" == typeof obj || obj instanceof String;
+                return "string" === typeof obj || obj instanceof String;
             },
-            addon: function(obj) {
-                "use strict";
+            addon: function(obj, ...args) {
                 obj = obj || {};
-                for (var i = 1, length = arguments.length; i < length; i++) {
-                    var source = arguments[i];
+                for (var i = 0, length = args.length; i < length; i++) {
+                    var source = args[i];
                     if (source) {
-                        if ("object" != typeof source) {
+                        if ("object" !== typeof source) {
                             cc.errorID(5402, source);
                             continue;
                         }
@@ -19703,13 +23148,12 @@
                 }
                 return obj;
             },
-            mixin: function(obj) {
-                "use strict";
+            mixin: function(obj, ...args) {
                 obj = obj || {};
-                for (var i = 1, length = arguments.length; i < length; i++) {
-                    var source = arguments[i];
+                for (var i = 0, length = args.length; i < length; i++) {
+                    var source = args[i];
                     if (source) {
-                        if ("object" != typeof source) {
+                        if ("object" !== typeof source) {
                             cc.errorID(5403, source);
                             continue;
                         }
@@ -19724,9 +23168,22 @@
                 for (var p in base) {
                     base.hasOwnProperty(p) && (cls[p] = base[p]);
                 }
-                cls.prototype = Object.create(base.prototype);
-                cls.prototype.constructor = cls;
+                cls.prototype = Object.create(base.prototype, {
+                    constructor: {
+                        value: cls,
+                        writable: true,
+                        configurable: true
+                    }
+                });
                 return cls;
+            },
+            getSuper: function(ctor) {
+                if (ctor.$super) {
+                    return ctor.$super;
+                }
+                var proto = ctor.prototype;
+                var dunderProto = proto && Object.getPrototypeOf(proto);
+                return dunderProto && dunderProto.constructor;
             },
             clear: function(obj) {
                 var keys = Object.keys(obj);
@@ -19736,34 +23193,29 @@
             },
             getPropertyDescriptor: _getPropertyDescriptor
         };
-        js.getClassName = function(obj) {
-            if ("function" == typeof obj) {
-                if (obj.prototype.__classname__) {
-                    return obj.prototype.__classname__;
+        js.getClassName = function(objOrCtor) {
+            if ("function" === typeof objOrCtor) {
+                var prototype = objOrCtor.prototype;
+                if (prototype && prototype.hasOwnProperty("__classname__") && prototype.__classname__) {
+                    return prototype.__classname__;
                 }
-            } else {
-                if (obj && obj.constructor) {
-                    if (obj.constructor.prototype && obj.constructor.prototype.hasOwnProperty("__classname__")) {
-                        return obj.__classname__;
-                    }
-                    var retval;
-                    obj.constructor.name && (retval = obj.constructor.name);
-                    if (obj.constructor.toString) {
-                        var arr, str = obj.constructor.toString();
-                        arr = "[" === str.charAt(0) ? str.match(/\[\w+\s*(\w+)\]/) : str.match(/function\s*(\w+)/);
-                        arr && 2 === arr.length && (retval = arr[1]);
-                    }
-                    return "Object" !== retval ? retval : "";
+                var retval = "";
+                objOrCtor.name && (retval = objOrCtor.name);
+                if (objOrCtor.toString) {
+                    var arr, str = objOrCtor.toString();
+                    arr = "[" === str.charAt(0) ? str.match(/\[\w+\s*(\w+)\]/) : str.match(/function\s*(\w+)/);
+                    arr && 2 === arr.length && (retval = arr[1]);
                 }
+                return "Object" !== retval ? retval : "";
+            }
+            if (objOrCtor && objOrCtor.constructor) {
+                return js.getClassName(objOrCtor.constructor);
             }
             return "";
         };
-        var TCID_PREFIX = "cc.TmpCId.";
-        var id = 0;
-        function getTempCID() {
-            return TCID_PREFIX + id++;
+        function isTempClassId_DEV(id) {
+            return "string" !== typeof id || id.startsWith(tempCIDGenerater.prefix);
         }
-        var isTempClassId = false;
         (function() {
             var _idToClass = {};
             var _nameToClass = {};
@@ -19787,14 +23239,13 @@
             js.setClassName = function(className, constructor) {
                 doSetClassName(className, constructor);
                 if (!constructor.prototype.hasOwnProperty("__cid__")) {
-                    var id = className || getTempCID();
+                    var id = className || tempCIDGenerater.getNewId();
                     id && js._setClassId(id, constructor);
                 }
             };
-            js.unregisterClass = function(constructor) {
-                "use strict";
-                for (var i = 0; i < arguments.length; i++) {
-                    var p = arguments[i].prototype;
+            js.unregisterClass = function(...args) {
+                for (var i = 0; i < args.length; i++) {
+                    var p = args[i].prototype;
                     var classId = p.__cid__;
                     classId && delete _idToClass[classId];
                     var classname = p.__classname__;
@@ -19808,11 +23259,11 @@
                 return _nameToClass[classname];
             };
             js._getClassId = function(obj, allowTempId) {
-                allowTempId = "undefined" == typeof allowTempId || allowTempId;
+                allowTempId = "undefined" === typeof allowTempId || allowTempId;
                 var res;
-                if ("function" == typeof obj && obj.prototype.hasOwnProperty("__cid__")) {
+                if ("function" === typeof obj && obj.prototype.hasOwnProperty("__cid__")) {
                     res = obj.prototype.__cid__;
-                    if (!allowTempId && false && isTempClassId(res)) {
+                    if (!allowTempId && false && isTempClassId_DEV(res)) {
                         return "";
                     }
                     return res;
@@ -19821,7 +23272,7 @@
                     var prototype = obj.constructor.prototype;
                     if (prototype && prototype.hasOwnProperty("__cid__")) {
                         res = obj.__cid__;
-                        if (!allowTempId && false && isTempClassId(res)) {
+                        if (!allowTempId && false && isTempClassId_DEV(res)) {
                             return "";
                         }
                         return res;
@@ -19831,7 +23282,7 @@
             };
         })();
         js.getset = function(obj, prop, getter, setter, enumerable) {
-            if ("function" != typeof setter) {
+            if ("function" !== typeof setter) {
                 enumerable = setter;
                 setter = void 0;
             }
@@ -19868,8 +23319,7 @@
                 js.obsolete(obj, objName + "." + obsoleted, newName, writable);
             }
         };
-        js.formatStr = function() {
-            var args = arguments;
+        js.formatStr = function(...args) {
             var l = args.length;
             if (l < 1) {
                 return "";
@@ -19877,12 +23327,12 @@
             var REGEXP_NUM_OR_STR = /(%d)|(%s)/;
             var i = 1;
             var str = args[0];
-            var hasSubstitution = "string" == typeof str && REGEXP_NUM_OR_STR.test(str);
+            var hasSubstitution = "string" === typeof str && REGEXP_NUM_OR_STR.test(str);
             if (hasSubstitution) {
                 var REGEXP_STR = /%s/;
                 for (;i < l; ++i) {
                     var arg = args[i];
-                    var regExpToTest = "number" == typeof arg ? REGEXP_NUM_OR_STR : REGEXP_STR;
+                    var regExpToTest = "number" === typeof arg ? REGEXP_NUM_OR_STR : REGEXP_STR;
                     regExpToTest.test(str) ? str = str.replace(regExpToTest, arg) : str += " " + arg;
                 }
             } else {
@@ -19909,7 +23359,7 @@
         }
         function remove(array, value) {
             var index = array.indexOf(value);
-            if (index !== -1) {
+            if (index >= 0) {
                 removeAt(array, index);
                 return true;
             }
@@ -19917,7 +23367,7 @@
         }
         function fastRemove(array, value) {
             var index = array.indexOf(value);
-            if (index !== -1) {
+            if (index >= 0) {
                 array[index] = array[array.length - 1];
                 --array.length;
             }
@@ -19944,7 +23394,7 @@
         }
         var indexOf = Array.prototype.indexOf;
         function contains(array, value) {
-            return indexOf.call(array, value) !== -1;
+            return indexOf.call(array, value) >= 0;
         }
         function copy(array) {
             var i, len = array.length, arr_clone = new Array(len);
@@ -19969,9 +23419,10 @@
         cc.js = js;
         module.exports = js;
     }, {
-        "../utils/mutable-forward-iterator": 131
+        "../utils/mutable-forward-iterator": 157,
+        "./id-generater": 142
     } ],
-    122: [ function(require, module, exports) {
+    147: [ function(require, module, exports) {
         cc.$ = function(x) {
             var parent = this === cc ? document : this;
             var el = x instanceof HTMLElement ? x : parent.querySelector(x);
@@ -20105,12 +23556,12 @@
             };
         };
     }, {} ],
-    123: [ function(require, module, exports) {
+    148: [ function(require, module, exports) {
         var SerializableAttrs = {
             url: {
                 canUsedInGet: true
             },
-            "default": {},
+            default: {},
             serializable: {},
             editorOnly: {},
             rawType: {}
@@ -20163,37 +23614,42 @@
         function getBaseClassWherePropertyDefined_DEV(propName, cls) {
             var res;
         }
-        module.exports.preprocessAttrs = function(properties, className, cls) {
+        exports.getFullFormOfProperty = function(options) {
+            var isLiteral = options && options.constructor === Object;
+            if (!isLiteral) {
+                if (Array.isArray(options) && options.length > 0) {
+                    return {
+                        default: [],
+                        type: options,
+                        _short: true
+                    };
+                }
+                if ("function" === typeof options) {
+                    var type = options;
+                    return cc.RawAsset.isRawAssetType(type) ? {
+                        default: "",
+                        url: type,
+                        _short: true
+                    } : {
+                        default: cc.isChildClassOf(type, cc.ValueType) ? new type() : null,
+                        type: type,
+                        _short: true
+                    };
+                }
+                return {
+                    default: options,
+                    _short: true
+                };
+            }
+            return null;
+        };
+        exports.preprocessAttrs = function(properties, className, cls, es6) {
             for (var propName in properties) {
                 var val = properties[propName];
-                var isLiteral = val && val.constructor === Object;
-                if (!isLiteral) {
-                    if (Array.isArray(val) && val.length > 0) {
-                        val = {
-                            "default": [],
-                            type: val
-                        };
-                    } else {
-                        if ("function" == typeof val) {
-                            var type = val;
-                            val = cc.RawAsset.isRawAssetType(type) ? {
-                                "default": "",
-                                url: type
-                            } : cc.isChildClassOf(type, cc.ValueType) ? {
-                                "default": new type()
-                            } : {
-                                "default": null,
-                                type: val
-                            };
-                        } else {
-                            val = {
-                                "default": val
-                            };
-                        }
-                    }
-                    properties[propName] = val;
-                }
+                var fullForm = exports.getFullFormOfProperty(val);
+                fullForm && (val = properties[propName] = fullForm);
                 if (val) {
+                    var maybeTypeScript;
                     var baseClass;
                     var notify = val.notify;
                     notify && parseNotify(val, propName, notify, properties);
@@ -20204,7 +23660,7 @@
             }
         };
         module.exports.validateMethod = function(func, funcName, className, cls, base) {
-            if ("function" != typeof func && null !== func) {
+            if ("function" !== typeof func && null !== func) {
                 var overrided;
                 var baseFuc;
                 var subFuc;
@@ -20215,13 +23671,13 @@
             return true;
         };
     }, {
-        "./CCClass": 108
+        "./CCClass": 132
     } ],
-    124: [ function(require, module, exports) {
+    149: [ function(require, module, exports) {
         var requiringFrames = [];
         cc._RF = {
             push: function(module, uuid, script) {
-                if (2 === arguments.length) {
+                if (void 0 === script) {
                     script = uuid;
                     uuid = "";
                 }
@@ -20241,7 +23697,7 @@
                     for (var anyKey in exports) {
                         return;
                     }
-                    module.exports = exports = frameInfo.beh;
+                    module.exports = exports = frameInfo.cls;
                 }
             },
             peek: function() {
@@ -20252,7 +23708,7 @@
         cc._RFpop = cc._RF.pop;
         cc._RFpeek = cc._RF.peek;
     }, {} ],
-    125: [ function(require, module, exports) {
+    150: [ function(require, module, exports) {
         var _mounts = {};
         cc.url = {
             _rawAssets: "",
@@ -20279,7 +23735,7 @@
         };
         module.exports = cc.url;
     }, {} ],
-    126: [ function(require, module, exports) {
+    151: [ function(require, module, exports) {
         module.exports = {
             contains: function(refNode, otherNode) {
                 if ("function" == typeof refNode.contains) {
@@ -20297,10 +23753,10 @@
                 } while (null !== node);
                 return false;
             },
-            isDomNode: "object" == typeof window && ("function" == typeof Node ? function(obj) {
+            isDomNode: "object" === typeof window && ("function" === typeof Node ? function(obj) {
                 return obj instanceof Node;
             } : function(obj) {
-                return obj && "object" == typeof obj && "number" == typeof obj.nodeType && "string" == typeof obj.nodeName;
+                return obj && "object" === typeof obj && "number" === typeof obj.nodeType && "string" === typeof obj.nodeName;
             }),
             callInNextTick: function(callback, p1, p2) {
                 callback && cc.director.once(cc.Director._EVENT_NEXT_TICK, function() {
@@ -20309,7 +23765,7 @@
             }
         };
     }, {} ],
-    127: [ function(require, module, exports) {
+    152: [ function(require, module, exports) {
         require("../platform/CCSys");
         var EXTNAME_RE = /(\.[^\.\/\?\\]*)(\?.*)?$/;
         var NORMALIZE_RE = /[^\.\/]+\/\.\.\//;
@@ -20392,10 +23848,10 @@
             sep: cc.sys.os === cc.sys.OS_WINDOWS ? "\\" : "/",
             _setEndWithSep: function(path, endsWithSep) {
                 var sep = cc.path.sep;
-                if ("undefined" == typeof endsWithSep) {
+                if ("undefined" === typeof endsWithSep) {
                     endsWithSep = true;
                 } else {
-                    if ("string" == typeof endsWithSep) {
+                    if ("string" === typeof endsWithSep) {
                         sep = endsWithSep;
                         endsWithSep = !!endsWithSep;
                     }
@@ -20408,48 +23864,85 @@
         };
         module.exports = cc.path;
     }, {
-        "../platform/CCSys": 111
+        "../platform/CCSys": 136
     } ],
-    128: [ function(require, module, exports) {
-        var SgHelper = require("./scene-graph-helper");
-        var Destroying = require("../platform/CCObject").Flags.Destroying;
+    153: [ function(require, module, exports) {
+        var Flags = require("../platform/CCObject").Flags;
         var Misc = require("./misc");
         var IdGenerater = require("../platform/id-generater");
-        function updateOrder(node) {
-            var parent = node._parent;
-            parent._delaySort();
-        }
-        var POSITION_CHANGED = "position-changed";
-        var SIZE_CHANGED = "size-changed";
-        var ANCHOR_CHANGED = "anchor-changed";
+        var JS = cc.js;
+        var Destroying = Flags.Destroying;
+        var DontDestroy = Flags.DontDestroy;
         var CHILD_ADDED = "child-added";
         var CHILD_REMOVED = "child-removed";
-        var CHILD_REORDER = "child-reorder";
-        var ERR_INVALID_NUMBER = false;
         var idGenerater = new IdGenerater("Node");
+        function getConstructor(typeOrClassName) {
+            if (!typeOrClassName) {
+                cc.errorID(3804);
+                return null;
+            }
+            if ("string" === typeof typeOrClassName) {
+                return JS.getClassByName(typeOrClassName);
+            }
+            return typeOrClassName;
+        }
+        function findComponent(node, constructor) {
+            for (var i = 0; i < node._components.length; ++i) {
+                var comp = node._components[i];
+                if (comp instanceof constructor) {
+                    return comp;
+                }
+            }
+            return null;
+        }
+        function findComponents(node, constructor, components) {
+            for (var i = 0; i < node._components.length; ++i) {
+                var comp = node._components[i];
+                comp instanceof constructor && components.push(comp);
+            }
+        }
+        function findChildComponent(children, constructor) {
+            for (var i = 0; i < children.length; ++i) {
+                var node = children[i];
+                var comp = findComponent(node, constructor);
+                if (comp) {
+                    return comp;
+                }
+                if (node._children.length > 0) {
+                    comp = findChildComponent(node._children, constructor);
+                    if (comp) {
+                        return comp;
+                    }
+                }
+            }
+            return null;
+        }
+        function findChildComponents(children, constructor, components) {
+            for (var i = 0; i < children.length; ++i) {
+                var node = children[i];
+                findComponents(node, constructor, components);
+                node._children.length > 0 && findChildComponents(node._children, constructor, components);
+            }
+        }
         var BaseNode = cc.Class({
             name: "cc._BaseNode",
-            "extends": cc.Object,
+            extends: cc.Object,
             mixins: [ cc.EventTarget ],
             properties: {
-                _opacity: 255,
-                _color: cc.Color.WHITE,
-                _cascadeOpacityEnabled: true,
                 _parent: null,
-                _anchorPoint: cc.p(.5, .5),
-                _contentSize: cc.size(0, 0),
                 _children: [],
-                _rotationX: 0,
-                _rotationY: 0,
-                _scaleX: 1,
-                _scaleY: 1,
-                _position: cc.p(0, 0),
-                _skewX: 0,
-                _skewY: 0,
-                _localZOrder: 0,
-                _globalZOrder: 0,
                 _tag: cc.macro.NODE_TAG_INVALID,
-                _opacityModifyRGB: false,
+                _active: true,
+                _components: [],
+                _prefab: null,
+                _persistNode: {
+                    get: function() {
+                        return (this._objFlags & DontDestroy) > 0;
+                    },
+                    set: function(value) {
+                        value ? this._objFlags |= DontDestroy : this._objFlags &= ~DontDestroy;
+                    }
+                },
                 name: {
                     get: function() {
                         return this._name;
@@ -20458,39 +23951,8 @@
                         this._name = value;
                     }
                 },
-                parent: {
-                    get: function() {
-                        return this._parent;
-                    },
-                    set: function(value) {
-                        if (this._parent === value) {
-                            return;
-                        }
-                        var sgNode = this._sgNode;
-                        sgNode.parent && sgNode.parent.removeChild(sgNode, false);
-                        var oldParent = this._parent;
-                        this._parent = value || null;
-                        if (value) {
-                            var parent = value._sgNode;
-                            parent.addChild(sgNode);
-                            updateOrder(this);
-                            value._children.push(this);
-                            value.emit(CHILD_ADDED, this);
-                        }
-                        if (oldParent) {
-                            if (!(oldParent._objFlags & Destroying)) {
-                                var removeAt = oldParent._children.indexOf(this);
-                                oldParent._children.splice(removeAt, 1);
-                                oldParent.emit(CHILD_REMOVED, this);
-                                this._onHierarchyChanged(oldParent);
-                            }
-                        } else {
-                            value && this._onHierarchyChanged(null);
-                        }
-                    }
-                },
                 _id: {
-                    "default": "",
+                    default: "",
                     editorOnly: true
                 },
                 uuid: {
@@ -20498,124 +23960,6 @@
                         var id = this._id;
                         id || (id = this._id = idGenerater.getNewId());
                         return id;
-                    }
-                },
-                skewX: {
-                    get: function() {
-                        return this._skewX;
-                    },
-                    set: function(value) {
-                        this._skewX = value;
-                        this._sgNode.skewX = value;
-                    }
-                },
-                skewY: {
-                    get: function() {
-                        return this._skewY;
-                    },
-                    set: function(value) {
-                        this._skewY = value;
-                        this._sgNode.skewY = value;
-                    }
-                },
-                zIndex: {
-                    get: function() {
-                        return this._localZOrder;
-                    },
-                    set: function(value) {
-                        if (this._localZOrder !== value) {
-                            this._localZOrder = value;
-                            this._sgNode.zIndex = value;
-                            this._parent && updateOrder(this);
-                        }
-                    }
-                },
-                rotation: {
-                    get: function() {
-                        this._rotationX !== this._rotationY && cc.logID(1602);
-                        return this._rotationX;
-                    },
-                    set: function(value) {
-                        if (this._rotationX !== value || this._rotationY !== value) {
-                            this._rotationX = this._rotationY = value;
-                            this._sgNode.rotation = value;
-                        }
-                    }
-                },
-                rotationX: {
-                    get: function() {
-                        return this._rotationX;
-                    },
-                    set: function(value) {
-                        if (this._rotationX !== value) {
-                            this._rotationX = value;
-                            this._sgNode.rotationX = value;
-                        }
-                    }
-                },
-                rotationY: {
-                    get: function() {
-                        return this._rotationY;
-                    },
-                    set: function(value) {
-                        if (this._rotationY !== value) {
-                            this._rotationY = value;
-                            this._sgNode.rotationY = value;
-                        }
-                    }
-                },
-                scaleX: {
-                    get: function() {
-                        return this._scaleX;
-                    },
-                    set: function(value) {
-                        if (this._scaleX !== value) {
-                            this._scaleX = value;
-                            this._sgNode.scaleX = value;
-                        }
-                    }
-                },
-                scaleY: {
-                    get: function() {
-                        return this._scaleY;
-                    },
-                    set: function(value) {
-                        if (this._scaleY !== value) {
-                            this._scaleY = value;
-                            this._sgNode.scaleY = value;
-                        }
-                    }
-                },
-                x: {
-                    get: function() {
-                        return this._position.x;
-                    },
-                    set: function(value) {
-                        var localPosition = this._position;
-                        if (value !== localPosition.x) {
-                            var oldValue;
-                            localPosition.x = value;
-                            this._sgNode.setPositionX(value);
-                            var capListeners = this._capturingListeners && this._capturingListeners._callbackTable[POSITION_CHANGED];
-                            var bubListeners = this._bubblingListeners && this._bubblingListeners._callbackTable[POSITION_CHANGED];
-                            (capListeners && capListeners.length > 0 || bubListeners && bubListeners.length > 0) && this.emit(POSITION_CHANGED);
-                        }
-                    }
-                },
-                y: {
-                    get: function() {
-                        return this._position.y;
-                    },
-                    set: function(value) {
-                        var localPosition = this._position;
-                        if (value !== localPosition.y) {
-                            var oldValue;
-                            localPosition.y = value;
-                            this._sgNode.setPositionY(value);
-                            var capListeners = this._capturingListeners && this._capturingListeners._callbackTable[POSITION_CHANGED];
-                            var bubListeners = this._bubblingListeners && this._bubblingListeners._callbackTable[POSITION_CHANGED];
-                            (capListeners && capListeners.length > 0 || bubListeners && bubListeners.length > 0) && this.emit(POSITION_CHANGED);
-                        }
                     }
                 },
                 children: {
@@ -20628,166 +23972,65 @@
                         return this._children.length;
                     }
                 },
-                anchorX: {
+                active: {
                     get: function() {
-                        return this._anchorPoint.x;
+                        return this._active;
                     },
                     set: function(value) {
-                        var anchorPoint = this._anchorPoint;
-                        if (anchorPoint.x !== value) {
-                            anchorPoint.x = value;
-                            var sizeProvider = this._sizeProvider;
-                            sizeProvider instanceof _ccsg.Node && sizeProvider.setAnchorPoint(anchorPoint);
-                            this.emit(ANCHOR_CHANGED);
-                        }
-                    }
-                },
-                anchorY: {
-                    get: function() {
-                        return this._anchorPoint.y;
-                    },
-                    set: function(value) {
-                        var anchorPoint = this._anchorPoint;
-                        if (anchorPoint.y !== value) {
-                            anchorPoint.y = value;
-                            var sizeProvider = this._sizeProvider;
-                            sizeProvider instanceof _ccsg.Node && sizeProvider.setAnchorPoint(anchorPoint);
-                            this.emit(ANCHOR_CHANGED);
-                        }
-                    }
-                },
-                width: {
-                    get: function() {
-                        if (this._sizeProvider) {
-                            var w = this._sizeProvider._getWidth();
-                            this._contentSize.width = w;
-                            return w;
-                        }
-                        return this._contentSize.width;
-                    },
-                    set: function(value) {
-                        if (value !== this._contentSize.width) {
-                            var sizeProvider = this._sizeProvider;
-                            sizeProvider && sizeProvider.setContentSize(value, sizeProvider._getHeight());
-                            var clone;
-                            this._contentSize.width = value;
-                            this.emit(SIZE_CHANGED);
-                        }
-                    }
-                },
-                height: {
-                    get: function() {
-                        if (this._sizeProvider) {
-                            var h = this._sizeProvider._getHeight();
-                            this._contentSize.height = h;
-                            return h;
-                        }
-                        return this._contentSize.height;
-                    },
-                    set: function(value) {
-                        if (value !== this._contentSize.height) {
-                            var sizeProvider = this._sizeProvider;
-                            sizeProvider && sizeProvider.setContentSize(sizeProvider._getWidth(), value);
-                            var clone;
-                            this._contentSize.height = value;
-                            this.emit(SIZE_CHANGED);
-                        }
-                    }
-                },
-                _ignoreAnchor: {
-                    get: function() {
-                        return this.__ignoreAnchor;
-                    },
-                    set: function(value) {
-                        if (this.__ignoreAnchor !== value) {
-                            this.__ignoreAnchor = value;
-                            this._sgNode.ignoreAnchor = value;
-                            var sizeProvider = this._sizeProvider;
-                            sizeProvider instanceof _ccsg.Node && sizeProvider !== this._sgNode && (sizeProvider.ignoreAnchor = value);
-                            this.emit(ANCHOR_CHANGED);
-                        }
-                    }
-                },
-                tag: {
-                    get: function() {
-                        return this._tag;
-                    },
-                    set: function(value) {
-                        this._tag = value;
-                        this._sgNode.tag = value;
-                    }
-                },
-                opacity: {
-                    get: function() {
-                        return this._opacity;
-                    },
-                    set: function(value) {
-                        if (this._opacity !== value) {
-                            this._opacity = value;
-                            this._sgNode.setOpacity(value);
-                            if (!this._cascadeOpacityEnabled) {
-                                var sizeProvider = this._sizeProvider;
-                                sizeProvider instanceof _ccsg.Node && sizeProvider !== this._sgNode && sizeProvider.setOpacity(value);
+                        value = !!value;
+                        if (this._active !== value) {
+                            this._active = value;
+                            var parent = this._parent;
+                            if (parent) {
+                                var couldActiveInScene = parent._activeInHierarchy;
+                                couldActiveInScene && cc.director._nodeActivator.activateNode(this, value);
                             }
                         }
-                    },
-                    range: [ 0, 255 ]
-                },
-                cascadeOpacity: {
-                    get: function() {
-                        return this._cascadeOpacityEnabled;
-                    },
-                    set: function(value) {
-                        if (this._cascadeOpacityEnabled !== value) {
-                            this._cascadeOpacityEnabled = value;
-                            this._sgNode.cascadeOpacity = value;
-                            var opacity = value ? 255 : this._opacity;
-                            var sizeProvider = this._sizeProvider;
-                            sizeProvider instanceof _ccsg.Node && sizeProvider.setOpacity(opacity);
-                        }
                     }
                 },
-                color: {
+                activeInHierarchy: {
                     get: function() {
-                        return this._color.clone();
-                    },
-                    set: function(value) {
-                        if (!this._color.equals(value)) {
-                            this._color.fromColor(value);
-                            this._sizeProvider instanceof _ccsg.Node && this._sizeProvider.setColor(value);
-                        }
+                        return this._activeInHierarchy;
                     }
                 }
             },
-            ctor: function() {
-                var sgNode = this._sgNode = new _ccsg.Node();
-                sgNode.retain();
-                sgNode._entity = this;
-                sgNode.onEnter = function() {
-                    _ccsg.Node.prototype.onEnter.call(this);
-                    if (this._entity && !this._entity._active) {
-                        cc.director.getActionManager().pauseTarget(this);
-                        cc.eventManager.pauseTarget(this);
-                    }
-                };
-                cc.game._isCloning || (sgNode.cascadeOpacity = true);
-                this._sizeProvider = null;
-                this.__ignoreAnchor = false;
-                this._reorderChildDirty = false;
+            ctor: function(name) {
+                this._name = "undefined" !== typeof name ? name : "New Node";
+                this._activeInHierarchy = false;
                 this.__instanceId = this._id || cc.ClassManager.getNewInstanceId();
                 this.__eventTargets = [];
             },
-            _onPreDestroy: function() {
-                cc.eventManager.removeListeners(this);
-                this._sgNode.release();
-                this._sgNode._entity = null;
-                this._sgNode = null;
-                for (var i = 0, len = this.__eventTargets.length; i < len; ++i) {
-                    var target = this.__eventTargets[i];
-                    target && target.targetOff(this);
+            getTag: function() {
+                return this._tag;
+            },
+            setTag: function(tag) {
+                this._tag = tag;
+            },
+            getParent: function() {
+                return this._parent;
+            },
+            setParent: function(value) {
+                if (this._parent === value) {
+                    return;
+                }
+                var oldParent = this._parent;
+                this._parent = value || null;
+                this._onSetParent(value);
+                if (value) {
+                    value._children.push(this);
+                    value.emit(CHILD_ADDED, this);
+                }
+                if (oldParent) {
+                    if (!(oldParent._objFlags & Destroying)) {
+                        var removeAt = oldParent._children.indexOf(this);
+                        oldParent._children.splice(removeAt, 1);
+                        oldParent.emit(CHILD_REMOVED, this);
+                        this._onHierarchyChanged(oldParent);
+                    }
+                } else {
+                    value && this._onHierarchyChanged(null);
                 }
             },
-            _onHierarchyChanged: null,
             init: function() {
                 return true;
             },
@@ -20796,127 +24039,12 @@
                     this[key] = attrs[key];
                 }
             },
-            setGlobalZOrder: function(globalZOrder) {
-                this._globalZOrder = globalZOrder;
-                this._sgNode.setGlobalZOrder(globalZOrder);
-            },
-            getGlobalZOrder: function() {
-                this._globalZOrder = this._sgNode.getGlobalZOrder();
-                return this._globalZOrder;
-            },
-            getScale: function() {
-                this._scaleX !== this._scaleY && cc.logID(1603);
-                return this._scaleX;
-            },
-            setScale: function(scaleX, scaleY) {
-                if ("object" == typeof scaleX) {
-                    scaleY = scaleX.y;
-                    scaleX = scaleX.x;
-                } else {
-                    scaleY = scaleY || 0 === scaleY ? scaleY : scaleX;
-                }
-                if (this._scaleX !== scaleX || this._scaleY !== scaleY) {
-                    this._scaleX = scaleX;
-                    this._scaleY = scaleY;
-                    this._sgNode.setScale(scaleX, scaleY);
-                }
-            },
-            getPosition: function() {
-                return cc.p(this._position);
-            },
-            setPosition: function(newPosOrxValue, yValue) {
-                var xValue;
-                if ("undefined" == typeof yValue) {
-                    xValue = newPosOrxValue.x;
-                    yValue = newPosOrxValue.y;
-                } else {
-                    xValue = newPosOrxValue;
-                    yValue = yValue;
-                }
-                var locPosition = this._position;
-                if (locPosition.x === xValue && locPosition.y === yValue) {
-                    return;
-                }
-                var oldPosition;
-                locPosition.x = xValue;
-                locPosition.y = yValue;
-                this._sgNode.setPosition(xValue, yValue);
-                var capListeners = this._capturingListeners && this._capturingListeners._callbackTable[POSITION_CHANGED];
-                var bubListeners = this._bubblingListeners && this._bubblingListeners._callbackTable[POSITION_CHANGED];
-                (capListeners && capListeners.length > 0 || bubListeners && bubListeners.length > 0) && this.emit(POSITION_CHANGED);
-            },
-            getAnchorPoint: function() {
-                return cc.p(this._anchorPoint);
-            },
-            setAnchorPoint: function(point, y) {
-                var locAnchorPoint = this._anchorPoint;
-                if (void 0 === y) {
-                    if (point.x === locAnchorPoint.x && point.y === locAnchorPoint.y) {
-                        return;
-                    }
-                    locAnchorPoint.x = point.x;
-                    locAnchorPoint.y = point.y;
-                } else {
-                    if (point === locAnchorPoint.x && y === locAnchorPoint.y) {
-                        return;
-                    }
-                    locAnchorPoint.x = point;
-                    locAnchorPoint.y = y;
-                }
-                var sizeProvider = this._sizeProvider;
-                sizeProvider instanceof _ccsg.Node && sizeProvider.setAnchorPoint(locAnchorPoint);
-                this.emit(ANCHOR_CHANGED);
-            },
-            getAnchorPointInPoints: function() {
-                return this._sgNode.getAnchorPointInPoints();
-            },
-            getContentSize: function(ignoreSizeProvider) {
-                if (this._sizeProvider && !ignoreSizeProvider) {
-                    var size = this._sizeProvider.getContentSize();
-                    this._contentSize = size;
-                    return size;
-                }
-                return cc.size(this._contentSize);
-            },
-            setContentSize: function(size, height) {
-                var locContentSize = this._contentSize;
-                var clone;
-                if (void 0 === height) {
-                    if (size.width === locContentSize.width && size.height === locContentSize.height) {
-                        return;
-                    }
-                    locContentSize.width = size.width;
-                    locContentSize.height = size.height;
-                } else {
-                    if (size === locContentSize.width && height === locContentSize.height) {
-                        return;
-                    }
-                    locContentSize.width = size;
-                    locContentSize.height = height;
-                }
-                this._sizeProvider && this._sizeProvider.setContentSize(locContentSize);
-                this.emit(SIZE_CHANGED);
-            },
-            getBoundingBox: function() {
-                var size = this.getContentSize();
-                var rect = cc.rect(0, 0, size.width, size.height);
-                return cc._rectApplyAffineTransformIn(rect, this.getNodeToParentTransform());
-            },
-            cleanup: function() {
-                cc.director.getActionManager().removeAllActionsFromTarget(this);
-                cc.eventManager.removeListeners(this);
-                var i, len = this._children.length, node;
-                for (i = 0; i < len; ++i) {
-                    node = this._children[i];
-                    node && node.cleanup();
-                }
-            },
             getChildByTag: function(aTag) {
                 var children = this._children;
                 if (null !== children) {
                     for (var i = 0; i < children.length; i++) {
                         var node = children[i];
-                        if (node && node.tag === aTag) {
+                        if (node && node._tag === aTag) {
                             return node;
                         }
                     }
@@ -20949,29 +24077,28 @@
                 }
                 return null;
             },
-            addChild: function(child, localZOrder, tag) {
-                localZOrder = void 0 === localZOrder ? child._localZOrder : localZOrder;
-                var name, setTag = false;
-                if ("undefined" == typeof tag) {
-                    tag = void 0;
-                    name = child._name;
-                } else {
-                    if (cc.js.isString(tag)) {
-                        name = tag;
-                        tag = void 0;
-                    } else {
-                        if (cc.js.isNumber(tag)) {
-                            setTag = true;
-                            name = "";
-                        }
-                    }
-                }
+            addChild: function(child) {
                 cc.assertID(child, 1606);
                 cc.assertID(null === child._parent, 1605);
-                child.parent = this;
-                child.zIndex = localZOrder;
-                setTag ? child.setTag(tag) : child.setName(name);
+                child.setParent(this);
             },
+            getSiblingIndex: function() {
+                return this._parent ? this._parent._children.indexOf(this) : 0;
+            },
+            setSiblingIndex: function(index) {
+                if (!this._parent) {
+                    return;
+                }
+                var siblings = this._parent._children;
+                index = index !== -1 ? index : siblings.length - 1;
+                var oldIndex = siblings.indexOf(this);
+                if (index !== oldIndex) {
+                    siblings.splice(oldIndex, 1);
+                    index < siblings.length ? siblings.splice(index, 0, this) : siblings.push(this);
+                    this._onSiblingIndexChanged && this._onSiblingIndexChanged(index);
+                }
+            },
+            cleanup: function() {},
             removeFromParent: function(cleanup) {
                 if (this._parent) {
                     void 0 === cleanup && (cleanup = true);
@@ -21001,176 +24128,6 @@
                 }
                 this._children.length = 0;
             },
-            setNodeDirty: function() {
-                this._sgNode.setNodeDirty();
-            },
-            getParentToNodeTransform: function() {
-                return this._sgNode.getParentToNodeTransform();
-            },
-            _isSgTransformArToMe: function(myContentSize) {
-                var renderSize = this._sgNode.getContentSize();
-                if (0 === renderSize.width && 0 === renderSize.height && (0 !== myContentSize.width || 0 !== myContentSize.height)) {
-                    return true;
-                }
-                if (this._sgNode.isIgnoreAnchorPointForPosition()) {
-                    return true;
-                }
-                return false;
-            },
-            getNodeToWorldTransform: function() {
-                var contentSize = this.getContentSize();
-                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
-                var mat = this._sgNode.getNodeToWorldTransform();
-                if (this._isSgTransformArToMe(contentSize)) {
-                    var tx = -this._anchorPoint.x * contentSize.width;
-                    var ty = -this._anchorPoint.y * contentSize.height;
-                    var offset = cc.affineTransformMake(1, 0, 0, 1, tx, ty);
-                    mat = cc.affineTransformConcatIn(offset, mat);
-                }
-                return mat;
-            },
-            getNodeToWorldTransformAR: function() {
-                var contentSize = this.getContentSize();
-                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
-                var mat = this._sgNode.getNodeToWorldTransform();
-                if (!this._isSgTransformArToMe(contentSize)) {
-                    var tx = this._anchorPoint.x * contentSize.width;
-                    var ty = this._anchorPoint.y * contentSize.height;
-                    var offset = cc.affineTransformMake(1, 0, 0, 1, tx, ty);
-                    mat = cc.affineTransformConcatIn(offset, mat);
-                }
-                return mat;
-            },
-            getWorldToNodeTransform: function() {
-                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
-                return this._sgNode.getWorldToNodeTransform();
-            },
-            convertToNodeSpace: function(worldPoint) {
-                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
-                var nodePositionIgnoreAnchorPoint = this._sgNode.convertToNodeSpace(worldPoint);
-                return cc.pAdd(nodePositionIgnoreAnchorPoint, cc.p(this._anchorPoint.x * this._contentSize.width, this._anchorPoint.y * this._contentSize.height));
-            },
-            convertToWorldSpace: function(nodePoint) {
-                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
-                var x = nodePoint.x - this._anchorPoint.x * this._contentSize.width;
-                var y = nodePoint.y - this._anchorPoint.y * this._contentSize.height;
-                return cc.v2(this._sgNode.convertToWorldSpace(cc.v2(x, y)));
-            },
-            convertToNodeSpaceAR: function(worldPoint) {
-                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
-                return this._sgNode.isIgnoreAnchorPointForPosition() ? cc.v2(this._sgNode.convertToNodeSpace(worldPoint)) : this._sgNode.convertToNodeSpaceAR(worldPoint);
-            },
-            convertToWorldSpaceAR: function(nodePoint) {
-                cc._renderType === cc.game.RENDER_TYPE_CANVAS && cc.director._visitScene();
-                return this._sgNode.isIgnoreAnchorPointForPosition() ? cc.v2(this._sgNode.convertToWorldSpace(nodePoint)) : cc.v2(this._sgNode.convertToWorldSpaceAR(nodePoint));
-            },
-            convertTouchToNodeSpace: function(touch) {
-                return this.convertToNodeSpace(touch.getLocation());
-            },
-            convertTouchToNodeSpaceAR: function(touch) {
-                return this.convertToNodeSpaceAR(touch.getLocation());
-            },
-            getNodeToParentTransform: function() {
-                var contentSize = this.getContentSize();
-                var mat = this._sgNode.getNodeToParentTransform();
-                if (this._isSgTransformArToMe(contentSize)) {
-                    var tx = -this._anchorPoint.x * contentSize.width;
-                    var ty = -this._anchorPoint.y * contentSize.height;
-                    var offset = cc.affineTransformMake(1, 0, 0, 1, tx, ty);
-                    mat = cc.affineTransformConcatIn(offset, mat);
-                }
-                return mat;
-            },
-            getNodeToParentTransformAR: function() {
-                var contentSize = this.getContentSize();
-                var mat = this._sgNode.getNodeToParentTransform();
-                if (!this._isSgTransformArToMe(contentSize)) {
-                    var tx = this._anchorPoint.x * contentSize.width;
-                    var ty = this._anchorPoint.y * contentSize.height;
-                    var offset = cc.affineTransformMake(1, 0, 0, 1, tx, ty);
-                    mat = cc.affineTransformConcatIn(offset, mat);
-                }
-                return mat;
-            },
-            getBoundingBoxToWorld: function() {
-                var trans;
-                this.parent && (trans = this.parent.getNodeToWorldTransformAR());
-                return this._getBoundingBoxTo(trans);
-            },
-            _getBoundingBoxTo: function(parentTransformAR) {
-                var size = this.getContentSize();
-                var width = size.width;
-                var height = size.height;
-                var rect = cc.rect(-this._anchorPoint.x * width, -this._anchorPoint.y * height, width, height);
-                var transAR = cc.affineTransformConcat(this.getNodeToParentTransformAR(), parentTransformAR);
-                cc._rectApplyAffineTransformIn(rect, transAR);
-                if (!this._children) {
-                    return rect;
-                }
-                var locChildren = this._children;
-                for (var i = 0; i < locChildren.length; i++) {
-                    var child = locChildren[i];
-                    if (child && child.active) {
-                        var childRect = child._getBoundingBoxTo(transAR);
-                        childRect && (rect = cc.rectUnion(rect, childRect));
-                    }
-                }
-                return rect;
-            },
-            getDisplayedOpacity: function() {
-                return this._sgNode.getDisplayedOpacity();
-            },
-            _updateDisplayedOpacity: function(parentOpacity) {
-                this._sgNode.updateDisplayedOpacity(parentOpacity);
-            },
-            getDisplayedColor: function() {
-                return this._sgNode.getDisplayedColor();
-            },
-            setOpacityModifyRGB: function(opacityValue) {
-                if (this._opacityModifyRGB !== opacityValue) {
-                    this._opacityModifyRGB = opacityValue;
-                    this._sgNode.setOpacityModifyRGB(opacityValue);
-                    var sizeProvider = this._sizeProvider;
-                    sizeProvider instanceof _ccsg.Node && sizeProvider !== this._sgNode && sizeProvider.setOpacityModifyRGB(opacityValue);
-                }
-            },
-            isOpacityModifyRGB: function() {
-                return this._opacityModifyRGB;
-            },
-            getSiblingIndex: function() {
-                return this._parent ? this._parent._children.indexOf(this) : 0;
-            },
-            setSiblingIndex: function(index) {
-                if (!this._parent) {
-                    return;
-                }
-                var array = this._parent._children;
-                index = index !== -1 ? index : array.length - 1;
-                var oldIndex = array.indexOf(this);
-                if (index !== oldIndex) {
-                    array.splice(oldIndex, 1);
-                    index < array.length ? array.splice(index, 0, this) : array.push(this);
-                    var parent = this._parent;
-                    var siblings = parent._children;
-                    var i = 0, len = siblings.length, sibling;
-                    if (cc.runtime) {
-                        for (;i < len; i++) {
-                            sibling = siblings[i]._sgNode;
-                            var zOrder = sibling.getLocalZOrder();
-                            sibling.setLocalZOrder(zOrder + 1);
-                            sibling.setLocalZOrder(zOrder);
-                        }
-                    } else {
-                        parent._sgNode.removeChild(this._sgNode, false);
-                        if (index + 1 < array.length) {
-                            var nextSibling = array[index + 1];
-                            parent._sgNode.insertChildBefore(this._sgNode, nextSibling._sgNode);
-                        } else {
-                            parent._sgNode.addChild(this._sgNode);
-                        }
-                    }
-                }
-            },
             isChildOf: function(parent) {
                 var child = this;
                 do {
@@ -21181,93 +24138,203 @@
                 } while (child);
                 return false;
             },
-            sortAllChildren: function() {
-                if (this._reorderChildDirty) {
-                    this._reorderChildDirty = false;
-                    var _children = this._children;
-                    if (_children.length > 1) {
-                        var len = _children.length, i, j, child;
-                        for (i = 1; i < len; i++) {
-                            child = _children[i];
-                            j = i - 1;
-                            while (j >= 0) {
-                                if (child._localZOrder < _children[j]._localZOrder) {
-                                    _children[j + 1] = _children[j];
-                                } else {
-                                    if (!(child._localZOrder === _children[j]._localZOrder && child._sgNode._arrivalOrder < _children[j]._sgNode._arrivalOrder)) {
-                                        break;
-                                    }
-                                    _children[j + 1] = _children[j];
-                                }
-                                j--;
-                            }
-                            _children[j + 1] = child;
-                        }
-                        this.emit(CHILD_REORDER);
+            getComponent: function(typeOrClassName) {
+                var constructor = getConstructor(typeOrClassName);
+                if (constructor) {
+                    return findComponent(this, constructor);
+                }
+                return null;
+            },
+            getComponents: function(typeOrClassName) {
+                var constructor = getConstructor(typeOrClassName), components = [];
+                constructor && findComponents(this, constructor, components);
+                return components;
+            },
+            getComponentInChildren: function(typeOrClassName) {
+                var constructor = getConstructor(typeOrClassName);
+                if (constructor) {
+                    return findChildComponent(this._children, constructor);
+                }
+                return null;
+            },
+            getComponentsInChildren: function(typeOrClassName) {
+                var constructor = getConstructor(typeOrClassName), components = [];
+                if (constructor) {
+                    findComponents(this, constructor, components);
+                    findChildComponents(this._children, constructor, components);
+                }
+                return components;
+            },
+            _checkMultipleComp: false,
+            addComponent: function(typeOrClassName) {
+                var constructor;
+                if ("string" === typeof typeOrClassName) {
+                    constructor = JS.getClassByName(typeOrClassName);
+                    if (!constructor) {
+                        cc.errorID(3807, typeOrClassName);
+                        cc._RFpeek() && cc.errorID(3808, typeOrClassName);
+                        return null;
                     }
-                    cc.director.__fastOff(cc.Director.EVENT_AFTER_UPDATE, this.sortAllChildren, this, this.__eventTargets);
-                }
-            },
-            _delaySort: function() {
-                if (!this._reorderChildDirty) {
-                    this._reorderChildDirty = true;
-                    cc.director.__fastOn(cc.Director.EVENT_AFTER_UPDATE, this.sortAllChildren, this, this.__eventTargets);
-                }
-            },
-            _updateDummySgNode: function() {
-                var self = this;
-                var sgNode = self._sgNode;
-                sgNode.setPosition(self._position);
-                sgNode.setRotationX(self._rotationX);
-                sgNode.setRotationY(self._rotationY);
-                sgNode.setScale(self._scaleX, self._scaleY);
-                sgNode.setSkewX(self._skewX);
-                sgNode.setSkewY(self._skewY);
-                sgNode.setIgnoreAnchorPointForPosition(self.__ignoreAnchor);
-                var arrivalOrder = sgNode._arrivalOrder;
-                sgNode.setLocalZOrder(self._localZOrder);
-                sgNode._arrivalOrder = arrivalOrder;
-                sgNode.setGlobalZOrder(self._globalZOrder);
-                sgNode.setColor(this._color);
-                sgNode.setOpacity(self._opacity);
-                sgNode.setOpacityModifyRGB(self._opacityModifyRGB);
-                sgNode.setCascadeOpacityEnabled(self._cascadeOpacityEnabled);
-                sgNode.setTag(self._tag);
-            },
-            _updateSgNode: function() {
-                this._updateDummySgNode();
-                var sgNode = this._sgNode;
-                sgNode.setAnchorPoint(this._anchorPoint);
-                sgNode.setVisible(this._active);
-                sgNode.setColor(this._color);
-                if (this._activeInHierarchy) {
-                    cc.director.getActionManager().resumeTarget(this);
-                    cc.eventManager.resumeTarget(this);
                 } else {
-                    cc.director.getActionManager().pauseTarget(this);
-                    cc.eventManager.pauseTarget(this);
+                    if (!typeOrClassName) {
+                        cc.errorID(3804);
+                        return null;
+                    }
+                    constructor = typeOrClassName;
+                }
+                if ("function" !== typeof constructor) {
+                    cc.errorID(3809);
+                    return null;
+                }
+                if (!cc.isChildClassOf(constructor, cc.Component)) {
+                    cc.errorID(3810);
+                    return null;
+                }
+                var ReqComp = constructor._requireComponent;
+                if (ReqComp && !this.getComponent(ReqComp)) {
+                    var depended = this.addComponent(ReqComp);
+                    if (!depended) {
+                        return null;
+                    }
+                }
+                var component = new constructor();
+                component.node = this;
+                this._components.push(component);
+                this._activeInHierarchy && cc.director._nodeActivator.activateComp(component);
+                return component;
+            },
+            _addComponentAt: false,
+            removeComponent: function(component) {
+                if (!component) {
+                    cc.errorID(3813);
+                    return;
+                }
+                component instanceof cc.Component || (component = this.getComponent(component));
+                component && component.destroy();
+            },
+            _getDependComponent: false,
+            _removeComponent: function(component) {
+                if (!component) {
+                    cc.errorID(3814);
+                    return;
+                }
+                if (!(this._objFlags & Destroying)) {
+                    var i = this._components.indexOf(component);
+                    i !== -1 ? this._components.splice(i, 1) : component.node !== this && cc.errorID(3815);
                 }
             },
-            onRestore: false,
-            _removeSgNode: SgHelper.removeSgNode
+            _disableChildComps: function() {
+                var i, len = this._components.length;
+                for (i = 0; i < len; ++i) {
+                    var component = this._components[i];
+                    component._enabled && cc.director._compScheduler.disableComp(component);
+                }
+                for (i = 0, len = this._children.length; i < len; ++i) {
+                    var node = this._children[i];
+                    node._active && node._disableChildComps();
+                }
+            },
+            destroy: function() {
+                cc.Object.prototype.destroy.call(this) && this._activeInHierarchy && this._disableChildComps();
+            },
+            destroyAllChildren: function() {
+                var children = this._children;
+                for (var i = 0; i < children.length; ++i) {
+                    children[i].destroy();
+                }
+            },
+            _onSetParent: function(value) {},
+            _onPostActivated: function() {},
+            _onHierarchyChanged: function(oldParent) {
+                var newParent = this._parent;
+                !this._persistNode || newParent instanceof cc.Scene || cc.game.removePersistRootNode(this);
+                var shouldActiveNow = this._active && !!(newParent && newParent._activeInHierarchy);
+                this._activeInHierarchy !== shouldActiveNow && cc.director._nodeActivator.activateNode(this, shouldActiveNow);
+                var scene;
+                var inCurrentSceneBefore;
+                var inCurrentSceneNow;
+                var newPrefabRoot;
+                var myPrefabInfo;
+            },
+            _onBatchCreated: function() {
+                var prefabInfo = this._prefab;
+                prefabInfo && prefabInfo.sync && !prefabInfo._synced && prefabInfo.root === this && PrefabHelper.syncWithPrefab(this);
+                var children = this._children;
+                for (var i = 0, len = children.length; i < len; i++) {
+                    children[i]._onBatchCreated();
+                }
+            },
+            _instantiate: function(cloned) {
+                cloned || (cloned = cc.instantiate._clone(this, this));
+                var thisPrefabInfo = this._prefab;
+                var syncing = thisPrefabInfo && this === thisPrefabInfo.root && thisPrefabInfo.sync;
+                syncing && (cloned._prefab._synced = thisPrefabInfo._synced);
+                cloned._parent = null;
+                cloned._onBatchCreated();
+                return cloned;
+            },
+            _registerIfAttached: false,
+            _onPreDestroy: function() {
+                var i, len;
+                this._objFlags |= Destroying;
+                var parent = this._parent;
+                var destroyByParent = parent && parent._objFlags & Destroying;
+                !destroyByParent && false && this._registerIfAttached(false);
+                var children = this._children;
+                for (i = 0, len = children.length; i < len; ++i) {
+                    children[i]._destroyImmediate();
+                }
+                for (i = 0, len = this._components.length; i < len; ++i) {
+                    var component = this._components[i];
+                    component._destroyImmediate();
+                }
+                var eventTargets = this.__eventTargets;
+                for (i = 0, len = eventTargets.length; i < len; ++i) {
+                    var target = eventTargets[i];
+                    target && target.targetOff(this);
+                }
+                eventTargets.length = 0;
+                this._persistNode && cc.game.removePersistRootNode(this);
+                if (!destroyByParent && parent) {
+                    var childIndex = parent._children.indexOf(this);
+                    parent._children.splice(childIndex, 1);
+                    parent.emit("child-removed", this);
+                }
+                return destroyByParent;
+            },
+            onRestore: false
         });
-        var SameNameGetSets = [ "name", "skewX", "skewY", "position", "rotation", "rotationX", "rotationY", "scale", "scaleX", "scaleY", "children", "childrenCount", "parent", "opacity", "color", "tag" ];
-        var DiffNameGetSets = {
-            x: [ "getPositionX", "setPositionX" ],
-            y: [ "getPositionY", "setPositionY" ],
-            zIndex: [ "getLocalZOrder", "setLocalZOrder" ],
-            opacityModifyRGB: [ "isOpacityModifyRGB" ],
-            cascadeOpacity: [ "isCascadeOpacityEnabled", "setCascadeOpacityEnabled" ]
-        };
-        Misc.propertyDefine(BaseNode, SameNameGetSets, DiffNameGetSets);
+        BaseNode.prototype._onPreDestroyBase = BaseNode.prototype._onPreDestroy;
+        BaseNode.prototype._onHierarchyChangedBase = BaseNode.prototype._onHierarchyChanged;
+        var SameNameGetSets = [ "name", "children", "childrenCount" ];
+        Misc.propertyDefine(BaseNode, SameNameGetSets, {});
         cc._BaseNode = module.exports = BaseNode;
     }, {
-        "../platform/CCObject": 110,
-        "../platform/id-generater": 117,
-        "./misc": 130,
-        "./scene-graph-helper": 133
+        "../platform/CCObject": 135,
+        "../platform/id-generater": 142,
+        "./misc": 156
     } ],
-    129: [ function(require, module, exports) {
+    154: [ function(require, module, exports) {
+        var EPSILON = 1e-6;
+        function binarySearchEpsilon(array, value) {
+            for (var l = 0, h = array.length - 1, m = h >>> 1; l <= h; m = l + h >>> 1) {
+                var test = array[m];
+                if (test > value + EPSILON) {
+                    h = m - 1;
+                } else {
+                    if (!(test < value - EPSILON)) {
+                        return m;
+                    }
+                    l = m + 1;
+                }
+            }
+            return ~l;
+        }
+        module.exports = {
+            binarySearchEpsilon: binarySearchEpsilon
+        };
+    }, {} ],
+    155: [ function(require, module, exports) {
         cc.find = module.exports = function(path, referenceNode) {
             if (null == path) {
                 cc.errorID(5600);
@@ -21301,7 +24368,7 @@
             return match;
         };
     }, {} ],
-    130: [ function(require, module, exports) {
+    156: [ function(require, module, exports) {
         var m = {};
         m.propertyDefine = function(ctor, sameNameGetSets, diffNameGetSets) {
             function define(np, propName, getter, setter) {
@@ -21335,9 +24402,6 @@
             x |= x >> 16;
             return x + 1;
         };
-        m.cleanEval = function(code) {
-            return eval(code);
-        };
         m.cleanEval_F = function(code, F) {
             return eval(code);
         };
@@ -21345,16 +24409,53 @@
             var fireClass = eval(code);
             return fireClass;
         };
+        m.imagePool = {
+            _pool: new Array(10),
+            _MAX: 10,
+            _smallImg: "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=",
+            count: 0,
+            get: function() {
+                if (this.count > 0) {
+                    this.count--;
+                    var result = this._pool[this.count];
+                    this._pool[this.count] = null;
+                    return result;
+                }
+                return new Image();
+            },
+            put: function(img) {
+                var pool = this._pool;
+                if (img instanceof HTMLImageElement && this.count < this._MAX) {
+                    img.src = this._smallImg;
+                    pool[this.count] = img;
+                    this.count++;
+                }
+            }
+        };
         module.exports = m;
     }, {} ],
-    131: [ function(require, module, exports) {
+    157: [ function(require, module, exports) {
         function MutableForwardIterator(array) {
             this.i = 0;
             this.array = array;
         }
         var proto = MutableForwardIterator.prototype;
+        proto.remove = function(value) {
+            var index = this.array.indexOf(value);
+            index >= 0 && this.removeAt(index);
+        };
         proto.removeAt = function(i) {
             this.array.splice(i, 1);
+            i <= this.i && --this.i;
+        };
+        proto.fastRemove = function(value) {
+            var index = this.array.indexOf(value);
+            index >= 0 && this.fastRemoveAt(index);
+        };
+        proto.fastRemoveAt = function(i) {
+            var array = this.array;
+            array[i] = array[array.length - 1];
+            --array.length;
             i <= this.i && --this.i;
         };
         proto.push = function(item) {
@@ -21362,7 +24463,7 @@
         };
         module.exports = MutableForwardIterator;
     }, {} ],
-    132: [ function(require, module, exports) {
+    158: [ function(require, module, exports) {
         cc._PrefabInfo = cc.Class({
             name: "cc.PrefabInfo",
             properties: {
@@ -21371,7 +24472,7 @@
                 fileId: "",
                 sync: false,
                 _synced: {
-                    "default": false,
+                    default: false,
                     serializable: false
                 }
             }
@@ -21412,7 +24513,7 @@
             }
         };
     }, {} ],
-    133: [ function(require, module, exports) {
+    159: [ function(require, module, exports) {
         var SceneGraphUtils = {
             removeSgNode: function() {
                 var node = this._sgNode;
@@ -21426,7 +24527,7 @@
         };
         module.exports = SceneGraphUtils;
     }, {} ],
-    134: [ function(require, module, exports) {
+    160: [ function(require, module, exports) {
         cc.AffineTransform = function(a, b, c, d, tx, ty) {
             this.a = a;
             this.b = b;
@@ -21638,12 +24739,12 @@
             out.ty = determinant * (b * t.tx - a * t.ty);
         };
     }, {} ],
-    135: [ function(require, module, exports) {
+    161: [ function(require, module, exports) {
         var ValueType = require("./CCValueType");
         var JS = require("../platform/js");
         var Color = function() {
             function Color(r, g, b, a) {
-                if ("object" == typeof r) {
+                if ("object" === typeof r) {
                     g = r.g;
                     b = r.b;
                     a = r.a;
@@ -21652,7 +24753,7 @@
                 r = r || 0;
                 g = g || 0;
                 b = b || 0;
-                a = "number" == typeof a ? a : 255;
+                a = "number" === typeof a ? a : 255;
                 this._val = (~~r << 24 >>> 0) + (~~g << 16) + (~~b << 8) + ~~a;
             }
             JS.extend(Color, ValueType);
@@ -21882,11 +24983,11 @@
         };
         cc.Color = Color;
         cc.color = function color(r, g, b, a) {
-            if ("string" == typeof r) {
+            if ("string" === typeof r) {
                 var result = new cc.Color();
                 return result.fromHEX(r);
             }
-            if ("object" == typeof r) {
+            if ("object" === typeof r) {
                 return new cc.Color(r.r, r.g, r.b, r.a);
             }
             return new cc.Color(r, g, b, a);
@@ -21908,11 +25009,11 @@
         };
         module.exports = cc.Color;
     }, {
-        "../platform/CCClass": 108,
-        "../platform/js": 121,
-        "./CCValueType": 142
+        "../platform/CCClass": 132,
+        "../platform/js": 146,
+        "./CCValueType": 168
     } ],
-    136: [ function(require, module, exports) {
+    162: [ function(require, module, exports) {
         cc.Enum = function(obj) {
             var enumType = {};
             Object.defineProperty(enumType, "__enums__", {
@@ -21948,7 +25049,7 @@
             for (var entry in enumDef) {
                 if (enumDef.hasOwnProperty(entry)) {
                     var value = enumDef[entry];
-                    var isInteger = "number" == typeof value && (0 | value) === value;
+                    var isInteger = "number" === typeof value && (0 | value) === value;
                     isInteger && enums.push({
                         name: entry,
                         value: value
@@ -21964,7 +25065,7 @@
         var _TestEnum;
         module.exports = cc.Enum;
     }, {} ],
-    137: [ function(require, module, exports) {
+    163: [ function(require, module, exports) {
         var POINT_EPSILON = parseFloat("1.192092896e-07F");
         cc.pNeg = function(point) {
             return cc.p(-point.x, -point.y);
@@ -22144,11 +25245,11 @@
             cc.pMultIn(v, 1 / Math.sqrt(v.x * v.x + v.y * v.y));
         };
     }, {} ],
-    138: [ function(require, module, exports) {
+    164: [ function(require, module, exports) {
         var ValueType = require("./CCValueType");
         var JS = require("../platform/js");
         function Rect(x, y, w, h) {
-            if (x && "object" == typeof x) {
+            if (x && "object" === typeof x) {
                 y = x.y;
                 w = x.width;
                 h = x.height;
@@ -22247,6 +25348,15 @@
                 this.y = value.y - .5 * this.height;
             }
         });
+        Object.defineProperty(proto, "origin", {
+            get: function() {
+                return new cc.Vec2(this.x, this.y);
+            },
+            set: function(value) {
+                this.x = value.x;
+                this.y = value.y;
+            }
+        });
         Object.defineProperty(proto, "size", {
             get: function() {
                 return new cc.Size(this.width, this.height);
@@ -22325,15 +25435,15 @@
         };
         module.exports = cc.Rect;
     }, {
-        "../platform/CCClass": 108,
-        "../platform/js": 121,
-        "./CCValueType": 142
+        "../platform/CCClass": 132,
+        "../platform/js": 146,
+        "./CCValueType": 168
     } ],
-    139: [ function(require, module, exports) {
+    165: [ function(require, module, exports) {
         var ValueType = require("./CCValueType");
         var JS = require("../platform/js");
         function Size(width, height) {
-            if (width && "object" == typeof width) {
+            if (width && "object" === typeof width) {
                 height = width.height;
                 width = width.width;
             }
@@ -22374,11 +25484,11 @@
         };
         cc.Size = module.exports = Size;
     }, {
-        "../platform/CCClass": 108,
-        "../platform/js": 121,
-        "./CCValueType": 142
+        "../platform/CCClass": 132,
+        "../platform/js": 146,
+        "./CCValueType": 168
     } ],
-    140: [ function(require, module, exports) {
+    166: [ function(require, module, exports) {
         cc.Acceleration = function(x, y, z, timestamp) {
             this.x = x || 0;
             this.y = y || 0;
@@ -22533,7 +25643,7 @@
             }
         });
     }, {} ],
-    141: [ function(require, module, exports) {
+    167: [ function(require, module, exports) {
         cc.WebGLColor = function(r, g, b, a, arrayBuffer, offset) {
             this._arrayBuffer = arrayBuffer || new ArrayBuffer(cc.WebGLColor.BYTES_PER_ELEMENT);
             this._offset = offset || 0;
@@ -22542,7 +25652,7 @@
             this._view[0] = r || 0;
             this._view[1] = g || 0;
             this._view[2] = b || 0;
-            if ("number" == typeof a) {
+            if ("number" === typeof a) {
                 this._view[3] = a;
             } else {
                 this._view[3] = 255;
@@ -22990,7 +26100,7 @@
         cc.js.getset(_p, "b", _p._getB, _p._setB);
         cc.js.getset(_p, "c", _p._getC, _p._setC);
     }, {} ],
-    142: [ function(require, module, exports) {
+    168: [ function(require, module, exports) {
         var JS = require("../platform/js");
         function ValueType() {}
         JS.setClassName("cc.ValueType", ValueType);
@@ -23005,14 +26115,14 @@
         cc.ValueType = ValueType;
         module.exports = ValueType;
     }, {
-        "../platform/js": 121
+        "../platform/js": 146
     } ],
-    143: [ function(require, module, exports) {
+    169: [ function(require, module, exports) {
         var ValueType = require("./CCValueType");
         var JS = require("../platform/js");
         var CCClass = require("../platform/CCClass");
         function Vec2(x, y) {
-            if (x && "object" == typeof x) {
+            if (x && "object" === typeof x) {
                 y = x.y;
                 x = x.x;
             }
@@ -23198,11 +26308,11 @@
         };
         module.exports = cc.Vec2;
     }, {
-        "../platform/CCClass": 108,
-        "../platform/js": 121,
-        "./CCValueType": 142
+        "../platform/CCClass": 132,
+        "../platform/js": 146,
+        "./CCValueType": 168
     } ],
-    144: [ function(require, module, exports) {
+    170: [ function(require, module, exports) {
         require("./CCValueType");
         require("./CCEnum");
         require("./CCVec2");
@@ -23214,22 +26324,22 @@
         require("./CCAffineTransform");
         require("./CCTypesWebGL");
     }, {
-        "./CCAffineTransform": 134,
-        "./CCColor": 135,
-        "./CCEnum": 136,
-        "./CCPointExtension": 137,
-        "./CCRect": 138,
-        "./CCSize": 139,
-        "./CCTypes": 140,
-        "./CCTypesWebGL": 141,
-        "./CCValueType": 142,
-        "./CCVec2": 143
+        "./CCAffineTransform": 160,
+        "./CCColor": 161,
+        "./CCEnum": 162,
+        "./CCPointExtension": 163,
+        "./CCRect": 164,
+        "./CCSize": 165,
+        "./CCTypes": 166,
+        "./CCTypesWebGL": 167,
+        "./CCValueType": 168,
+        "./CCVec2": 169
     } ],
-    145: [ function(require, module, exports) {
+    171: [ function(require, module, exports) {
         var js = cc.js;
         function deprecateEnum(obj, oldPath, newPath, hasTypePrefixBefore) {
             hasTypePrefixBefore = false !== hasTypePrefixBefore;
-            var enumDef = eval(newPath);
+            var enumDef = Function("return " + newPath)();
             var entries = cc.Enum.getList(enumDef);
             var delimiter = hasTypePrefixBefore ? "_" : ".";
             for (var i = 0; i < entries.length; i++) {
@@ -23265,7 +26375,7 @@
             }
             var className = ownerName || cc.js.getClassName(owner);
             var Info = "Sorry, " + className + ".%s is removed, please use %s instead.";
-            for (var prop in obj) {
+            var _loop = function() {
                 function define(prop, getset) {
                     function accessor(newProp) {
                         cc.error(Info, prop, newProp);
@@ -23275,9 +26385,9 @@
                     }));
                     js.getset(owner, prop, accessor.bind(null, getset[0]), getset[1] && accessor.bind(null, getset[1]));
                 }
-                var getset = obj[prop];
+                getset = obj[prop];
                 if ("*" === prop[0]) {
-                    var etProp = prop.slice(1);
+                    etProp = prop.slice(1);
                     define("g" + etProp, getset);
                     define("s" + etProp, getset);
                 } else {
@@ -23287,6 +26397,11 @@
                         define(x, getset);
                     });
                 }
+            };
+            for (var prop in obj) {
+                var getset;
+                var etProp;
+                _loop();
             }
         }
         function shouldNotUseNodeProp(component) {
@@ -23308,10 +26423,10 @@
         var ERR;
         js.obsolete(cc.loader, "cc.loader.loadResAll", "loadResDir");
     }, {} ],
-    146: [ function(require, module, exports) {
+    172: [ function(require, module, exports) {
         var MotionStreak = cc.Class({
             name: "cc.MotionStreak",
-            "extends": cc.Component,
+            extends: cc.Component,
             editor: false,
             ctor: function() {
                 this._root = null;
@@ -23319,7 +26434,7 @@
             },
             properties: {
                 preview: {
-                    "default": false,
+                    default: false,
                     editorOnly: true,
                     notify: false,
                     animatable: false
@@ -23334,7 +26449,7 @@
                         this._motionStreak && this._motionStreak.setFadeTime(value);
                     },
                     animatable: false,
-                    tooltip: "i18n:COMPONENT.motionStreak.fadeTime"
+                    tooltip: false
                 },
                 _minSeg: 1,
                 minSeg: {
@@ -23346,7 +26461,7 @@
                         this._motionStreak && this._motionStreak.setMinSeg(value);
                     },
                     animatable: false,
-                    tooltip: "i18n:COMPONENT.motionStreak.minSeg"
+                    tooltip: false
                 },
                 _stroke: 64,
                 stroke: {
@@ -23358,10 +26473,10 @@
                         this._motionStreak && this._motionStreak.setStroke(value);
                     },
                     animatable: false,
-                    tooltip: "i18n:COMPONENT.motionStreak.stroke"
+                    tooltip: false
                 },
                 _texture: {
-                    "default": "",
+                    default: "",
                     url: cc.Texture2D
                 },
                 texture: {
@@ -23377,7 +26492,7 @@
                     },
                     url: cc.Texture2D,
                     animatable: false,
-                    tooltip: "i18n:COMPONENT.motionStreak.texture"
+                    tooltip: false
                 },
                 _color: cc.Color.WHITE,
                 color: {
@@ -23388,7 +26503,7 @@
                         this._color = value;
                         this._motionStreak && this._motionStreak.tintWithColor(value);
                     },
-                    tooltip: "i18n:COMPONENT.motionStreak.color"
+                    tooltip: false
                 },
                 _fastMode: false,
                 fastMode: {
@@ -23400,7 +26515,7 @@
                         this._motionStreak && this._motionStreak.setFastMode(value);
                     },
                     animatable: false,
-                    tooltip: "i18n:COMPONENT.motionStreak.fastMode"
+                    tooltip: false
                 }
             },
             onFocusInEditor: false,
@@ -23436,14 +26551,14 @@
         });
         cc.MotionStreak = module.exports = MotionStreak;
     }, {} ],
-    147: [ function(require, module, exports) {
+    173: [ function(require, module, exports) {
         var ParticleAsset = cc.Class({
             name: "cc.ParticleAsset",
-            "extends": cc.RawAsset
+            extends: cc.RawAsset
         });
         cc.ParticleAsset = module.exports = ParticleAsset;
     }, {} ],
-    148: [ function(require, module, exports) {
+    174: [ function(require, module, exports) {
         var BlendFactor = cc.BlendFunc.BlendFactor;
         var EmitterMode = cc.Enum({
             GRAVITY: 0,
@@ -23456,11 +26571,11 @@
         });
         var properties = {
             preview: {
-                "default": true,
+                default: true,
                 editorOnly: true,
                 notify: false,
                 animatable: false,
-                tooltip: "i18n:COMPONENT.particle_system.preview"
+                tooltip: false
             },
             _custom: false,
             custom: {
@@ -23474,10 +26589,10 @@
                     }
                 },
                 animatable: false,
-                tooltip: "i18n:COMPONENT.particle_system.custom"
+                tooltip: false
             },
             _file: {
-                "default": "",
+                default: "",
                 url: cc.ParticleAsset
             },
             file: {
@@ -23492,10 +26607,10 @@
                 },
                 animatable: false,
                 url: cc.ParticleAsset,
-                tooltip: "i18n:COMPONENT.particle_system.file"
+                tooltip: false
             },
             _texture: {
-                "default": "",
+                default: "",
                 url: cc.Texture2D
             },
             texture: {
@@ -23508,7 +26623,7 @@
                     !value && this._file && this._applyFile();
                 },
                 url: cc.Texture2D,
-                tooltip: "i18n:COMPONENT.particle_system.texture"
+                tooltip: false
             },
             particleCount: {
                 get: function() {
@@ -23518,7 +26633,7 @@
                     this._sgNode.particleCount = value;
                 },
                 visible: false,
-                tooltip: "i18n:COMPONENT.particle_system.particleCount"
+                tooltip: false
             },
             _srcBlendFactor: BlendFactor.SRC_ALPHA,
             srcBlendFactor: {
@@ -23532,7 +26647,7 @@
                 },
                 animatable: false,
                 type: BlendFactor,
-                tooltip: "i18n:COMPONENT.particle_system.srcBlendFactor"
+                tooltip: false
             },
             _dstBlendFactor: BlendFactor.ONE_MINUS_SRC_ALPHA,
             dstBlendFactor: {
@@ -23546,7 +26661,7 @@
                 },
                 animatable: false,
                 type: BlendFactor,
-                tooltip: "i18n:COMPONENT.particle_system.dstBlendFactor"
+                tooltip: false
             },
             playOnLoad: true,
             _autoRemoveOnFinish: false,
@@ -23561,7 +26676,7 @@
                     }
                 },
                 animatable: false,
-                tooltip: "i18n:COMPONENT.particle_system.autoRemoveOnFinish"
+                tooltip: false
             },
             active: {
                 get: function() {
@@ -23643,13 +26758,14 @@
         properties.emitterMode.type = EmitterMode;
         var ParticleSystem = cc.Class({
             name: "cc.ParticleSystem",
-            "extends": cc._RendererUnderSG,
+            extends: cc._RendererUnderSG,
             editor: false,
             ctor: function() {
                 this._previewTimer = null;
                 this._focused = false;
                 this._willStart = false;
                 this._blendFunc = new cc.BlendFunc(0, 0);
+                this._originOnExit = null;
             },
             properties: properties,
             statics: {
@@ -23760,23 +26876,29 @@
                 var autoRemove = this._autoRemoveOnFinish;
                 sgNode.autoRemoveOnFinish = autoRemove;
                 if (autoRemove) {
-                    cc.assert(!sgNode.onExit);
+                    if (this._originOnExit) {
+                        return;
+                    }
+                    this._originOnExit = sgNode.onExit;
                     var self = this;
                     sgNode.onExit = function() {
-                        _ccsg.Node.prototype.onExit.call(this);
+                        self._originOnExit.call(this);
                         self.node.destroy();
                     };
                 } else {
-                    sgNode.hasOwnProperty("onExit") && (sgNode.onExit = _ccsg.Node.prototype.onExit);
+                    if (this._originOnExit) {
+                        sgNode.onExit = this._originOnExit;
+                        this._originOnExit = null;
+                    }
                 }
             }
         });
         cc.ParticleSystem = module.exports = ParticleSystem;
     }, {} ],
-    149: [ function(require, module, exports) {
+    175: [ function(require, module, exports) {
         var TiledLayer = cc.Class({
             name: "cc.TiledLayer",
-            "extends": cc._SGComponent,
+            extends: cc._SGComponent,
             onEnable: function() {
                 this._sgNode && this._sgNode.setVisible(true);
             },
@@ -23949,7 +27071,7 @@
         });
         cc.TiledLayer = module.exports = TiledLayer;
     }, {} ],
-    150: [ function(require, module, exports) {
+    176: [ function(require, module, exports) {
         var Orientation = cc.Enum({
             ORTHO: 0,
             HEX: 1,
@@ -23987,7 +27109,7 @@
         });
         var TiledMap = cc.Class({
             name: "cc.TiledMap",
-            "extends": cc._RendererInSG,
+            extends: cc._RendererInSG,
             editor: false,
             statics: {
                 Orientation: Orientation,
@@ -23999,11 +27121,11 @@
             },
             properties: {
                 _detachedChildren: {
-                    "default": [],
+                    default: [],
                     serializable: false
                 },
                 _tmxFile: {
-                    "default": null,
+                    default: null,
                     type: cc.TiledMapAsset
                 },
                 tmxAsset: {
@@ -24374,23 +27496,23 @@
             return [];
         }, false);
     }, {} ],
-    151: [ function(require, module, exports) {
+    177: [ function(require, module, exports) {
         var TiledMapAsset = cc.Class({
             name: "cc.TiledMapAsset",
-            "extends": cc.Asset,
+            extends: cc.Asset,
             properties: {
                 tmxXmlStr: {
-                    "default": ""
+                    default: ""
                 },
                 tmxFolderPath: {
-                    "default": ""
+                    default: ""
                 },
                 textures: {
-                    "default": [],
+                    default: [],
                     url: [ cc.Texture2D ]
                 },
                 tsxFiles: {
-                    "default": [],
+                    default: [],
                     url: [ cc.RawAsset ]
                 }
             },
@@ -24402,10 +27524,10 @@
         cc.TiledMapAsset = TiledMapAsset;
         module.exports = TiledMapAsset;
     }, {} ],
-    152: [ function(require, module, exports) {
+    178: [ function(require, module, exports) {
         var TiledObjectGroup = cc.Class({
             name: "cc.TiledObjectGroup",
-            "extends": cc._SGComponent,
+            extends: cc._SGComponent,
             onEnable: function() {
                 this._sgNode && this._sgNode.setVisible(true);
             },
@@ -24489,7 +27611,7 @@
         });
         cc.TiledObjectGroup = module.exports = TiledObjectGroup;
     }, {} ],
-    153: [ function(require, module, exports) {
+    179: [ function(require, module, exports) {
         require("./cocos2d/core");
         require("./cocos2d/animation");
         require("./cocos2d/particle/CCParticleAsset");
@@ -24508,26 +27630,25 @@
         require("./extensions/ccpool/CCPool.js");
         require("./cocos2d/deprecated");
     }, {
-        "./cocos2d/actions": 8,
+        "./cocos2d/actions": 9,
         "./cocos2d/animation": 18,
-        "./cocos2d/core": 91,
-        "./cocos2d/core/components/CCStudioComponent": 69,
-        "./cocos2d/deprecated": 145,
-        "./cocos2d/motion-streak/CCMotionStreak": 146,
-        "./cocos2d/particle/CCParticleAsset": 147,
-        "./cocos2d/particle/CCParticleSystem": 148,
-        "./cocos2d/tilemap/CCTiledLayer": 149,
-        "./cocos2d/tilemap/CCTiledMap": 150,
-        "./cocos2d/tilemap/CCTiledMapAsset": 151,
-        "./cocos2d/tilemap/CCTiledObjectGroup": 152,
-        "./extensions/ccpool/CCNodePool.js": 154,
-        "./extensions/ccpool/CCPool.js": 155,
-        "./extensions/dragonbones": 159,
-        "./extensions/spine": 163,
-        "./external/chipmunk/chipmunk.js": 164
+        "./cocos2d/core": 93,
+        "./cocos2d/core/components/CCStudioComponent": 71,
+        "./cocos2d/deprecated": 171,
+        "./cocos2d/motion-streak/CCMotionStreak": 172,
+        "./cocos2d/particle/CCParticleAsset": 173,
+        "./cocos2d/particle/CCParticleSystem": 174,
+        "./cocos2d/tilemap/CCTiledLayer": 175,
+        "./cocos2d/tilemap/CCTiledMap": 176,
+        "./cocos2d/tilemap/CCTiledMapAsset": 177,
+        "./cocos2d/tilemap/CCTiledObjectGroup": 178,
+        "./extensions/ccpool/CCNodePool.js": 180,
+        "./extensions/ccpool/CCPool.js": 181,
+        "./extensions/dragonbones": 185,
+        "./extensions/spine": 189,
+        "./external/chipmunk/chipmunk.js": 190
     } ],
-    154: [ function(require, module, exports) {
-        var _args = [];
+    180: [ function(require, module, exports) {
         cc.NodePool = function(poolHandlerComp) {
             this.poolHandlerComp = poolHandlerComp;
             this._pool = [];
@@ -24552,7 +27673,7 @@
                     this._pool.push(obj);
                 }
             },
-            get: function() {
+            get: function(...args) {
                 var last = this._pool.length - 1;
                 if (last < 0) {
                     return null;
@@ -24560,20 +27681,13 @@
                 var obj = this._pool[last];
                 this._pool.length = last;
                 var handler = this.poolHandlerComp ? obj.getComponent(this.poolHandlerComp) : null;
-                if (handler && handler.reuse) {
-                    _args.length = arguments.length;
-                    for (var i = 0, l = arguments.length; i < l; i++) {
-                        _args[i] = arguments[i];
-                    }
-                    handler.reuse.apply(handler, _args);
-                    _args.length = 0;
-                }
+                handler && handler.reuse && handler.reuse.apply(handler, args);
                 return obj;
             }
         };
         module.exports = cc.NodePool;
     }, {} ],
-    155: [ function(require, module, exports) {
+    181: [ function(require, module, exports) {
         var _args = [];
         cc.pool = {
             _pool: {},
@@ -24616,19 +27730,13 @@
                     }
                 }
             },
-            getFromPool: function(objClass) {
+            getFromPool: function(objClass, ...args) {
                 if (this.hasObject(objClass)) {
                     var cid = cc.js._getClassId(objClass);
                     var list = this._pool[cid];
-                    _args.length = arguments.length;
-                    for (var i = 0; i < arguments.length; i++) {
-                        _args[i] = arguments[i];
-                    }
-                    _args.shift();
                     var obj = list.pop();
-                    obj.reuse && obj.reuse.apply(obj, _args);
+                    obj.reuse && obj.reuse.apply(obj, args);
                     obj.release && this._autoRelease(obj);
-                    _args.length = 0;
                     return obj;
                 }
             },
@@ -24643,9 +27751,9 @@
             }
         };
     }, {} ],
-    156: [ function(require, module, exports) {
+    182: [ function(require, module, exports) {
         var DefaultArmaturesEnum = cc.Enum({
-            "default": -1
+            default: -1
         });
         var DefaultAnimsEnum = cc.Enum({
             "<None>": 0
@@ -24658,36 +27766,36 @@
         }
         dragonBones.ArmatureDisplay = cc.Class({
             name: "dragonBones.ArmatureDisplay",
-            "extends": cc._RendererUnderSG,
+            extends: cc._RendererUnderSG,
             editor: false,
             properties: {
                 _factory: {
-                    "default": null,
+                    default: null,
                     type: dragonBones.CCFactory,
                     serializable: false
                 },
                 _dragonBonesData: {
-                    "default": null,
+                    default: null,
                     type: dragonBones.DragonBonesData,
                     serializable: false
                 },
                 dragonAsset: {
-                    "default": null,
+                    default: null,
                     type: dragonBones.DragonBonesAsset,
                     notify: function() {
                         this._parseDragonAsset();
                         this._refresh();
                     },
-                    tooltip: "i18n:COMPONENT.dragon_bones.dragon_bones_asset"
+                    tooltip: false
                 },
                 dragonAtlasAsset: {
-                    "default": null,
+                    default: null,
                     type: dragonBones.DragonBonesAtlasAsset,
                     notify: function() {
                         this._parseDragonAtlasAsset();
                         this._refreshSgNode();
                     },
-                    tooltip: "i18n:COMPONENT.dragon_bones.dragon_bones_atlas_asset"
+                    tooltip: false
                 },
                 _armatureName: "",
                 armatureName: {
@@ -24713,7 +27821,7 @@
                     visible: false
                 },
                 _defaultArmatureIndex: {
-                    "default": 0,
+                    default: 0,
                     notify: function() {
                         var armatureName = "";
                         if (this.dragonAsset) {
@@ -24730,10 +27838,10 @@
                     visible: true,
                     editorOnly: true,
                     displayName: "Armature",
-                    tooltip: "i18n:COMPONENT.dragon_bones.armature_name"
+                    tooltip: false
                 },
                 _animationIndex: {
-                    "default": 0,
+                    default: 0,
                     notify: function() {
                         if (0 === this._animationIndex) {
                             this.animationName = "";
@@ -24751,26 +27859,26 @@
                     visible: true,
                     editorOnly: true,
                     displayName: "Animation",
-                    tooltip: "i18n:COMPONENT.dragon_bones.animation_name"
+                    tooltip: false
                 },
                 timeScale: {
-                    "default": 1,
+                    default: 1,
                     notify: function() {
                         this._sgNode && (this._sgNode.animation().timeScale = this.timeScale);
                     },
-                    tooltip: "i18n:COMPONENT.dragon_bones.time_scale"
+                    tooltip: false
                 },
                 playTimes: {
-                    "default": -1,
-                    tooltip: "i18n:COMPONENT.dragon_bones.play_times"
+                    default: -1,
+                    tooltip: false
                 },
                 debugBones: {
-                    "default": false,
+                    default: false,
                     notify: function() {
                         this._sgNode && this._sgNode.setDebugBones(this.debugBones);
                     },
                     editorOnly: true,
-                    tooltip: "i18n:COMPONENT.dragon_bones.debug_bones"
+                    tooltip: false
                 }
             },
             ctor: function() {
@@ -24891,10 +27999,10 @@
             }
         });
     }, {} ],
-    157: [ function(require, module, exports) {
+    183: [ function(require, module, exports) {
         var DragonBonesAsset = cc.Class({
             name: "dragonBones.DragonBonesAsset",
-            "extends": cc.Asset,
+            extends: cc.Asset,
             properties: {
                 _dragonBonesJson: "",
                 dragonBonesJson: {
@@ -24918,10 +28026,10 @@
         });
         dragonBones.DragonBonesAsset = module.exports = DragonBonesAsset;
     }, {} ],
-    158: [ function(require, module, exports) {
+    184: [ function(require, module, exports) {
         var DragonBonesAtlasAsset = cc.Class({
             name: "dragonBones.DragonBonesAtlasAsset",
-            "extends": cc.Asset,
+            extends: cc.Asset,
             properties: {
                 _atlasJson: "",
                 atlasJson: {
@@ -24933,7 +28041,7 @@
                     }
                 },
                 texture: {
-                    "default": "",
+                    default: "",
                     url: cc.Texture2D
                 }
             },
@@ -24944,7 +28052,7 @@
         });
         dragonBones.DragonBonesAtlasAsset = module.exports = DragonBonesAtlasAsset;
     }, {} ],
-    159: [ function(require, module, exports) {
+    185: [ function(require, module, exports) {
         dragonBones = dragonBones;
         dragonBones.DisplayType = {
             Image: 0,
@@ -24989,19 +28097,19 @@
         require("./DragonBonesAtlasAsset");
         require("./ArmatureDisplay");
     }, {
-        "./ArmatureDisplay": 156,
-        "./CCArmatureDisplay": 186,
-        "./CCFactory": 186,
-        "./CCSlot": 186,
-        "./CCTextureData": 186,
-        "./DragonBonesAsset": 157,
-        "./DragonBonesAtlasAsset": 158,
-        "./lib/dragonBones": 186
+        "./ArmatureDisplay": 182,
+        "./CCArmatureDisplay": 213,
+        "./CCFactory": 213,
+        "./CCSlot": 213,
+        "./CCTextureData": 213,
+        "./DragonBonesAsset": 183,
+        "./DragonBonesAtlasAsset": 184,
+        "./lib/dragonBones": 213
     } ],
-    160: [ function(require, module, exports) {
+    186: [ function(require, module, exports) {
         sp.SkeletonTexture = cc.Class({
             name: "sp.SkeletonTexture",
-            "extends": sp.spine.Texture,
+            extends: sp.spine.Texture,
             _texture: null,
             setRealTexture: function(tex) {
                 this._texture = tex;
@@ -25031,9 +28139,9 @@
             }
         });
     }, {} ],
-    161: [ function(require, module, exports) {
+    187: [ function(require, module, exports) {
         var DefaultSkinsEnum = cc.Enum({
-            "default": -1
+            default: -1
         });
         var DefaultAnimsEnum = cc.Enum({
             "<None>": 0
@@ -25046,31 +28154,31 @@
         }
         sp.Skeleton = cc.Class({
             name: "sp.Skeleton",
-            "extends": cc._RendererUnderSG,
+            extends: cc._RendererUnderSG,
             editor: false,
             properties: {
                 _startListener: {
-                    "default": null,
+                    default: null,
                     serializable: false
                 },
                 _endListener: {
-                    "default": null,
+                    default: null,
                     serializable: false
                 },
                 _completeListener: {
-                    "default": null,
+                    default: null,
                     serializable: false
                 },
                 _eventListener: {
-                    "default": null,
+                    default: null,
                     serializable: false
                 },
                 _disposeListener: {
-                    "default": null,
+                    default: null,
                     serializable: false
                 },
                 _interruptListener: {
-                    "default": null,
+                    default: null,
                     serializable: false
                 },
                 _paused: false,
@@ -25088,21 +28196,21 @@
                     visible: false
                 },
                 skeletonData: {
-                    "default": null,
+                    default: null,
                     type: sp.SkeletonData,
                     notify: function() {
                         this.defaultSkin = "";
                         this.defaultAnimation = "";
                         this._refresh();
                     },
-                    tooltip: "i18n:COMPONENT.skeleton.skeleton_data"
+                    tooltip: false
                 },
                 defaultSkin: {
-                    "default": "",
+                    default: "",
                     visible: false
                 },
                 defaultAnimation: {
-                    "default": "",
+                    default: "",
                     visible: false
                 },
                 animation: {
@@ -25146,7 +28254,7 @@
                     type: DefaultSkinsEnum,
                     visible: true,
                     displayName: "Default Skin",
-                    tooltip: "i18n:COMPONENT.skeleton.default_skin"
+                    tooltip: false
                 },
                 _animationIndex: {
                     get: function() {
@@ -25178,11 +28286,11 @@
                     type: DefaultAnimsEnum,
                     visible: true,
                     displayName: "Animation",
-                    tooltip: "i18n:COMPONENT.skeleton.animation"
+                    tooltip: false
                 },
                 loop: {
-                    "default": true,
-                    tooltip: "i18n:COMPONENT.skeleton.loop"
+                    default: true,
+                    tooltip: false
                 },
                 _premultipliedAlpha: true,
                 premultipliedAlpha: {
@@ -25193,30 +28301,30 @@
                         this._premultipliedAlpha = value;
                         this._sgNode && this._sgNode.setPremultipliedAlpha(value);
                     },
-                    tooltip: "i18n:COMPONENT.skeleton.premultipliedAlpha"
+                    tooltip: false
                 },
                 timeScale: {
-                    "default": 1,
+                    default: 1,
                     notify: function() {
                         this._sgNode && this._sgNode.setTimeScale(this.timeScale);
                     },
-                    tooltip: "i18n:COMPONENT.skeleton.time_scale"
+                    tooltip: false
                 },
                 debugSlots: {
-                    "default": false,
+                    default: false,
                     notify: function() {
                         this._sgNode && this._sgNode.setDebugSlotsEnabled(this.debugSlots);
                     },
                     editorOnly: true,
-                    tooltip: "i18n:COMPONENT.skeleton.debug_slots"
+                    tooltip: false
                 },
                 debugBones: {
-                    "default": false,
+                    default: false,
                     notify: function() {
                         this._sgNode && this._sgNode.setDebugBonesEnabled(this.debugBones);
                     },
                     editorOnly: true,
-                    tooltip: "i18n:COMPONENT.skeleton.debug_bones"
+                    tooltip: false
                 }
             },
             __preload: function() {
@@ -25235,7 +28343,7 @@
                     var jsonFile = this.skeletonData.rawUrl;
                     var atlasFile = this.skeletonData.atlasUrl;
                     if (atlasFile) {
-                        if ("string" != typeof atlasFile) {
+                        if ("string" !== typeof atlasFile) {
                             cc.errorID(7505);
                             return null;
                         }
@@ -25428,11 +28536,11 @@
             }
         });
     }, {} ],
-    162: [ function(require, module, exports) {
+    188: [ function(require, module, exports) {
         var TextureLoader = false;
         var SkeletonData = cc.Class({
             name: "sp.SkeletonData",
-            "extends": cc.Asset,
+            extends: cc.Asset,
             ctor: function() {
                 this.reset();
             },
@@ -25458,11 +28566,11 @@
                     }
                 },
                 atlasUrl: {
-                    "default": "",
+                    default: "",
                     url: cc.RawAsset
                 },
                 textures: {
-                    "default": [],
+                    default: [],
                     url: [ cc.Texture2D ]
                 },
                 scale: 1
@@ -25482,7 +28590,7 @@
         });
         sp.SkeletonData = module.exports = SkeletonData;
     }, {} ],
-    163: [ function(require, module, exports) {
+    189: [ function(require, module, exports) {
         sp = sp;
         sp.VERTEX_INDEX = {
             X1: 0,
@@ -25511,16 +28619,16 @@
         require("./SkeletonData");
         require("./Skeleton");
     }, {
-        "./SGSkeleton": 186,
-        "./SGSkeletonAnimation": 186,
-        "./SGSkeletonCanvasRenderCmd": 186,
-        "./SGSkeletonTexture": 160,
-        "./SGSkeletonWebGLRenderCmd": 186,
-        "./Skeleton": 161,
-        "./SkeletonData": 162,
-        "./lib/spine": 186
+        "./SGSkeleton": 213,
+        "./SGSkeletonAnimation": 213,
+        "./SGSkeletonCanvasRenderCmd": 213,
+        "./SGSkeletonTexture": 186,
+        "./SGSkeletonWebGLRenderCmd": 213,
+        "./Skeleton": 187,
+        "./SkeletonData": 188,
+        "./lib/spine": 213
     } ],
-    164: [ function(require, module, exports) {
+    190: [ function(require, module, exports) {
         Object.create = Object.create || function(o) {
             function F() {}
             F.prototype = o;
@@ -25544,7 +28652,7 @@
             return a > b ? a : b;
         };
         var min, max;
-        if ("object" == typeof window && window.navigator.userAgent.indexOf("Firefox") > -1) {
+        if ("object" === typeof window && window.navigator.userAgent.indexOf("Firefox") > -1) {
             min = Math.min;
             max = Math.max;
         } else {
@@ -25790,7 +28898,7 @@
             return this;
         };
         var vneg = cp.v.neg = function(v) {
-            return new Vect((-v.x), (-v.y));
+            return new Vect(-v.x, -v.y);
         };
         Vect.prototype.neg = function() {
             this.x = -this.x;
@@ -25812,10 +28920,10 @@
             return x1 * y2 - y1 * x2;
         };
         var vperp = cp.v.perp = function(v) {
-            return new Vect((-v.y), v.x);
+            return new Vect(-v.y, v.x);
         };
         var vpvrperp = cp.v.pvrperp = function(v) {
-            return new Vect(v.y, (-v.x));
+            return new Vect(v.y, -v.x);
         };
         var vproject = cp.v.project = function(v1, v2) {
             return vmult(v2, vdot(v1, v2) / vlengthsq(v2));
@@ -26183,7 +29291,7 @@
         };
         PolyShape.prototype.setVerts = function(verts, offset) {
             assert(verts.length >= 4, "Polygons require some verts");
-            assert("number" == typeof verts[0], "Polygon verticies should be specified in a flattened list (eg [x1,y1,x2,y2,x3,y3,...])");
+            assert("number" === typeof verts[0], "Polygon verticies should be specified in a flattened list (eg [x1,y1,x2,y2,x3,y3,...])");
             assert(polyValidate(verts), "Polygon is concave or has a reversed winding. Consider using cpConvexHull()");
             var len = verts.length;
             var numVerts = len >> 1;
@@ -26206,7 +29314,7 @@
         var BoxShape = cp.BoxShape = function(body, width, height) {
             var hw = width / 2;
             var hh = height / 2;
-            return BoxShape2(body, new BB((-hw), (-hh), hw, hh));
+            return BoxShape2(body, new BB(-hw, -hh, hw, hh));
         };
         var BoxShape2 = cp.BoxShape2 = function(body, box) {
             var verts = [ box.l, box.b, box.l, box.t, box.r, box.t, box.r, box.b ];
@@ -26362,7 +29470,7 @@
             return body;
         };
         cp.StaticBody = createStaticBody;
-        if ("undefined" != typeof DEBUG && DEBUG) {
+        if ("undefined" !== typeof DEBUG && DEBUG) {
             var v_assert_nan = function(v, message) {
                 assert(v.x == v.x && v.y == v.y, message);
             };
@@ -28364,7 +31472,7 @@
         };
         var PivotJoint = cp.PivotJoint = function(a, b, anchr1, anchr2) {
             Constraint.call(this, a, b);
-            if ("undefined" == typeof anchr2) {
+            if ("undefined" === typeof anchr2) {
                 var pivot = anchr1;
                 anchr1 = a ? a.world2Local(pivot) : pivot;
                 anchr2 = b ? b.world2Local(pivot) : pivot;
@@ -28736,7 +31844,7 @@
             return Math.abs(this.jAcc);
         };
     }, {} ],
-    165: [ function(require, module, exports) {
+    191: [ function(require, module, exports) {
         "use strict";
         var _engineNumberVersion = function() {
             var result = /Cocos2d\-JS\sv([\d]+)\.([\d]+)/.exec(cc.ENGINE_VERSION);
@@ -28746,18 +31854,12 @@
             } : null;
         }();
         var originLog = console.log;
-        var _args = [];
         try {
-            console.log = function() {
-                _args.length = arguments.length;
-                for (var i = 0; i < arguments.length; i++) {
-                    _args[i] = arguments[i];
-                }
-                originLog(cc.js.formatStr.apply(null, _args));
-                _args.length = 0;
+            console.log = function(...args) {
+                originLog(cc.js.formatStr.apply(null, args));
             };
         } catch (e) {}
-        eval('if(typeof CC_TEST=="undefined")window.CC_TEST=typeof describe!="undefined"||typeof QUnit=="object";if(typeof CC_EDITOR=="undefined")window.CC_EDITOR=typeof Editor=="object"&&typeof process=="object"&&"electron" in process.versions;if(typeof CC_DEV=="undefined")window.CC_DEV=CC_EDITOR||CC_TEST;if(typeof CC_JSB=="undefined")window.CC_JSB=true;');
+        Function('if(typeof CC_TEST=="undefined")window.CC_TEST=typeof describe!="undefined"||typeof QUnit=="object";if(typeof CC_EDITOR=="undefined")window.CC_EDITOR=typeof Editor=="object"&&typeof process=="object"&&"electron" in process.versions;if(typeof CC_DEV=="undefined")window.CC_DEV=CC_EDITOR||CC_TEST;if(typeof CC_JSB=="undefined")window.CC_JSB=true;')();
         require("./jsb-predefine");
         require("./jsb-game");
         require("./jsb-loader");
@@ -28776,45 +31878,47 @@
         require("./jsb-etc");
         require("./jsb-audio");
         require("./jsb-tiledmap");
+        require("./jsb-box2d");
         require("./jsb-dragonbones");
         cc.runtime && require("./versions/jsb-polyfill-runtime");
     }, {
-        "./jsb-action": 166,
-        "./jsb-audio": 167,
-        "./jsb-director": 168,
-        "./jsb-dragonbones": 169,
-        "./jsb-editbox": 170,
-        "./jsb-enums": 171,
-        "./jsb-etc": 172,
-        "./jsb-event": 173,
-        "./jsb-game": 174,
-        "./jsb-label": 175,
-        "./jsb-loader": 176,
-        "./jsb-particle": 177,
-        "./jsb-predefine": 178,
-        "./jsb-scale9sprite": 179,
-        "./jsb-spine": 180,
-        "./jsb-tex-sprite-frame": 181,
-        "./jsb-tiledmap": 182,
-        "./jsb-videoplayer": 183,
-        "./jsb-webview.js": 184,
-        "./versions/jsb-polyfill-runtime": 185
+        "./jsb-action": 192,
+        "./jsb-audio": 193,
+        "./jsb-box2d": 194,
+        "./jsb-director": 195,
+        "./jsb-dragonbones": 196,
+        "./jsb-editbox": 197,
+        "./jsb-enums": 198,
+        "./jsb-etc": 199,
+        "./jsb-event": 200,
+        "./jsb-game": 201,
+        "./jsb-label": 202,
+        "./jsb-loader": 203,
+        "./jsb-particle": 204,
+        "./jsb-predefine": 205,
+        "./jsb-scale9sprite": 206,
+        "./jsb-spine": 207,
+        "./jsb-tex-sprite-frame": 208,
+        "./jsb-tiledmap": 209,
+        "./jsb-videoplayer": 210,
+        "./jsb-webview.js": 211,
+        "./versions/jsb-polyfill-runtime": 212
     } ],
-    166: [ function(require, module, exports) {
+    192: [ function(require, module, exports) {
         var ENABLE_GC_FOR_NATIVE_OBJECTS = cc.macro.ENABLE_GC_FOR_NATIVE_OBJECTS;
-        var actionArr = [ "ActionEase", "EaseExponentialIn", "EaseExponentialOut", "EaseExponentialInOut", "EaseSineIn", "EaseSineOut", "EaseSineInOut", "EaseBounce", "EaseBounceIn", "EaseBounceOut", "EaseBounceInOut", "EaseBackIn", "EaseBackOut", "EaseBackInOut", "EaseRateAction", "EaseIn", "EaseElastic", "EaseElasticIn", "EaseElasticOut", "EaseElasticInOut", "RemoveSelf", "FlipX", "FlipY", "Place", "CallFunc", "DelayTime", "Sequence", "Spawn", "Speed", "Repeat", "RepeatForever", "Follow", "TargetedAction", "Animate", "OrbitCamera", "GridAction", "ProgressTo", "ProgressFromTo", "ActionInterval", "RotateTo", "RotateBy", "MoveBy", "MoveTo", "SkewTo", "SkewBy", "JumpTo", "JumpBy", "ScaleTo", "ScaleBy", "Blink", "FadeTo", "FadeIn", "FadeOut", "TintTo", "TintBy" ];
+        var actionArr = [ "ActionEase", "EaseExponentialIn", "EaseExponentialOut", "EaseExponentialInOut", "EaseSineIn", "EaseSineOut", "EaseSineInOut", "EaseBounce", "EaseBounceIn", "EaseBounceOut", "EaseBounceInOut", "EaseBackIn", "EaseBackOut", "EaseBackInOut", "EaseRateAction", "EaseIn", "EaseElastic", "EaseElasticIn", "EaseElasticOut", "EaseElasticInOut", "RemoveSelf", "FlipX", "FlipY", "Place", "CallFunc", "DelayTime", "Sequence", "Spawn", "Speed", "Repeat", "RepeatForever", "Follow", "TargetedAction", "ActionInterval", "RotateTo", "RotateBy", "MoveBy", "MoveTo", "SkewTo", "SkewBy", "JumpTo", "JumpBy", "ScaleTo", "ScaleBy", "Blink", "FadeTo", "FadeIn", "FadeOut", "TintTo", "TintBy" ];
         function setCtorReplacer(proto) {
             var ctor = proto._ctor;
-            proto._ctor = function() {
-                ctor.apply(this, arguments);
+            proto._ctor = function(...args) {
+                ctor.apply(this, args);
                 this.retain();
                 this._retained = true;
             };
         }
         function setAliasReplacer(name, type) {
             var aliasName = name[0].toLowerCase() + name.substr(1);
-            cc[aliasName] = function() {
-                var action = type.create.apply(this, arguments);
+            cc[aliasName] = function(...args) {
+                var action = type.create.apply(this, args);
                 action.retain();
                 action._retained = true;
                 return action;
@@ -28863,7 +31967,7 @@
                 target.scaleX = Math.abs(target.scaleX) * (this._flippedX ? -1 : 1);
             },
             reverse: function() {
-                return new cc.FlipX((!this._flippedX));
+                return new cc.FlipX(!this._flippedX);
             },
             clone: function() {
                 return new cc.FlipX(this._flippedX);
@@ -28888,7 +31992,7 @@
                 target.scaleY = Math.abs(target.scaleY) * (this._flippedY ? -1 : 1);
             },
             reverse: function() {
-                return new cc.FlipY((!this._flippedY));
+                return new cc.FlipY(!this._flippedY);
             },
             clone: function() {
                 return new cc.FlipY(this._flippedY);
@@ -28943,12 +32047,12 @@
         };
         function setChainFuncReplacer(proto, name) {
             var oldFunc = proto[name];
-            proto[name] = function() {
+            proto[name] = function(...args) {
                 if (this._retained) {
                     this.release();
                     this._retained = false;
                 }
-                var newAction = oldFunc.apply(this, arguments);
+                var newAction = oldFunc.apply(this, args);
                 newAction.retain();
                 newAction._retained = true;
                 return newAction;
@@ -28986,10 +32090,9 @@
         function actionMgrFuncReplacer(funcName, targetPos) {
             var proto = cc.ActionManager.prototype;
             var oldFunc = proto[funcName];
-            proto[funcName] = function() {
-                var args = [];
-                for (var i = 0; i < arguments.length; i++) {
-                    i === targetPos ? args[i] = getSGTarget(arguments[i]) : args[i] = arguments[i];
+            proto[funcName] = function(...args) {
+                for (var i = 0; i < args.length; i++) {
+                    i === targetPos && (args[i] = getSGTarget(args[i]));
                 }
                 return args[targetPos] ? oldFunc.apply(this, args) : void 0;
             };
@@ -29085,7 +32188,7 @@
             action.prototype.update = actionUpdate[key];
         }
     }, {} ],
-    167: [ function(require, module, exports) {
+    193: [ function(require, module, exports) {
         cc.Audio = function(src) {
             this.src = src;
             this.volume = 1;
@@ -29193,39 +32296,474 @@
     }, {
         "../cocos2d/audio/deprecated": 22
     } ],
-    168: [ function(require, module, exports) {
+    194: [ function(require, module, exports) {
+        (function() {
+            window.b2 || (window.b2 = {});
+            var Vec2 = b2.Vec2 = function(x_, y_) {
+                void 0 === x_ && (x_ = 0);
+                void 0 === y_ && (y_ = 0);
+                this.x = x_;
+                this.y = y_;
+            };
+            Vec2.Make = function(x_, y_) {
+                void 0 === x_ && (x_ = 0);
+                void 0 === y_ && (y_ = 0);
+                return new Vec2(x_, y_);
+            };
+            Vec2.prototype.SetZero = function() {
+                this.x = 0;
+                this.y = 0;
+            };
+            Vec2.prototype.Set = function(x_, y_) {
+                void 0 === x_ && (x_ = 0);
+                void 0 === y_ && (y_ = 0);
+                this.x = x_;
+                this.y = y_;
+            };
+            Vec2.prototype.SetV = function(v) {
+                this.x = v.x;
+                this.y = v.y;
+            };
+            Vec2.prototype.GetNegative = function() {
+                return new Vec2(-this.x, -this.y);
+            };
+            Vec2.prototype.NegativeSelf = function() {
+                this.x = -this.x;
+                this.y = -this.y;
+            };
+            Vec2.prototype.Copy = function() {
+                return new Vec2(this.x, this.y);
+            };
+            Vec2.prototype.Add = function(v) {
+                this.x += v.x;
+                this.y += v.y;
+            };
+            Vec2.prototype.Subtract = function(v) {
+                this.x -= v.x;
+                this.y -= v.y;
+            };
+            Vec2.prototype.Multiply = function(a) {
+                void 0 === a && (a = 0);
+                this.x *= a;
+                this.y *= a;
+            };
+            Vec2.prototype.CrossVF = function(s) {
+                void 0 === s && (s = 0);
+                var tX = this.x;
+                this.x = s * this.y;
+                this.y = -s * tX;
+            };
+            Vec2.prototype.CrossFV = function(s) {
+                void 0 === s && (s = 0);
+                var tX = this.x;
+                this.x = -s * this.y;
+                this.y = s * tX;
+            };
+            Vec2.prototype.MinV = function(b) {
+                this.x = this.x < b.x ? this.x : b.x;
+                this.y = this.y < b.y ? this.y : b.y;
+            };
+            Vec2.prototype.MaxV = function(b) {
+                this.x = this.x > b.x ? this.x : b.x;
+                this.y = this.y > b.y ? this.y : b.y;
+            };
+            Vec2.prototype.Abs = function() {
+                this.x < 0 && (this.x = -this.x);
+                this.y < 0 && (this.y = -this.y);
+            };
+            Vec2.prototype.Length = function() {
+                return Math.sqrt(this.x * this.x + this.y * this.y);
+            };
+            Vec2.prototype.LengthSquared = function() {
+                return this.x * this.x + this.y * this.y;
+            };
+            Vec2.prototype.Normalize = function() {
+                var length = Math.sqrt(this.x * this.x + this.y * this.y);
+                if (length < Number.MIN_VALUE) {
+                    return 0;
+                }
+                var invLength = 1 / length;
+                this.x *= invLength;
+                this.y *= invLength;
+                return length;
+            };
+            Vec2.IsValid = function(x) {
+                void 0 === x && (x = 0);
+                return isFinite(x);
+            };
+            Vec2.prototype.IsValid = function() {
+                return Vec2.IsValid(this.x) && Vec2.IsValid(this.y);
+            };
+            var AABB = b2.AABB = function() {
+                this.lowerBound = new Vec2();
+                this.upperBound = new Vec2();
+            };
+            AABB.prototype.IsValid = function() {
+                var dX = this.upperBound.x - this.lowerBound.x;
+                var dY = this.upperBound.y - this.lowerBound.y;
+                var valid = dX >= 0 && dY >= 0;
+                valid = valid && this.lowerBound.IsValid() && this.upperBound.IsValid();
+                return valid;
+            };
+            AABB.prototype.GetCenter = function() {
+                return new Vec2((this.lowerBound.x + this.upperBound.x) / 2, (this.lowerBound.y + this.upperBound.y) / 2);
+            };
+            AABB.prototype.GetExtents = function() {
+                return new Vec2((this.upperBound.x - this.lowerBound.x) / 2, (this.upperBound.y - this.lowerBound.y) / 2);
+            };
+            AABB.prototype.Contains = function(aabb) {
+                var result = true;
+                result = result && this.lowerBound.x <= aabb.lowerBound.x;
+                result = result && this.lowerBound.y <= aabb.lowerBound.y;
+                result = result && aabb.upperBound.x <= this.upperBound.x;
+                result = result && aabb.upperBound.y <= this.upperBound.y;
+                return result;
+            };
+            AABB.prototype.RayCast = function(output, input) {
+                var tmin = -Number.MAX_VALUE;
+                var tmax = Number.MAX_VALUE;
+                var pX = input.p1.x;
+                var pY = input.p1.y;
+                var dX = input.p2.x - input.p1.x;
+                var dY = input.p2.y - input.p1.y;
+                var absDX = Math.abs(dX);
+                var absDY = Math.abs(dY);
+                var normal = output.normal;
+                var inv_d = 0;
+                var t1 = 0;
+                var t2 = 0;
+                var t3 = 0;
+                var s = 0;
+                if (absDX < Number.MIN_VALUE) {
+                    if (pX < this.lowerBound.x || this.upperBound.x < pX) {
+                        return false;
+                    }
+                } else {
+                    inv_d = 1 / dX;
+                    t1 = (this.lowerBound.x - pX) * inv_d;
+                    t2 = (this.upperBound.x - pX) * inv_d;
+                    s = -1;
+                    if (t1 > t2) {
+                        t3 = t1;
+                        t1 = t2;
+                        t2 = t3;
+                        s = 1;
+                    }
+                    if (t1 > tmin) {
+                        normal.x = s;
+                        normal.y = 0;
+                        tmin = t1;
+                    }
+                    tmax = Math.min(tmax, t2);
+                    if (tmin > tmax) {
+                        return false;
+                    }
+                }
+                if (absDY < Number.MIN_VALUE) {
+                    if (pY < this.lowerBound.y || this.upperBound.y < pY) {
+                        return false;
+                    }
+                } else {
+                    inv_d = 1 / dY;
+                    t1 = (this.lowerBound.y - pY) * inv_d;
+                    t2 = (this.upperBound.y - pY) * inv_d;
+                    s = -1;
+                    if (t1 > t2) {
+                        t3 = t1;
+                        t1 = t2;
+                        t2 = t3;
+                        s = 1;
+                    }
+                    if (t1 > tmin) {
+                        normal.y = s;
+                        normal.x = 0;
+                        tmin = t1;
+                    }
+                    tmax = Math.min(tmax, t2);
+                    if (tmin > tmax) {
+                        return false;
+                    }
+                }
+                output.fraction = tmin;
+                return true;
+            };
+            AABB.prototype.TestOverlap = function(other) {
+                var d1X = other.lowerBound.x - this.upperBound.x;
+                var d1Y = other.lowerBound.y - this.upperBound.y;
+                var d2X = this.lowerBound.x - other.upperBound.x;
+                var d2Y = this.lowerBound.y - other.upperBound.y;
+                if (d1X > 0 || d1Y > 0) {
+                    return false;
+                }
+                if (d2X > 0 || d2Y > 0) {
+                    return false;
+                }
+                return true;
+            };
+            AABB.Combine = function(aabb1, aabb2) {
+                var aabb = new AABB();
+                aabb.Combine(aabb1, aabb2);
+                return aabb;
+            };
+            AABB.prototype.Combine = function(aabb1, aabb2) {
+                this.lowerBound.x = Math.min(aabb1.lowerBound.x, aabb2.lowerBound.x);
+                this.lowerBound.y = Math.min(aabb1.lowerBound.y, aabb2.lowerBound.y);
+                this.upperBound.x = Math.max(aabb1.upperBound.x, aabb2.upperBound.x);
+                this.upperBound.y = Math.max(aabb1.upperBound.y, aabb2.upperBound.y);
+            };
+            var FilterData = b2.FilterData = function() {
+                this.categoryBits = 1;
+                this.maskBits = 65535;
+                this.groupIndex = 0;
+            };
+            FilterData.prototype.Copy = function() {
+                var copy = new FilterData();
+                copy.categoryBits = this.categoryBits;
+                copy.maskBits = this.maskBits;
+                copy.groupIndex = this.groupIndex;
+                return copy;
+            };
+            b2.FixtureDef = function() {
+                this.filter = new FilterData();
+                this.shape = null;
+                this.userData = null;
+                this.friction = .2;
+                this.restitution = 0;
+                this.density = 0;
+                this.isSensor = false;
+            };
+            b2.BodyDef = function() {
+                this.position = new Vec2(0, 0);
+                this.linearVelocity = new Vec2(0, 0);
+                this.userData = null;
+                this.angle = 0;
+                this.angularVelocity = 0;
+                this.linearDamping = 0;
+                this.angularDamping = 0;
+                this.allowSleep = true;
+                this.awake = true;
+                this.fixedRotation = false;
+                this.bullet = false;
+                this.type = b2.Body.b2_staticBody;
+                this.active = true;
+                this.inertiaScale = 1;
+                this.gravityScale = 1;
+            };
+            b2.JointDef = function() {
+                this.type = b2.Joint.e_unknownJoint;
+                this.userData = null;
+                this.bodyA = null;
+                this.bodyB = null;
+                this.collideConnected = false;
+            };
+            b2.DistanceJointDef = function() {
+                b2.JointDef.apply(this, arguments);
+                this.type = b2.Joint.e_distanceJoint;
+                this.localAnchorA = new Vec2();
+                this.localAnchorB = new Vec2();
+                this.length = 1;
+                this.frequencyHz = 0;
+                this.dampingRatio = 0;
+            };
+            b2.FrictionJointDef = function() {
+                b2.JointDef.apply(this, arguments);
+                this.type = b2.Joint.e_frictionJoint;
+                this.localAnchorA = new Vec2();
+                this.localAnchorB = new Vec2();
+                this.maxForce = 0;
+                this.maxTorque = 0;
+            };
+            b2.GearJointDef = function() {
+                b2.JointDef.apply(this, arguments);
+                this.type = b2.Joint.e_gearJoint;
+                this.joint1 = null;
+                this.joint2 = null;
+                this.ratio = 1;
+            };
+            b2.MotorJointDef = function() {
+                b2.JointDef.apply(this, arguments);
+                this.type = b2.Joint.e_motorJoint;
+                this.linearOffset = new Vec2();
+                this.angularOffset = 0;
+                this.maxForce = 1;
+                this.maxTorque = 1;
+                this.correctionFactor = .3;
+            };
+            b2.MouseJointDef = function() {
+                b2.JointDef.apply(this, arguments);
+                this.type = b2.Joint.e_mouseJoint;
+                this.target = new Vec2();
+                this.maxForce = 0;
+                this.frequencyHz = 5;
+                this.dampingRatio = .7;
+            };
+            b2.PrismaticJointDef = function() {
+                b2.JointDef.apply(this, arguments);
+                this.type = b2.Joint.e_prismaticJoint;
+                this.localAnchorA = new Vec2();
+                this.localAnchorB = new Vec2();
+                this.localAxisA = new Vec2(1, 0);
+                this.referenceAngle = 0;
+                this.enableLimit = false;
+                this.lowerTranslation = 0;
+                this.upperTranslation = 0;
+                this.enableMotor = false;
+                this.maxMotorForce = 0;
+                this.motorSpeed = 0;
+            };
+            b2.PulleyJointDef = function() {
+                b2.JointDef.apply(this, arguments);
+                this.type = b2.Joint.e_pulleyJoint;
+                this.groundAnchorA = new Vec2(-1, 1);
+                this.groundAnchorB = new Vec2(1, 1);
+                this.localAnchorA = new Vec2(-1, 0);
+                this.localAnchorB = new Vec2(1, 0);
+                this.lengthA = 0;
+                this.lengthB = 0;
+                this.ratio = 1;
+                this.collideConnected = true;
+            };
+            b2.RevoluteJointDef = function() {
+                b2.JointDef.apply(this, arguments);
+                this.type = b2.Joint.e_revoluteJoint;
+                this.localAnchorA = new Vec2(0, 0);
+                this.localAnchorB = new Vec2(0, 0);
+                this.referenceAngle = 0;
+                this.lowerAngle = 0;
+                this.upperAngle = 0;
+                this.maxMotorTorque = 0;
+                this.motorSpeed = 0;
+                this.enableLimit = false;
+                this.enableMotor = false;
+            };
+            b2.RopeJointDef = function() {
+                b2.JointDef.apply(this, arguments);
+                this.type = b2.Joint.e_ropeJoint;
+                this.localAnchorA = new Vec2(-1, 0);
+                this.localAnchorB = new Vec2(1, 0);
+                this.maxLength = 0;
+            };
+            b2.WeldJointDef = function() {
+                b2.JointDef.apply(this, arguments);
+                this.type = b2.Joint.e_weldJoint;
+                this.localAnchorA = new Vec2(0, 0);
+                this.localAnchorB = new Vec2(0, 0);
+                this.referenceAngle = 0;
+                this.frequencyHz = 0;
+                this.dampingRatio = 0;
+            };
+            b2.WheelJointDef = function() {
+                b2.JointDef.apply(this, arguments);
+                this.type = b2.Joint.e_wheelJoint;
+                this.localAnchorA = new Vec2();
+                this.localAnchorB = new Vec2();
+                this.localAxisA = new Vec2(1, 0);
+                this.enableMotor = false;
+                this.maxMotorTorque = 0;
+                this.motorSpeed = 0;
+                this.frequencyHz = 2;
+                this.dampingRatio = .7;
+            };
+            b2.WorldManifold = function() {
+                this.normal = new b2.Vec2();
+                this.points = [];
+                this.separations = [];
+            };
+            var _p = b2.Shape.prototype;
+            cc.defineGetterSetter(_p, "m_radius", _p.GetRadius, _p.SetRadius);
+            _p = b2.CircleShape.prototype;
+            cc.defineGetterSetter(_p, "m_p", _p.GetPosition, _p.SetPosition);
+            b2.Body.b2_staticBody = 0;
+            b2.Body.b2_kinematicBody = 1;
+            b2.Body.b2_dynamicBody = 2;
+            b2.Draw.e_shapeBit = 1;
+            b2.Draw.e_jointBit = 2;
+            b2.Draw.e_aabbBit = 4;
+            b2.Draw.e_pairBit = 8;
+            b2.Draw.e_centerOfMassBit = 16;
+            b2.Joint.e_unknownJoint = 0;
+            b2.Joint.e_revoluteJoint = 1;
+            b2.Joint.e_prismaticJoint = 2;
+            b2.Joint.e_distanceJoint = 3;
+            b2.Joint.e_pulleyJoint = 4;
+            b2.Joint.e_mouseJoint = 5;
+            b2.Joint.e_gearJoint = 6;
+            b2.Joint.e_wheelJoint = 7;
+            b2.Joint.e_weldJoint = 8;
+            b2.Joint.e_frictionJoint = 9;
+            b2.Joint.e_ropeJoint = 10;
+            b2.Joint.e_motorJoint = 11;
+            b2.Joint.e_inactiveLimit = 0;
+            b2.Joint.e_atLowerLimit = 1;
+            b2.Joint.e_atUpperLimit = 2;
+            b2.Joint.e_equalLimits = 3;
+            b2.maxPolygonVertices = 8;
+            b2.maxManifoldPoints = 2;
+        })();
+    }, {} ],
+    195: [ function(require, module, exports) {
         "use strict";
         var AutoReleaseUtils = require("../cocos2d/core/load-pipeline/auto-release-utils");
+        var ComponentScheduler = require("../cocos2d/core/component-scheduler");
+        var NodeActivator = require("../cocos2d/core/node-activator");
+        var EventListeners = require("../cocos2d/core/event/event-listeners");
+        cc.director._purgeDirector = cc.director.purgeDirector;
         cc.js.mixin(cc.director, {
             sharedInit: function() {
+                this._compScheduler = new ComponentScheduler();
+                this._nodeActivator = new NodeActivator();
+                var scheduler = this.getScheduler();
                 if (cc.AnimationManager) {
                     this._animationManager = new cc.AnimationManager();
-                    this.getScheduler().scheduleUpdate(this._animationManager, cc.Scheduler.PRIORITY_SYSTEM, false);
+                    scheduler.scheduleUpdate(this._animationManager, cc.Scheduler.PRIORITY_SYSTEM, false);
                 } else {
                     this._animationManager = null;
                 }
                 if (cc.CollisionManager) {
                     this._collisionManager = new cc.CollisionManager();
-                    this.getScheduler().scheduleUpdate(this._collisionManager, cc.Scheduler.PRIORITY_SYSTEM, false);
+                    scheduler.scheduleUpdate(this._collisionManager, cc.Scheduler.PRIORITY_SYSTEM, false);
                 } else {
                     this._collisionManager = null;
                 }
+                if (cc.PhysicsManager) {
+                    this._physicsManager = new cc.PhysicsManager();
+                    this.getScheduler().scheduleUpdate(this._physicsManager, cc.Scheduler.PRIORITY_SYSTEM, false);
+                } else {
+                    this._physicsManager = null;
+                }
                 cc._widgetManager.init(this);
+            },
+            purgeDirector: function() {
+                this._compScheduler.unscheduleAll();
+                this._nodeActivator.reset();
+                this._purgeDirector();
             },
             reset: function() {
                 this.purgeDirector();
                 cc.eventManager && cc.eventManager.setEnabled(true);
-                var actionManager = this.getActionManager();
-                actionManager && this.getScheduler().scheduleUpdate(actionManager, cc.Scheduler.PRIORITY_SYSTEM, false);
                 this._animationManager && this.getScheduler().scheduleUpdate(this._animationManager, cc.Scheduler.PRIORITY_SYSTEM, false);
                 this._collisionManager && this.getScheduler().scheduleUpdate(this._collisionManager, cc.Scheduler.PRIORITY_SYSTEM, false);
+                this._physicsManager && this.getScheduler().scheduleUpdate(this._physicsManager, cc.Scheduler.PRIORITY_SYSTEM, false);
                 this.startAnimation();
+            },
+            getActionManager: function() {
+                return this._actionManager;
+            },
+            setActionManager: function(actionManager) {
+                if (this._actionManager !== actionManager) {
+                    this._actionManager && this._scheduler.unscheduleUpdate(this._actionManager);
+                    this._actionManager = actionManager;
+                    this._scheduler.scheduleUpdate(this._actionManager, cc.Scheduler.PRIORITY_SYSTEM, false);
+                }
             },
             getAnimationManager: function() {
                 return this._animationManager;
             },
             getCollisionManager: function() {
                 return this._collisionManager;
+            },
+            getPhysicsManager: function() {
+                return this._physicsManager;
             },
             getScene: function() {
                 return this._scene;
@@ -29279,7 +32817,7 @@
             },
             _getSceneUuid: function(key) {
                 var scenes = cc.game._sceneInfos;
-                if ("string" == typeof key) {
+                if ("string" === typeof key) {
                     key.endsWith(".fire") || (key += ".fire");
                     "/" === key[0] || key.startsWith("db://assets/") || (key = "/" + key);
                     for (var i = 0; i < scenes.length; i++) {
@@ -29289,7 +32827,7 @@
                         }
                     }
                 } else {
-                    if ("number" == typeof key) {
+                    if ("number" === typeof key) {
                         if (0 <= key && key < scenes.length) {
                             return scenes[key];
                         }
@@ -29371,8 +32909,18 @@
                     }
                     onLaunched && onLaunched(error);
                 });
+            },
+            __fastOn: function(type, callback, target) {
+                var listeners = this._bubblingListeners;
+                listeners || (listeners = this._bubblingListeners = new EventListeners());
+                listeners.add(type, callback, target);
+            },
+            __fastOff: function(type, callback, target) {
+                var listeners = this._bubblingListeners;
+                listeners && listeners.remove(type, callback, target);
             }
         });
+        cc.defineGetterSetter(cc.director, "actionManager", cc.director.getActionManager, cc.director.setActionManager);
         cc.EventTarget.call(cc.director);
         cc.js.addon(cc.director, cc.EventTarget.prototype);
         cc.Director.EVENT_PROJECTION_CHANGED = "director_projection_changed";
@@ -29384,17 +32932,15 @@
         cc.Director.EVENT_BEFORE_SCENE_LOADING = "director_before_scene_loading";
         cc.Director.EVENT_BEFORE_SCENE_LAUNCH = "director_before_scene_launch";
         cc.Director.EVENT_AFTER_SCENE_LAUNCH = "director_after_scene_launch";
-        cc.Director.EVENT_COMPONENT_UPDATE = "director_component_update";
-        cc.Director.EVENT_COMPONENT_LATE_UPDATE = "director_component_late_update";
         cc.Director._EVENT_NEXT_TICK = "_director_next_tick";
         cc.Director._beforeUpdateListener = {
             event: cc.EventListener.CUSTOM,
             eventName: cc.Director.EVENT_BEFORE_UPDATE,
             callback: function() {
-                var dt = cc.director.getDeltaTime();
                 cc.director.emit(cc.Director._EVENT_NEXT_TICK);
-                cc.director.emit(cc.Director.EVENT_BEFORE_UPDATE);
-                cc.director.emit(cc.Director.EVENT_COMPONENT_UPDATE, dt);
+                cc.director._compScheduler.startPhase();
+                var dt = cc.director.getDeltaTime();
+                cc.director._compScheduler.updatePhase(dt);
             }
         };
         cc.Director._afterUpdateListener = {
@@ -29402,7 +32948,7 @@
             eventName: cc.Director.EVENT_AFTER_UPDATE,
             callback: function() {
                 var dt = cc.director.getDeltaTime();
-                cc.director.emit(cc.Director.EVENT_COMPONENT_LATE_UPDATE, dt);
+                cc.director._compScheduler.lateUpdatePhase(dt);
                 cc.director.emit(cc.Director.EVENT_AFTER_UPDATE);
                 cc.Object._deferredDestroy();
                 cc.director.emit(cc.Director.EVENT_BEFORE_VISIT, this);
@@ -29427,9 +32973,12 @@
         cc.eventManager.addEventListenerWithFixedPriority(cc.EventListener.create(cc.Director._afterVisitListener), 1);
         cc.eventManager.addEventListenerWithFixedPriority(cc.EventListener.create(cc.Director._afterDrawListener), 1);
     }, {
-        "../cocos2d/core/load-pipeline/auto-release-utils": 96
+        "../cocos2d/core/component-scheduler": 47,
+        "../cocos2d/core/event/event-listeners": 81,
+        "../cocos2d/core/load-pipeline/auto-release-utils": 98,
+        "../cocos2d/core/node-activator": 109
     } ],
-    169: [ function(require, module, exports) {
+    196: [ function(require, module, exports) {
         var proto = dragonBones.CCArmatureDisplay.prototype;
         cc.js.mixin(proto, cc.EventTarget.prototype);
         proto.addEvent = function(type, listener, target) {
@@ -29466,7 +33015,7 @@
             display.removeEvent(type, listener, target);
         };
     }, {} ],
-    170: [ function(require, module, exports) {
+    197: [ function(require, module, exports) {
         "use strict";
         var _p = cc.EditBox.prototype;
         _p._setMaxLength = _p.setMaxLength;
@@ -29500,12 +33049,8 @@
         };
         _p.stayOnTop = function() {};
     }, {} ],
-    171: [ function(require, module, exports) {
+    198: [ function(require, module, exports) {
         "use strict";
-        cc.ProgressTimer.Type = cc.Enum({
-            RADIAL: 0,
-            BAR: 1
-        });
         cc.sys.os !== cc.sys.OS_OSX && cc.sys.os !== cc.sys.OS_WINDOWS || (cc.VideoPlayer = {});
         cc.sys.os !== cc.sys.OS_OSX && cc.sys.os !== cc.sys.OS_WINDOWS || (cc.WebView = {});
         cc.VideoPlayer.EventType = {
@@ -29598,7 +33143,7 @@
             BOTH: 3
         });
     }, {} ],
-    172: [ function(require, module, exports) {
+    199: [ function(require, module, exports) {
         "use strict";
         cc.sys.now = function() {
             return Date.now();
@@ -29616,10 +33161,10 @@
             sep: cc.sys.os === cc.sys.OS_WINDOWS ? "\\" : "/",
             _setEndWithSep: function(path, endsWithSep) {
                 var sep = cc.path.sep;
-                if ("undefined" == typeof endsWithSep) {
+                if ("undefined" === typeof endsWithSep) {
                     endsWithSep = true;
                 } else {
-                    if ("string" == typeof endsWithSep) {
+                    if ("string" === typeof endsWithSep) {
                         sep = endsWithSep;
                         endsWithSep = !!endsWithSep;
                     }
@@ -29639,7 +33184,7 @@
         cc.Scheduler.prototype.scheduleUpdate = cc.Scheduler.prototype.scheduleUpdateForTarget;
         cc.Scheduler.prototype._unschedule = cc.Scheduler.prototype.unschedule;
         cc.Scheduler.prototype.unschedule = function(callback, target) {
-            if ("function" == typeof target) {
+            if ("function" === typeof target) {
                 var tmp = target;
                 target = callback;
                 callback = tmp;
@@ -29661,16 +33206,11 @@
                 return;
             }
             var code = this._code;
-            "string" == typeof code ? Function(code)() : "function" == typeof code && code.apply(null, this._args);
+            "string" === typeof code ? Function(code)() : "function" === typeof code && code.apply(null, this._args);
         };
-        window.setTimeout = function(code, delay) {
+        window.setTimeout = function(code, delay, ...args) {
             var target = new WindowTimeFun(code);
-            if (arguments.length > 2) {
-                target._args = new Array(arguments.length - 2);
-                for (var i = 2; i < arguments.length; i++) {
-                    target._args[i - 2] = arguments[i];
-                }
-            }
+            args.length > 0 && (target._args = args);
             var original = target.fun;
             target.fun = function() {
                 original.call(this);
@@ -29680,14 +33220,9 @@
             _windowTimeFunHash[target._intervalId] = target;
             return target._intervalId;
         };
-        window.setInterval = function(code, delay) {
+        window.setInterval = function(code, delay, ...args) {
             var target = new WindowTimeFun(code);
-            if (arguments.length > 2) {
-                target._args = new Array(arguments.length - 2);
-                for (var i = 2; i < arguments.length; i++) {
-                    target._args[i - 2] = arguments[i];
-                }
-            }
+            args.length > 0 && (target._args = args);
             cc.director.getScheduler()._schedule(target.fun, target, delay / 1e3, cc.macro.REPEAT_FOREVER, 0, false, target._intervalId + "");
             _windowTimeFunHash[target._intervalId] = target;
             return target._intervalId;
@@ -29703,7 +33238,7 @@
         window.SocketIO && (window.io = window.SocketIO);
         SocketIO.prototype._jsbEmit = SocketIO.prototype.emit;
         SocketIO.prototype.emit = function(uri, delegate) {
-            "object" == typeof delegate && (delegate = JSON.stringify(delegate));
+            "object" === typeof delegate && (delegate = JSON.stringify(delegate));
             this._jsbEmit(uri, delegate);
         };
         cc.Node.prototype.setIgnoreAnchorPointForPosition = cc.Node.prototype.ignoreAnchorPointForPosition;
@@ -29722,14 +33257,14 @@
             TMXObjectImage: cc.TMXObjetImage,
             TMXObjectShape: cc.TMXObjectShape,
             TMXLayer: cc.TMXLayer,
-            MotionStreak: cc.MotionStreak
+            MotionStreak: cc.MotionStreak,
+            CameraNode: cc.CameraNode
         };
         window.__errorHandler = function(filename, lineno, message) {};
-        cc._Class = cc.Class;
         cc.formatStr = cc.js.formatStr;
         cc.Image && cc.Image.setPNGPremultipliedAlphaEnabled && cc.Image.setPNGPremultipliedAlphaEnabled(false);
     }, {} ],
-    173: [ function(require, module, exports) {
+    200: [ function(require, module, exports) {
         "use strict";
         cc.Event.NO_TYPE = "no_type";
         cc.Event.NONE = 0;
@@ -29835,7 +33370,7 @@
         };
         cc.eventManager.addListener = function(listener, nodeOrPriority) {
             listener instanceof cc.EventListener || (listener = cc.EventListener.create(listener));
-            if ("number" == typeof nodeOrPriority) {
+            if ("number" === typeof nodeOrPriority) {
                 if (0 === nodeOrPriority) {
                     cc.logID(3500);
                     return;
@@ -29899,8 +33434,6 @@
         cc._EventListenerKeyboard.LISTENER_ID = "__cc_keyboard";
         cc._EventListenerAcceleration = cc.EventListenerAcceleration;
         cc._EventListenerAcceleration.LISTENER_ID = "__cc_acceleration";
-        cc._EventListenerFocus = cc.EventListenerFocus;
-        cc._EventListenerFocus.LISTENER_ID = "__cc_focus_event";
         cc._EventListenerTouchAllAtOnce = cc.EventListenerTouchAllAtOnce;
         cc._EventListenerTouchAllAtOnce.LISTENER_ID = "__cc_touch_all_at_once";
         cc._EventListenerTouchOneByOne = cc.EventListenerTouchOneByOne;
@@ -29943,7 +33476,7 @@
             }
         });
     }, {} ],
-    174: [ function(require, module, exports) {
+    201: [ function(require, module, exports) {
         "use strict";
         cc.game = {
             DEBUG_MODE_NONE: 0,
@@ -30019,7 +33552,6 @@
                 }
                 this._prepareCalled = true;
                 cc._renderType = cc.game.RENDER_TYPE_OPENGL;
-                cc._initDebugSetting(this.config[this.CONFIG_KEY.debugMode]);
                 cc.director.sharedInit();
                 var jsList = config[CONFIG_KEY.jsList];
                 if (jsList) {
@@ -30037,17 +33569,17 @@
                 }
             },
             run: function(config, onStart) {
-                if ("function" == typeof config) {
+                if ("function" === typeof config) {
                     cc.game.onStart = config;
                 } else {
                     config && (cc.game.config = config);
-                    "function" == typeof onStart && (cc.game.onStart = onStart);
+                    "function" === typeof onStart && (cc.game.onStart = onStart);
                 }
                 cc.director.startAnimation();
                 this.prepare(cc.game.onStart && cc.game.onStart.bind(cc.game));
             },
             addPersistRootNode: function(node) {
-                if (!(node instanceof cc.Node && node.uuid)) {
+                if (!cc.Node.isNode(node) || !node.uuid) {
                     cc.warnID(3803);
                     return;
                 }
@@ -30100,9 +33632,9 @@
             },
             _initConfig: function(config) {
                 var CONFIG_KEY = this.CONFIG_KEY;
-                "number" != typeof config[CONFIG_KEY.debugMode] && (config[CONFIG_KEY.debugMode] = 0);
-                "number" != typeof config[CONFIG_KEY.frameRate] && (config[CONFIG_KEY.frameRate] = 60);
-                "number" != typeof config[CONFIG_KEY.renderMode] && (config[CONFIG_KEY.renderMode] = 0);
+                "number" !== typeof config[CONFIG_KEY.debugMode] && (config[CONFIG_KEY.debugMode] = 0);
+                "number" !== typeof config[CONFIG_KEY.frameRate] && (config[CONFIG_KEY.frameRate] = 60);
+                "number" !== typeof config[CONFIG_KEY.renderMode] && (config[CONFIG_KEY.renderMode] = 0);
                 config[CONFIG_KEY.showFPS] = !(CONFIG_KEY.showFPS in config) || !!config[CONFIG_KEY.showFPS];
                 config[CONFIG_KEY.engineDir] = config[CONFIG_KEY.engineDir] || "frameworks/cocos2d-html5";
                 this.groupList = config.groupList || [];
@@ -30124,7 +33656,7 @@
         });
         cc._initDebugSetting(cc.game.DEBUG_MODE_INFO);
     }, {} ],
-    175: [ function(require, module, exports) {
+    202: [ function(require, module, exports) {
         "use strict";
         var jsbLabel = cc.Label;
         !jsbLabel.createWithTTF && jsbLabel.prototype.createWithTTF && (jsbLabel.createWithTTF = jsbLabel.prototype.createWithTTF);
@@ -30183,6 +33715,7 @@
         jsbLabel.prototype.setColor = function(color) {
             this._labelType === _ccsg.Label.Type.BMFont ? this._setColor(color) : this.setTextColor(color);
         };
+        jsbLabel.prototype.setSpacingX = jsbLabel.prototype.setAdditionalKerning;
         jsbLabel.prototype._setTTFConfig = jsbLabel.prototype.setTTFConfig;
         jsbLabel.prototype.setTTFConfig = function(config) {
             this._setTTFConfig(config);
@@ -30193,8 +33726,8 @@
         };
         jsbLabel.prototype._setContentSize = jsbLabel.prototype.setContentSize;
         jsbLabel.prototype.setContentSize = function(size, height) {
-            var newWidth = "number" == typeof size.width ? size.width : size;
-            var newHeight = "number" == typeof size.height ? size.height : height;
+            var newWidth = "number" === typeof size.width ? size.width : size;
+            var newHeight = "number" === typeof size.height ? size.height : height;
             if (this.getOverflow() === cc.Label.Overflow.NONE) {
                 newWidth = 0;
                 newHeight = 0;
@@ -30297,7 +33830,7 @@
             RESIZE_HEIGHT: 3
         });
     }, {} ],
-    176: [ function(require, module, exports) {
+    203: [ function(require, module, exports) {
         "use strict";
         require("../cocos2d/core/load-pipeline");
         function empty(item, callback) {
@@ -30364,12 +33897,12 @@
             tiff: loadImage,
             webp: loadImage,
             image: loadImage,
-            "default": empty
+            default: empty
         });
     }, {
-        "../cocos2d/core/load-pipeline": 98
+        "../cocos2d/core/load-pipeline": 100
     } ],
-    177: [ function(require, module, exports) {
+    204: [ function(require, module, exports) {
         "use strict";
         cc.ParticleSystem.Mode = cc.Enum({
             GRAVITY: 0,
@@ -30414,7 +33947,7 @@
             }
         }
     }, {} ],
-    178: [ function(require, module, exports) {
+    205: [ function(require, module, exports) {
         cc.ClassManager || (cc.ClassManager = window.ClassManager || {
             id: 0 | 998 * Math.random(),
             instanceId: 0 | 998 * Math.random(),
@@ -30425,6 +33958,7 @@
                 return this.instanceId++;
             }
         });
+        require("../polyfill/typescript");
         require("../cocos2d/core/platform/js");
         require("../cocos2d/core/value-types");
         require("../cocos2d/core/utils/find");
@@ -30437,15 +33971,16 @@
     }, {
         "../CCDebugger": 1,
         "../DebugInfos": 2,
-        "../cocos2d/core/event": 81,
-        "../cocos2d/core/event-manager/CCSystemEvent": 78,
-        "../cocos2d/core/platform/CCMacro": 109,
-        "../cocos2d/core/platform/js": 121,
-        "../cocos2d/core/utils/find": 129,
-        "../cocos2d/core/utils/mutable-forward-iterator": 131,
-        "../cocos2d/core/value-types": 144
+        "../cocos2d/core/event": 83,
+        "../cocos2d/core/event-manager/CCSystemEvent": 80,
+        "../cocos2d/core/platform/CCMacro": 134,
+        "../cocos2d/core/platform/js": 146,
+        "../cocos2d/core/utils/find": 155,
+        "../cocos2d/core/utils/mutable-forward-iterator": 157,
+        "../cocos2d/core/value-types": 170,
+        "../polyfill/typescript": 214
     } ],
-    179: [ function(require, module, exports) {
+    206: [ function(require, module, exports) {
         "use strict";
         var v2Found = false;
         if (cc.Scale9SpriteV2) {
@@ -30622,13 +34157,13 @@
             };
         }
     }, {} ],
-    180: [ function(require, module, exports) {
+    207: [ function(require, module, exports) {
         sp._SGSkeleton = sp.Skeleton;
         sp._SGSkeletonAnimation = sp.SkeletonAnimation;
         sp._SGSkeleton.prototype.setPremultipliedAlpha = sp._SGSkeleton.prototype.setOpacityModifyRGB;
         sp._SGSkeleton.prototype.setOpacityModifyRGB = function() {};
     }, {} ],
-    181: [ function(require, module, exports) {
+    208: [ function(require, module, exports) {
         "use strict";
         require("../cocos2d/core/platform/CCClass");
         require("../cocos2d/core/assets/CCAsset");
@@ -30644,7 +34179,7 @@
         };
         cc.TextureCache.prototype._addImage || (cc.TextureCache.prototype._addImage = cc.TextureCache.prototype.addImage);
         cc.TextureCache.prototype.addImage = function(url, cb, target) {
-            return "function" == typeof cb ? this.addImageAsync(url, cb, target) : cb ? this._addImage(url, cb) : this._addImage(url);
+            return "function" === typeof cb ? this.addImageAsync(url, cb, target) : cb ? this._addImage(url, cb) : this._addImage(url);
         };
         cc.textureCache._textures = {};
         cc.textureCache.cacheImage = function(key, texture) {
@@ -30686,6 +34221,10 @@
         };
         prototype._ctor = function(filename, rect, rotated, offset, originalSize) {
             this._name = "";
+            this.insetTop = 0;
+            this.insetBottom = 0;
+            this.insetLeft = 0;
+            this.insetRight = 0;
             void 0 !== filename && this.initWithTexture(filename, rect, rotated, offset, originalSize);
         };
         prototype.setTexture = function(textureOrTextureFile, rect, rotated, offset, originalSize) {
@@ -30722,12 +34261,6 @@
                 0 !== originalSize.width && 0 !== originalSize.height || (originalSize = cc.size(w, h));
                 var offset = this.getOffset();
                 var rotated = this.isRotated();
-                if (void 0 === this.insetTop) {
-                    this.insetTop = 0;
-                    this.insetBottom = 0;
-                    this.insetLeft = 0;
-                    this.insetRight = 0;
-                }
                 this._initWithTexture(texture, rect, rotated, offset, originalSize);
                 this.emit("load");
             }
@@ -30783,9 +34316,9 @@
         });
     }, {
         "../cocos2d/core/assets/CCAsset": 25,
-        "../cocos2d/core/platform/CCClass": 108
+        "../cocos2d/core/platform/CCClass": 132
     } ],
-    182: [ function(require, module, exports) {
+    209: [ function(require, module, exports) {
         "use strict";
         if (!cc.runtime) {
             var _p = cc.TMXObject.prototype;
@@ -30800,13 +34333,13 @@
             cc.defineGetterSetter(_p, "sgNode", _p.getNode, null);
         }
     }, {} ],
-    183: [ function(require, module, exports) {
+    210: [ function(require, module, exports) {
         cc.VideoPlayer = ccui.VideoPlayer;
     }, {} ],
-    184: [ function(require, module, exports) {
+    211: [ function(require, module, exports) {
         cc.WebView = ccui.WebView;
     }, {} ],
-    185: [ function(require, module, exports) {
+    212: [ function(require, module, exports) {
         var _imageArray = [];
         function _addDownloadList(url, picName, suffix, option, cb) {
             var item = {
@@ -30931,5 +34464,178 @@
             followedNode && (rect ? this.initWithTarget(followedNode, rect) : this.initWithTarget(followedNode));
         };
     }, {} ],
-    186: [ function(require, module, exports) {}, {} ]
-}, {}, [ 165, 153 ]);
+    213: [ function(require, module, exports) {}, {} ],
+    214: [ function(require, module, exports) {
+        window.__extends = function(d, b) {
+            for (var p in b) {
+                b.hasOwnProperty(p) && (d[p] = b[p]);
+            }
+            function __() {
+                this.constructor = d;
+            }
+            d.prototype = null === b ? Object.create(b) : (__.prototype = b.prototype, new __());
+        };
+        window.__assign = Object.assign || function(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+                s = arguments[i];
+                for (var p in s) {
+                    Object.prototype.hasOwnProperty.call(s, p) && (t[p] = s[p]);
+                }
+            }
+            return t;
+        };
+        window.__rest = function(s, e) {
+            var t = {};
+            for (var p in s) {
+                Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0 && (t[p] = s[p]);
+            }
+            if (null != s && "function" === typeof Object.getOwnPropertySymbols) {
+                for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+                    e.indexOf(p[i]) < 0 && (t[p[i]] = s[p[i]]);
+                }
+            }
+            return t;
+        };
+        window.__decorate = function(decorators, target, key, desc) {
+            var c = arguments.length, r = c < 3 ? target : null === desc ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+            if ("object" === typeof Reflect && "function" === typeof Reflect.decorate) {
+                r = Reflect.decorate(decorators, target, key, desc);
+            } else {
+                for (var i = decorators.length - 1; i >= 0; i--) {
+                    (d = decorators[i]) && (r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r);
+                }
+            }
+            return c > 3 && r && Object.defineProperty(target, key, r), r;
+        };
+        window.__param = function(paramIndex, decorator) {
+            return function(target, key) {
+                decorator(target, key, paramIndex);
+            };
+        };
+        window.__metadata = function(metadataKey, metadataValue) {
+            if ("object" === typeof Reflect && "function" === typeof Reflect.metadata) {
+                return Reflect.metadata(metadataKey, metadataValue);
+            }
+        };
+        window.__awaiter = function(thisArg, _arguments, P, generator) {
+            return new (P || (P = Promise))(function(resolve, reject) {
+                function fulfilled(value) {
+                    try {
+                        step(generator.next(value));
+                    } catch (e) {
+                        reject(e);
+                    }
+                }
+                function rejected(value) {
+                    try {
+                        step(generator["throw"](value));
+                    } catch (e) {
+                        reject(e);
+                    }
+                }
+                function step(result) {
+                    result.done ? resolve(result.value) : new P(function(resolve) {
+                        resolve(result.value);
+                    }).then(fulfilled, rejected);
+                }
+                step((generator = generator.apply(thisArg, _arguments)).next());
+            });
+        };
+        window.__generator = function(thisArg, body) {
+            var _ = {
+                label: 0,
+                sent: function() {
+                    if (1 & t[0]) {
+                        throw t[1];
+                    }
+                    return t[1];
+                },
+                trys: [],
+                ops: []
+            }, f, y, t;
+            return {
+                next: verb(0),
+                throw: verb(1),
+                return: verb(2)
+            };
+            function verb(n) {
+                return function(v) {
+                    return step([ n, v ]);
+                };
+            }
+            function step(op) {
+                if (f) {
+                    throw new TypeError("Generator is already executing.");
+                }
+                while (_) {
+                    try {
+                        if (f = 1, y && (t = y[2 & op[0] ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) {
+                            return t;
+                        }
+                        (y = 0, t) && (op = [ 0, t.value ]);
+                        switch (op[0]) {
+                          case 0:
+                          case 1:
+                            t = op;
+                            break;
+
+                          case 4:
+                            _.label++;
+                            return {
+                                value: op[1],
+                                done: false
+                            };
+
+                          case 5:
+                            _.label++;
+                            y = op[1];
+                            op = [ 0 ];
+                            continue;
+
+                          case 7:
+                            op = _.ops.pop();
+                            _.trys.pop();
+                            continue;
+
+                          default:
+                            if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (6 === op[0] || 2 === op[0])) {
+                                _ = 0;
+                                continue;
+                            }
+                            if (3 === op[0] && (!t || op[1] > t[0] && op[1] < t[3])) {
+                                _.label = op[1];
+                                break;
+                            }
+                            if (6 === op[0] && _.label < t[1]) {
+                                _.label = t[1];
+                                t = op;
+                                break;
+                            }
+                            if (t && _.label < t[2]) {
+                                _.label = t[2];
+                                _.ops.push(op);
+                                break;
+                            }
+                            t[2] && _.ops.pop();
+                            _.trys.pop();
+                            continue;
+                        }
+                        op = body.call(thisArg, _);
+                    } catch (e) {
+                        op = [ 6, e ];
+                        y = 0;
+                    } finally {
+                        f = t = 0;
+                    }
+                }
+                if (5 & op[0]) {
+                    throw op[1];
+                }
+                return {
+                    value: op[0] ? op[1] : void 0,
+                    done: true
+                };
+            }
+        };
+    }, {} ]
+}, {}, [ 191, 179 ]);

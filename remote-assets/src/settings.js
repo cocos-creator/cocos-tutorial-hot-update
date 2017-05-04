@@ -581,6 +581,7 @@ _CCSettings = {
             "uuid": "0ea9fb8e-b46b-4c18-b1cc-5e62da8c29ff"
         }
     ],
+    "packedAssets": {},
     "orientation": "",
     "debug": true
 };
