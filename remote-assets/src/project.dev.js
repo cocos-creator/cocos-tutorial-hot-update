@@ -124,15 +124,15 @@ cc.Class({
         var countdownTex = Game.instance.assetMng.texCountdown.getTexture();
         this.sgCountdown = new _ccsg.Sprite(countdownTex);
 
-        var progressTimer = new cc.ProgressTimer(this.sgCountdown);
-        progressTimer.setName('progressTimer');
-        progressTimer.setMidpoint(cc.p(0.5, 0.5));
-        progressTimer.setType(cc.ProgressTimer.Type.RADIAL);
-        this.playerInfo._sgNode.addChild(progressTimer);
-        progressTimer.setPosition(cc.p(0, 0));
-        progressTimer.setPercentage(0);
-
-        return progressTimer;
+        //var progressTimer = new cc.ProgressTimer(this.sgCountdown);
+        //progressTimer.setName('progressTimer');
+        //progressTimer.setMidpoint(cc.p(0.5, 0.5));
+        //progressTimer.setType(cc.ProgressTimer.Type.RADIAL);
+        //this.playerInfo._sgNode.addChild(progressTimer);
+        //progressTimer.setPosition(cc.p(0, 0));
+        //progressTimer.setPercentage(0);
+        //
+        //return progressTimer;
     },
 
     startCountdown: function startCountdown() {
@@ -1455,16 +1455,16 @@ cc.Class({
         this.sgCountdown = new _ccsg.Sprite(countdownTex);
         this.sgCountdown.setColor(cc.Color.BLACK);
 
-        var progressTimer = new cc.ProgressTimer(this.sgCountdown);
-        progressTimer.setName('progressTimer');
-        progressTimer.setMidpoint(cc.p(0.5, 0.5));
-        progressTimer.setType(cc.ProgressTimer.Type.RADIAL);
-        progressTimer.reverseDir = true;
-        this.betCounter._sgNode.addChild(progressTimer);
-        progressTimer.setPosition(cc.p(0, -this.betCounter.height / 2));
-        progressTimer.setPercentage(0);
-
-        return progressTimer;
+        //var progressTimer = new cc.ProgressTimer(this.sgCountdown);
+        //progressTimer.setName('progressTimer');
+        //progressTimer.setMidpoint(cc.p(0.5, 0.5));
+        //progressTimer.setType(cc.ProgressTimer.Type.RADIAL);
+        //progressTimer.reverseDir = true;
+        //this.betCounter._sgNode.addChild(progressTimer);
+        //progressTimer.setPosition(cc.p(0, -this.betCounter.height / 2));
+        //progressTimer.setPercentage(0);
+        //
+        //return progressTimer;
     },
 
     startCountdown: function startCountdown() {
