@@ -429,8 +429,8 @@ cc.Class({
                 failed = true;
                 break;
             case jsb.EventAssetsManager.UPDATE_PROGRESSION:
-                this.panel.byteProgress.progress = event.getPercent() / 100;
-                this.panel.fileProgress.progress = event.getPercentByFile() / 100;
+                this.panel.byteProgress.progress = event.getPercent();
+                this.panel.fileProgress.progress = event.getPercentByFile();
 
                 this.panel.fileLabel.string = event.getDownloadedFiles() + ' / ' + event.getTotalFiles();
                 this.panel.byteLabel.string = event.getDownloadedBytes() + ' / ' + event.getTotalBytes();
@@ -438,7 +438,7 @@ cc.Class({
                 var msg = event.getMessage();
                 if (msg) {
                     this.panel.info.string = 'Updated file: ' + msg;
-                    cc.log(event.getPercent().toFixed(2) + '% : ' + msg);
+                    // cc.log(event.getPercent()/100 + '% : ' + msg);
                 }
                 break;
             case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:
@@ -488,8 +488,9 @@ cc.Class({
             // please refer to samples/js-tests/main.js for detailed usage.
             // !!! Re-add the search paths in main.js is very important, otherwise, new scripts won't take effect.
             cc.sys.localStorage.setItem('HotUpdateSearchPaths', JSON.stringify(searchPaths));
-
             jsb.fileUtils.setSearchPaths(searchPaths);
+
+            cc.audioEngine.stopAll();
             cc.game.restart();
         }
     },
