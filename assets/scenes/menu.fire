@@ -4918,11 +4918,11 @@
       "__id__": 127
     },
     "_enabled": true,
+    "_N$totalLength": 500,
     "_N$barSprite": {
       "__id__": 129
     },
     "_N$mode": 0,
-    "_N$totalLength": 500,
     "_N$progress": 0.5,
     "_N$reverse": false
   },
@@ -5171,11 +5171,11 @@
       "__id__": 134
     },
     "_enabled": true,
+    "_N$totalLength": 500,
     "_N$barSprite": {
       "__id__": 136
     },
     "_N$mode": 0,
-    "_N$totalLength": 500,
     "_N$progress": 0.5,
     "_N$reverse": false
   },
@@ -6615,6 +6615,7 @@
       "__id__": 116
     },
     "_updating": false,
-    "_canRetry": false
+    "_canRetry": false,
+    "_storagePath": ""
   }
 ]
