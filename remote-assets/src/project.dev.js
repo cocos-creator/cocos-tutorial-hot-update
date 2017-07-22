@@ -1,2 +1,2293 @@
-require=function t(e,n,i){function o(s,r){if(!n[s]){if(!e[s]){var c="function"==typeof require&&require;if(!r&&c)return c(s,!0);if(a)return a(s,!0);var u=new Error("Cannot find module '"+s+"'");throw u.code="MODULE_NOT_FOUND",u}var l=n[s]={exports:{}};e[s][0].call(l.exports,function(t){var n=e[s][1][t];return o(n||t)},l,l.exports,t,e,n,i)}return n[s].exports}for(var a="function"==typeof require&&require,s=0;s<i.length;s++)o(i[s]);return o}({ActorRenderer:[function(t,e,n){"use strict";cc._RF.push(e,"1a792KO87NBg7vCCIp1jq+j","ActorRenderer");var i=t("Game"),o=t("Types"),a=t("Utils"),s=o.ActorPlayingState;cc.Class({extends:cc.Component,properties:{playerInfo:{default:null,type:cc.Node},stakeOnTable:{default:null,type:cc.Node},cardInfo:{default:null,type:cc.Node},cardPrefab:{default:null,type:cc.Prefab},anchorCards:{default:null,type:cc.Node},spPlayerName:{default:null,type:cc.Sprite},labelPlayerName:{default:null,type:cc.Label},labelTotalStake:{default:null,type:cc.Label},spPlayerPhoto:{default:null,type:cc.Sprite},spCountdown:{default:null,type:cc.Sprite},labelStakeOnTable:{default:null,type:cc.Label},spChips:{default:[],type:cc.Sprite},labelCardInfo:{default:null,type:cc.Label},spCardInfo:{default:null,type:cc.Sprite},animFX:{default:null,type:cc.Node},cardSpace:0},onLoad:function(){},init:function(t,e,n,o,a){this.actor=this.getComponent("Actor"),this.sgCountdown=null,this.turnDuration=o,this.playerInfo.position=e,this.stakeOnTable.position=n,this.labelPlayerName.string=t.name,this.updateTotalStake(t.gold);var s=t.photoIdx%5;this.spPlayerPhoto.spriteFrame=i.instance.assetMng.playerPhotos[s],this.animFX=this.animFX.getComponent("FXPlayer"),this.animFX.init(),this.animFX.show(!1),this.cardInfo.active=!1,this.progressTimer=this.initCountdown(),a&&(this.spCardInfo.getComponent("SideSwitcher").switchSide(),this.spPlayerName.getComponent("SideSwitcher").switchSide())},initDealer:function(){this.actor=this.getComponent("Actor"),this.animFX=this.animFX.getComponent("FXPlayer"),this.animFX.init(),this.animFX.show(!1)},updateTotalStake:function(t){this.labelTotalStake.string="$"+t},initCountdown:function(){var t=i.instance.assetMng.texCountdown.getTexture();this.sgCountdown=new _ccsg.Sprite(t);var e=new cc.ProgressTimer(this.sgCountdown);return e.setName("progressTimer"),e.setMidpoint(cc.p(.5,.5)),e.setType(cc.ProgressTimer.Type.RADIAL),this.playerInfo._sgNode.addChild(e),e.setPosition(cc.p(0,0)),e.setPercentage(0),e},startCountdown:function(){if(this.progressTimer){var t=cc.progressFromTo(this.turnDuration,0,100);this.progressTimer.runAction(t)}},resetCountdown:function(){this.progressTimer&&(this.progressTimer.stopAllActions(),this.progressTimer.setPercentage(0))},playBlackJackFX:function(){this.animFX.playFX("blackjack")},playBustFX:function(){this.animFX.playFX("bust")},onDeal:function(t,e){var n=cc.instantiate(this.cardPrefab).getComponent("Card");this.anchorCards.addChild(n.node),n.init(t),n.reveal(e);var i=cc.p(0,0),o=this.actor.cards.length-1,a=cc.p(this.cardSpace*o,0);n.node.setPosition(i);var s=cc.moveTo(.5,a),r=cc.callFunc(this._onDealEnd,this,this.cardSpace*o);n.node.runAction(cc.sequence(s,r))},_onDealEnd:function(t,e){this.resetCountdown(),this.actor.state===s.Normal&&this.startCountdown(),this.updatePoint(),this._updatePointPos(e)},onReset:function(){this.cardInfo.active=!1,this.anchorCards.removeAllChildren(),this._resetChips()},onRevealHoldCard:function(){cc.find("cardPrefab",this.anchorCards).getComponent("Card").reveal(!0),this.updateState()},updatePoint:function(){switch(this.cardInfo.active=!0,this.labelCardInfo.string=this.actor.bestPoint,this.actor.hand){case o.Hand.BlackJack:this.animFX.show(!0),this.animFX.playFX("blackjack");break;case o.Hand.FiveCard:}},_updatePointPos:function(t){this.cardInfo.setPositionX(t+50)},showStakeChips:function(t){var e=this.spChips,n=0;t>5e4?n=5:t>25e3?n=4:t>1e4?n=3:t>5e3?n=2:t>0&&(n=1);for(var i=0;i<n;++i)e[i].enabled=!0},_resetChips:function(){for(var t=0;t<this.spChips.length;++t)this.spChips.enabled=!1},updateState:function(){switch(this.actor.state){case s.Normal:this.cardInfo.active=!0,this.spCardInfo.spriteFrame=i.instance.assetMng.texCardInfo,this.updatePoint();break;case s.Bust:var t=a.getMinMaxPoint(this.actor.cards).min;this.labelCardInfo.string="爆牌("+t+")",this.spCardInfo.spriteFrame=i.instance.assetMng.texBust,this.cardInfo.active=!0,this.animFX.show(!0),this.animFX.playFX("bust"),this.resetCountdown();break;case s.Stand:var e=a.getMinMaxPoint(this.actor.cards).max;this.labelCardInfo.string="停牌("+e+")",this.spCardInfo.spriteFrame=i.instance.assetMng.texCardInfo,this.resetCountdown()}}}),cc._RF.pop()},{Game:"Game",Types:"Types",Utils:"Utils"}],Actor:[function(t,e,n){"use strict";cc._RF.push(e,"7d008dTf6xB2Z0wCAdzh1Rx","Actor");var i=t("Types"),o=t("Utils"),a=i.ActorPlayingState;cc.Class({extends:cc.Component,properties:{cards:{default:[],serializable:!1,visible:!1},holeCard:{default:null,serializable:!1,visible:!1},bestPoint:{get:function(){return o.getMinMaxPoint(this.cards).max}},hand:{get:function(){var t=this.cards.length;return this.holeCard&&++t,t>=5?i.Hand.FiveCard:2===t&&21===this.bestPoint?i.Hand.BlackJack:i.Hand.Normal}},canReport:{get:function(){return this.hand!==i.Hand.Normal},visible:!1},renderer:{default:null,type:cc.Node},state:{default:a.Normal,notify:function(t){this.state!==t&&this.renderer.updateState()},type:a,serializable:!1}},init:function(){this.ready=!0,this.renderer=this.getComponent("ActorRenderer")},addCard:function(t){this.cards.push(t),this.renderer.onDeal(t,!0);var e=this.holeCard?[this.holeCard].concat(this.cards):this.cards;o.isBust(e)&&(this.state=a.Bust)},addHoleCard:function(t){this.holeCard=t,this.renderer.onDeal(t,!1)},stand:function(){this.state=a.Stand},revealHoldCard:function(){this.holeCard&&(this.cards.unshift(this.holeCard),this.holeCard=null,this.renderer.onRevealHoldCard())},report:function(){this.state=a.Report},reset:function(){this.cards=[],this.holeCard=null,this.reported=!1,this.state=a.Normal,this.renderer.onReset()}}),cc._RF.pop()},{Types:"Types",Utils:"Utils"}],AssetMng:[function(t,e,n){"use strict";cc._RF.push(e,"54522LcoVpPHbrqYgwp/1Qm","AssetMng");cc.Class({extends:cc.Component,properties:{texBust:{default:null,type:cc.SpriteFrame},texCardInfo:{default:null,type:cc.SpriteFrame},texCountdown:{default:null,type:cc.SpriteFrame},texBetCountdown:{default:null,type:cc.SpriteFrame},playerPhotos:{default:[],type:cc.SpriteFrame}}});cc._RF.pop()},{}],AudioMng:[function(t,e,n){"use strict";cc._RF.push(e,"01ca4tStvVH+JmZ5TNcmuAu","AudioMng"),cc.Class({extends:cc.Component,properties:{winAudio:{default:null,url:cc.AudioClip},loseAudio:{default:null,url:cc.AudioClip},cardAudio:{default:null,url:cc.AudioClip},buttonAudio:{default:null,url:cc.AudioClip},chipsAudio:{default:null,url:cc.AudioClip},bgm:{default:null,url:cc.AudioClip}},playMusic:function(){cc.audioEngine.playMusic(this.bgm,!0)},pauseMusic:function(){cc.audioEngine.pauseMusic()},resumeMusic:function(){cc.audioEngine.resumeMusic()},_playSFX:function(t){cc.audioEngine.playEffect(t,!1)},playWin:function(){this._playSFX(this.winAudio)},playLose:function(){this._playSFX(this.loseAudio)},playCard:function(){this._playSFX(this.cardAudio)},playChips:function(){this._playSFX(this.chipsAudio)},playButton:function(){this._playSFX(this.buttonAudio)}}),cc._RF.pop()},{}],Bet:[function(t,e,n){"use strict";cc._RF.push(e,"28f38yToT1Pw7NgyeCvRxDC","Bet");var i=t("Game");cc.Class({extends:cc.Component,properties:{chipPrefab:{default:null,type:cc.Prefab},btnChips:{default:[],type:cc.Node},chipValues:{default:[],type:"Integer"},anchorChipToss:{default:null,type:cc.Node}},init:function(){this._registerBtns()},_registerBtns:function(){for(var t=this,e=0;e<t.btnChips.length;++e)!function(n){t.btnChips[e].on("touchstart",function(e){i.instance.addStake(t.chipValues[n])&&t.playAddChip()},this)}(e)},playAddChip:function(){var t=cc.p(50*cc.randomMinus1To1(),50*cc.randomMinus1To1()),e=cc.instantiate(this.chipPrefab);this.anchorChipToss.addChild(e),e.setPosition(t),e.getComponent("TossChip").play()},resetChips:function(){i.instance.resetStake(),i.instance.info.enabled=!1,this.resetTossedChips()},resetTossedChips:function(){this.anchorChipToss.removeAllChildren()}}),cc._RF.pop()},{Game:"Game"}],ButtonScaler:[function(t,e,n){"use strict";cc._RF.push(e,"a171dSnCXFMRIqs1IWdvgWM","ButtonScaler"),cc.Class({extends:cc.Component,properties:{pressedScale:1,transDuration:0},onLoad:function(){function t(t){this.stopAllActions(),i&&i.playButton(),this.runAction(n.scaleDownAction)}function e(t){this.stopAllActions(),this.runAction(n.scaleUpAction)}var n=this,i=cc.find("Menu/AudioMng")||cc.find("Game/AudioMng");i&&(i=i.getComponent("AudioMng")),n.initScale=this.node.scale,n.button=n.getComponent(cc.Button),n.scaleDownAction=cc.scaleTo(n.transDuration,n.pressedScale),n.scaleUpAction=cc.scaleTo(n.transDuration,n.initScale),this.node.on("touchstart",t,this.node),this.node.on("touchend",e,this.node),this.node.on("touchcancel",e,this.node)}}),cc._RF.pop()},{}],Card:[function(t,e,n){"use strict";cc._RF.push(e,"ab67e5QkiVCBZ3DIMlWhiAt","Card"),cc.Class({extends:cc.Component,properties:{point:{default:null,type:cc.Label},suit:{default:null,type:cc.Sprite},mainPic:{default:null,type:cc.Sprite},cardBG:{default:null,type:cc.Sprite},redTextColor:cc.Color.WHITE,blackTextColor:cc.Color.WHITE,texFrontBG:{default:null,type:cc.SpriteFrame},texBackBG:{default:null,type:cc.SpriteFrame},texFaces:{default:[],type:cc.SpriteFrame},texSuitBig:{default:[],type:cc.SpriteFrame},texSuitSmall:{default:[],type:cc.SpriteFrame}},init:function(t){var e=t.point>10;this.mainPic.spriteFrame=e?this.texFaces[t.point-10-1]:this.texSuitBig[t.suit-1],this.point.string=t.pointName,t.isRedSuit?this.point.node.color=this.redTextColor:this.point.node.color=this.blackTextColor,this.suit.spriteFrame=this.texSuitSmall[t.suit-1]},reveal:function(t){this.point.node.active=t,this.suit.node.active=t,this.mainPic.node.active=t,this.cardBG.spriteFrame=t?this.texFrontBG:this.texBackBG}}),cc._RF.pop()},{}],CounterTest:[function(t,e,n){"use strict";cc._RF.push(e,"b0926/aIatATYgTuL0RyW/q","CounterTest"),cc.Class({extends:cc.Component,properties:{target:{default:null,type:cc.Label}},onLoad:function(){this.target.node.color=cc.Color.GREEN},update:function(t){}}),cc._RF.pop()},{}],Dealer:[function(t,e,n){"use strict";cc._RF.push(e,"ce2dfoqEulHCLjS1Z9xPN7t","Dealer");var i=t("Actor"),o=t("Utils");cc.Class({extends:i,properties:{bestPoint:{get:function(){var t=this.holeCard?[this.holeCard].concat(this.cards):this.cards;return o.getMinMaxPoint(t).max},override:!0}},init:function(){this._super(),this.renderer.initDealer()},wantHit:function(){var e=t("Game"),n=t("Types"),i=this.bestPoint;if(21===i)return!1;if(i<=11)return!0;var o=e.instance.player;switch(e.instance._getPlayerResult(o,this)){case n.Outcome.Win:return!0;case n.Outcome.Lose:return!1}return this.bestPoint<17}}),cc._RF.pop()},{Actor:"Actor",Game:"Game",Types:"Types",Utils:"Utils"}],Decks:[function(t,e,n){"use strict";function i(t){this._numberOfDecks=t,this._cardIds=new Array(52*t),this.reset()}cc._RF.push(e,"17024G0JFpHcLI5GREbF8VN","Decks");var o=t("Types");i.prototype.reset=function(){this._cardIds.length=52*this._numberOfDecks;for(var t=0,e=o.Card.fromId,n=0;n<this._numberOfDecks;++n)for(var i=0;i<52;++i)this._cardIds[t]=e(i),++t},i.prototype.draw=function(){var t=this._cardIds,e=t.length;if(0===e)return null;var n=Math.random(),i=n*e|0,o=t[i],a=t[e-1];return t[i]=a,t.length=e-1,o},e.exports=i,cc._RF.pop()},{Types:"Types"}],FXPlayer:[function(t,e,n){"use strict";cc._RF.push(e,"68da2yjdGVMSYhXLN9DukIB","FXPlayer"),cc.Class({extends:cc.Component,init:function(){this.anim=this.getComponent(cc.Animation),this.sprite=this.getComponent(cc.Sprite)},show:function(t){this.sprite.enabled=t},playFX:function(t){this.anim.play(t)},hideFX:function(){this.sprite.enabled=!1}}),cc._RF.pop()},{}],Game:[function(t,e,n){"use strict";cc._RF.push(e,"63738OONCFKHqsf4QSeJSun","Game");var i=t("PlayerData").players,o=t("Decks"),a=t("Types"),s=a.ActorPlayingState,r=t("game-fsm"),c=cc.Class({extends:cc.Component,properties:{playerAnchors:{default:[],type:cc.Node},playerPrefab:{default:null,type:cc.Prefab},dealer:{default:null,type:cc.Node},inGameUI:{default:null,type:cc.Node},betUI:{default:null,type:cc.Node},assetMng:{default:null,type:cc.Node},audioMng:{default:null,type:cc.Node},turnDuration:0,betDuration:0,totalChipsNum:0,totalDiamondNum:0,numberOfDecks:{default:1,type:"Integer"}},statics:{instance:null},onLoad:function(){c.instance=this,this.inGameUI=this.inGameUI.getComponent("InGameUI"),this.assetMng=this.assetMng.getComponent("AssetMng"),this.audioMng=this.audioMng.getComponent("AudioMng"),this.betUI=this.betUI.getComponent("Bet"),this.inGameUI.init(this.betDuration),this.betUI.init(),this.dealer=this.dealer.getComponent("Dealer"),this.dealer.init(),this.player=null,this.createPlayers(),this.info=this.inGameUI.resultTxt,this.totalChips=this.inGameUI.labelTotalChips,this.decks=new o(this.numberOfDecks),this.fsm=r,this.fsm.init(this),this.updateTotalChips(),this.audioMng.playMusic()},addStake:function(t){return this.totalChipsNum<t?(console.log("not enough chips!"),this.info.enabled=!0,this.info.string="金币不足!",!1):(this.totalChipsNum-=t,this.updateTotalChips(),this.player.addStake(t),this.audioMng.playChips(),this.info.enabled=!1,this.info.string="请下注",!0)},resetStake:function(){this.totalChipsNum+=this.player.stakeNum,this.player.resetStake(),this.updateTotalChips()},updateTotalChips:function(){this.totalChips.string=this.totalChipsNum,this.player.renderer.updateTotalStake(this.totalChipsNum)},createPlayers:function(){for(var t=0;t<5;++t){var e=cc.instantiate(this.playerPrefab),n=this.playerAnchors[t],o=t>2;n.addChild(e),e.position=cc.p(0,0);var a=cc.find("anchorPlayerInfo",n).getPosition(),s=cc.find("anchorStake",n).getPosition();e.getComponent("ActorRenderer").init(i[t],a,s,this.turnDuration,o),2===t&&(this.player=e.getComponent("Player"),this.player.init())}},hit:function(){this.player.addCard(this.decks.draw()),this.player.state===s.Bust&&this.fsm.onPlayerActed(),this.audioMng.playCard(),this.audioMng.playButton()},stand:function(){this.player.stand(),this.audioMng.playButton(),this.fsm.onPlayerActed()},deal:function(){this.fsm.toDeal(),this.audioMng.playButton()},start:function(){this.fsm.toBet(),this.audioMng.playButton()},report:function(){this.player.report(),this.fsm.onPlayerActed()},quitToMenu:function(){cc.director.loadScene("menu")},onEnterDealState:function(){this.betUI.resetTossedChips(),this.inGameUI.resetCountdown(),this.player.renderer.showStakeChips(this.player.stakeNum),this.player.addCard(this.decks.draw());var t=this.decks.draw();this.dealer.addHoleCard(t),this.player.addCard(this.decks.draw()),this.dealer.addCard(this.decks.draw()),this.audioMng.playCard(),this.fsm.onDealed()},onPlayersTurnState:function(t){t&&this.inGameUI.showGameState()},onEnterDealersTurnState:function(){for(;this.dealer.state===s.Normal;)this.dealer.wantHit()?this.dealer.addCard(this.decks.draw()):this.dealer.stand();this.fsm.onDealerActed()},onEndState:function(t){if(t){this.dealer.revealHoldCard(),this.inGameUI.showResultState();switch(this._getPlayerResult(this.player,this.dealer)){case a.Outcome.Win:this.info.string="You Win",this.audioMng.pauseMusic(),this.audioMng.playWin(),this.totalChipsNum+=this.player.stakeNum;var e=this.player.stakeNum;!this.player.state===a.ActorPlayingState.Report&&(this.player.hand===a.Hand.BlackJack?e*=1.5:e*=2),this.totalChipsNum+=e,this.updateTotalChips();break;case a.Outcome.Lose:this.info.string="You Lose",this.audioMng.pauseMusic(),this.audioMng.playLose();break;case a.Outcome.Tie:this.info.string="Draw",this.totalChipsNum+=this.player.stakeNum,this.updateTotalChips()}}this.info.enabled=t},onBetState:function(t){t&&(this.decks.reset(),this.player.reset(),this.dealer.reset(),this.info.string="请下注",this.inGameUI.showBetState(),this.inGameUI.startCountdown(),this.audioMng.resumeMusic()),this.info.enabled=t},_getPlayerResult:function(t,e){var n=a.Outcome;return t.state===s.Bust?n.Lose:e.state===s.Bust?n.Win:t.state===s.Report?n.Win:t.hand>e.hand?n.Win:t.hand<e.hand?n.Lose:t.bestPoint===e.bestPoint?n.Tie:t.bestPoint<e.bestPoint?n.Lose:n.Win}});cc._RF.pop()},{Decks:"Decks",PlayerData:"PlayerData",Types:"Types","game-fsm":"game-fsm"}],HotUpdate:[function(t,e,n){"use strict";cc._RF.push(e,"e390cpl5vpL54CRkH0xI8Ul","HotUpdate"),cc.Class({extends:cc.Component,properties:{updatePanel:{default:null,type:cc.Node},manifestUrl:{default:null,url:cc.RawAsset},percent:{default:null,type:cc.Label}},checkCb:function(t){switch(cc.log("Code: "+t.getEventCode()),t.getEventCode()){case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:cc.log("No local manifest file found, hot update skipped."),cc.eventManager.removeListener(this._checkListener);break;case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST:cc.log("Fail to download manifest file, hot update skipped."),cc.eventManager.removeListener(this._checkListener);break;case jsb.EventAssetsManager.ALREADY_UP_TO_DATE:cc.log("Already up to date with the latest remote version."),cc.eventManager.removeListener(this._checkListener);break;case jsb.EventAssetsManager.NEW_VERSION_FOUND:this._needUpdate=!0,this.updatePanel.active=!0,cc.eventManager.removeListener(this._checkListener)}},updateCb:function(t){var e=!1,n=!1;switch(t.getEventCode()){case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:cc.log("No local manifest file found, hot update skipped."),n=!0;break;case jsb.EventAssetsManager.UPDATE_PROGRESSION:var i=t.getPercent(),o=(t.getPercentByFile(),t.getMessage());o&&cc.log(o),cc.log(i.toFixed(2)+"%"),this.percent.string=i+"%";break;case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST:cc.log("Fail to download manifest file, hot update skipped."),n=!0;break;case jsb.EventAssetsManager.ALREADY_UP_TO_DATE:cc.log("Already up to date with the latest remote version."),n=!0;break;case jsb.EventAssetsManager.UPDATE_FINISHED:cc.log("Update finished. "+t.getMessage()),e=!0;break;case jsb.EventAssetsManager.UPDATE_FAILED:cc.log("Update failed. "+t.getMessage()),this._failCount++,this._failCount<5?this._am.downloadFailedAssets():(cc.log("Reach maximum fail count, exit update process"),this._failCount=0,n=!0);break;case jsb.EventAssetsManager.ERROR_UPDATING:cc.log("Asset update error: "+t.getAssetId()+", "+t.getMessage());break;case jsb.EventAssetsManager.ERROR_DECOMPRESS:cc.log(t.getMessage())}if(n&&(cc.eventManager.removeListener(this._updateListener),this.updatePanel.active=!1),e){cc.eventManager.removeListener(this._updateListener);var a=jsb.fileUtils.getSearchPaths(),s=this._am.getLocalManifest().getSearchPaths();Array.prototype.unshift(a,s),cc.sys.localStorage.setItem("HotUpdateSearchPaths",JSON.stringify(a)),jsb.fileUtils.setSearchPaths(a),cc.game.restart()}},hotUpdate:function(){this._am&&this._needUpdate&&(this._updateListener=new jsb.EventListenerAssetsManager(this._am,this.updateCb.bind(this)),cc.eventManager.addListener(this._updateListener,1),this._failCount=0,this._am.update())},onLoad:function(){if(cc.sys.isNative){var t=(jsb.fileUtils?jsb.fileUtils.getWritablePath():"/")+"blackjack-remote-asset";cc.log("Storage path for remote asset : "+t),this._am=new jsb.AssetsManager(this.manifestUrl,t),this._am.retain(),this._needUpdate=!1,this._am.getLocalManifest().isLoaded()&&(this._checkListener=new jsb.EventListenerAssetsManager(this._am,this.checkCb.bind(this)),cc.eventManager.addListener(this._checkListener,1),this._am.checkUpdate())}},onDestroy:function(){this._am&&this._am.release()}}),cc._RF.pop()},{}],InGameUI:[function(t,e,n){"use strict";cc._RF.push(e,"f192efroeFEyaxtfh8TVXYz","InGameUI");var i=t("Game");cc.Class({extends:cc.Component,properties:{panelChat:{default:null,type:cc.Node},panelSocial:{default:null,type:cc.Node},betStateUI:{default:null,type:cc.Node},gameStateUI:{default:null,type:cc.Node},resultTxt:{default:null,type:cc.Label},betCounter:{default:null,type:cc.Node},btnStart:{default:null,type:cc.Node},labelTotalChips:{default:null,type:cc.Label}},init:function(t){this.panelChat.active=!1,this.panelSocial.active=!1,this.resultTxt.enabled=!1,this.betStateUI.active=!0,this.gameStateUI.active=!1,this.btnStart.active=!1,this.betDuration=t,this.progressTimer=this.initCountdown()},initCountdown:function(){var t=i.instance.assetMng.texBetCountdown.getTexture();this.sgCountdown=new _ccsg.Sprite(t),this.sgCountdown.setColor(cc.Color.BLACK);var e=new cc.ProgressTimer(this.sgCountdown);return e.setName("progressTimer"),e.setMidpoint(cc.p(.5,.5)),e.setType(cc.ProgressTimer.Type.RADIAL),e.reverseDir=!0,this.betCounter._sgNode.addChild(e),e.setPosition(cc.p(0,-this.betCounter.height/2)),e.setPercentage(0),e},startCountdown:function(){if(this.progressTimer){var t=cc.progressFromTo(this.betDuration,0,100);this.progressTimer.runAction(t)}},resetCountdown:function(){this.progressTimer&&(this.progressTimer.stopAllActions(),this.progressTimer.setPercentage(100))},showBetState:function(){this.betStateUI.active=!0,this.gameStateUI.active=!1,this.btnStart.active=!1},showGameState:function(){this.betStateUI.active=!1,this.gameStateUI.active=!0,this.btnStart.active=!1},showResultState:function(){this.betStateUI.active=!1,this.gameStateUI.active=!1,this.btnStart.active=!0},toggleChat:function(){this.panelChat.active=!this.panelChat.active},toggleSocial:function(){this.panelSocial.active=!this.panelSocial.active},update:function(t){}}),cc._RF.pop()},{Game:"Game"}],Mask:[function(t,e,n){"use strict";cc._RF.push(e,"3c16c3le6hCsrtnanqK8N2W","Mask"),cc.Class({extends:cc.Component,properties:{},onLoad:function(){this.node.on("touchstart",function(t){t.stopPropagation()}),this.node.on("mousedown",function(t){t.stopPropagation()}),this.node.on("mousemove",function(t){t.stopPropagation()}),this.node.on("mouseup",function(t){t.stopPropagation()})}}),cc._RF.pop()},{}],Menu:[function(t,e,n){"use strict";cc._RF.push(e,"20f60m+3RlGO7x2/ARzZ6Qc","Menu"),cc.Class({extends:cc.Component,properties:{audioMng:{default:null,type:cc.Node}},onLoad:function(){this.audioMng=this.audioMng.getComponent("AudioMng"),this.audioMng.playMusic()},playGame:function(){cc.director.loadScene("table")},update:function(t){}}),cc._RF.pop()},{}],PlayerData:[function(t,e,n){"use strict";cc._RF.push(e,"4f9c5eXxqhHAKLxZeRmgHDB","PlayerData");var i=[{name:"燃烧吧，蛋蛋儿军",gold:3e3,photoIdx:0},{name:"地方政府",gold:2e3,photoIdx:1},{name:"手机超人",gold:1500,photoIdx:2},{name:"天灵灵，地灵灵",gold:500,photoIdx:3},{name:"哟哟，切克闹",gold:9e3,photoIdx:4},{name:"学姐不要死",gold:5e3,photoIdx:5},{name:"提百万",gold:1e4,photoIdx:6}];e.exports={players:i},cc._RF.pop()},{}],Player:[function(t,e,n){"use strict";cc._RF.push(e,"226a2AvzRpHL7SJGTMy5PDX","Player");var i=t("Actor");cc.Class({extends:i,init:function(){this._super(),this.labelStake=this.renderer.labelStakeOnTable,this.stakeNum=0},reset:function(){this._super(),this.resetStake()},addCard:function(t){this._super(t)},addStake:function(t){this.stakeNum+=t,this.updateStake(this.stakeNum)},resetStake:function(t){this.stakeNum=0,this.updateStake(this.stakeNum)},updateStake:function(t){this.labelStake.string=t}}),cc._RF.pop()},{Actor:"Actor"}],RankItem:[function(t,e,n){"use strict";cc._RF.push(e,"1657ewfijBOXLq5zGqr6PvE","RankItem"),cc.Class({extends:cc.Component,properties:{spRankBG:{default:null,type:cc.Sprite},labelRank:{default:null,type:cc.Label},labelPlayerName:{default:null,type:cc.Label},labelGold:{default:null,type:cc.Label},spPlayerPhoto:{default:null,type:cc.Sprite},texRankBG:{default:[],type:cc.SpriteFrame},texPlayerPhoto:{default:[],type:cc.SpriteFrame}},init:function(t,e){t<3?(this.labelRank.node.active=!1,this.spRankBG.spriteFrame=this.texRankBG[t]):(this.labelRank.node.active=!0,this.labelRank.string=(t+1).toString()),this.labelPlayerName.string=e.name,this.labelGold.string=e.gold.toString(),this.spPlayerPhoto.spriteFrame=this.texPlayerPhoto[e.photoIdx]},update:function(t){}}),cc._RF.pop()},{}],RankList:[function(t,e,n){"use strict";cc._RF.push(e,"fe3fcIxCFFLrKHg6s5+xRUU","RankList");var i=t("PlayerData").players;cc.Class({extends:cc.Component,properties:{scrollView:{default:null,type:cc.ScrollView},prefabRankItem:{default:null,type:cc.Prefab},rankCount:0},onLoad:function(){this.content=this.scrollView.content,this.populateList()},populateList:function(){for(var t=0;t<this.rankCount;++t){var e=i[t],n=cc.instantiate(this.prefabRankItem);n.getComponent("RankItem").init(t,e),this.content.addChild(n)}},update:function(t){}}),cc._RF.pop()},{PlayerData:"PlayerData"}],SideSwitcher:[function(t,e,n){"use strict";cc._RF.push(e,"3aae7lZKyhPqqsLD3wMKl6X","SideSwitcher"),cc.Class({extends:cc.Component,properties:{retainSideNodes:{default:[],type:cc.Node}},switchSide:function(){this.node.scaleX=-this.node.scaleX;for(var t=0;t<this.retainSideNodes.length;++t){var e=this.retainSideNodes[t];e.scaleX=-e.scaleX}}}),cc._RF.pop()},{}],TossChip:[function(t,e,n){"use strict";cc._RF.push(e,"b4eb5Lo6U1IZ4eJWuxShCdH","TossChip"),cc.Class({extends:cc.Component,properties:{anim:{default:null,type:cc.Animation}},play:function(){this.anim.play("chip_toss")}}),cc._RF.pop()},{}],Types:[function(t,e,n){"use strict";function i(t,e){Object.defineProperties(this,{point:{value:t,writable:!1},suit:{value:e,writable:!1},id:{value:13*(e-1)+(t-1),writable:!1},pointName:{get:function(){return a[this.point]}},suitName:{get:function(){return o[this.suit]}},isBlackSuit:{get:function(){return this.suit===o.Spade||this.suit===o.Club}},isRedSuit:{get:function(){return this.suit===o.Heart||this.suit===o.Diamond}}})}cc._RF.push(e,"5b633QMQxpFmYetofEvK2UD","Types");var o=cc.Enum({Spade:1,Heart:2,Club:3,Diamond:4}),a="NAN,A,2,3,4,5,6,7,8,9,10,J,Q,K".split(",");i.prototype.toString=function(){return this.suitName+" "+this.pointName};var s=new Array(52);i.fromId=function(t){return s[t]},function(){for(var t=1;t<=4;t++)for(var e=1;e<=13;e++){var n=new i(e,t);s[n.id]=n}}();var r=cc.Enum({Normal:-1,Stand:-1,Report:-1,Bust:-1}),c=cc.Enum({Win:-1,Lose:-1,Tie:-1}),u=cc.Enum({Normal:-1,BlackJack:-1,FiveCard:-1});e.exports={Suit:o,Card:i,ActorPlayingState:r,Hand:u,Outcome:c},cc._RF.pop()},{}],Utils:[function(t,e,n){"use strict";function i(t){for(var e=!1,n=0,i=0;i<t.length;i++){var o=t[i];1===o.point&&(e=!0),n+=Math.min(10,o.point)}var a=n;return e&&n+10<=21&&(a+=10),{min:n,max:a}}function o(t){for(var e=0,n=0;n<t.length;n++){var i=t[n];e+=Math.min(10,i.point)}return e>21}cc._RF.push(e,"73590esk6xP9ICqhfUZalMg","Utils");var a=function(){return cc.sys.isMobile};e.exports={isBust:o,getMinMaxPoint:i,isMobile:a},cc._RF.pop()},{}],"game-fsm":[function(t,e,n){"use strict";function i(t){return function(e){return e===t}}cc._RF.push(e,"6510d1SmQRMMYH8FEIA7zXq","game-fsm");var o,a,s,r=t("state.com"),c=!1;n={init:function(t){r.console=console,a=new r.StateMachine("root");var e=new r.PseudoState("init-root",a,r.PseudoStateKind.Initial),n=new r.State("下注",a);s=new r.State("已开局",a);var c=new r.State("结算",a);e.to(n),n.to(s).when(i("deal")),s.to(c).when(i("end")),c.to(n).when(i("bet")),n.entry(function(){t.onBetState(!0)}),n.exit(function(){t.onBetState(!1)}),c.entry(function(){t.onEndState(!0)}),c.exit(function(){t.onEndState(!1)});var u=new r.PseudoState("init 已开局",s,r.PseudoStateKind.Initial),l=new r.State("发牌",s),h=new r.State("玩家决策",s),p=new r.State("庄家决策",s);u.to(l),l.to(h).when(i("dealed")),h.to(p).when(i("player acted")),l.entry(function(){t.onEnterDealState()}),h.entry(function(){t.onPlayersTurnState(!0)}),h.exit(function(){t.onPlayersTurnState(!1)}),p.entry(function(){t.onEnterDealersTurnState()}),o=new r.StateMachineInstance("fsm"),r.initialise(a,o)},toDeal:function(){this._evaluate("deal")},toBet:function(){this._evaluate("bet")},onDealed:function(){this._evaluate("dealed")},onPlayerActed:function(){this._evaluate("player acted")},onDealerActed:function(){this._evaluate("end")},_evaluate:function(t){if(c)return void setTimeout(function(){r.evaluate(a,o,t)},1);c=!0,r.evaluate(a,o,t),c=!1},_getInstance:function(){return o},_getModel:function(){return a}},e.exports=n,cc._RF.pop()},{"state.com":"state.com"}],"state.com":[function(t,e,n){"use strict";cc._RF.push(e,"71d9293mx9CFryhJvRw85ZS","state.com");var i;!function(t){var e=function(){function t(t){this.actions=[],t&&this.push(t)}return t.prototype.push=function(e){return Array.prototype.push.apply(this.actions,e instanceof t?e.actions:arguments),this},t.prototype.hasActions=function(){return 0!==this.actions.length},t.prototype.invoke=function(t,e,n){void 0===n&&(n=!1),this.actions.forEach(function(i){return i(t,e,n)})},t}();t.Behavior=e}(i||(i={}));var i;!function(t){!function(t){t[t.Initial=0]="Initial",t[t.ShallowHistory=1]="ShallowHistory",t[t.DeepHistory=2]="DeepHistory",t[t.Choice=3]="Choice",t[t.Junction=4]="Junction",t[t.Terminate=5]="Terminate"}(t.PseudoStateKind||(t.PseudoStateKind={}));t.PseudoStateKind}(i||(i={}));var i;!function(t){!function(t){t[t.Internal=0]="Internal",t[t.Local=1]="Local",t[t.External=2]="External"}(t.TransitionKind||(t.TransitionKind={}));t.TransitionKind}(i||(i={}));var i;!function(t){var e=function(){function t(e,n){this.name=e,this.qualifiedName=n?n.qualifiedName+t.namespaceSeparator+e:e}return t.prototype.toString=function(){return this.qualifiedName},t.namespaceSeparator=".",t}();t.Element=e}(i||(i={}));var i,o=function(t,e){function n(){this.constructor=t}for(var i in e)e.hasOwnProperty(i)&&(t[i]=e[i]);n.prototype=e.prototype,t.prototype=new n};!function(t){var e=function(t){function e(e,n){t.call(this,e,n),this.vertices=[],this.state=n,this.state.regions.push(this),this.state.getRoot().clean=!1}return o(e,t),e.prototype.getRoot=function(){return this.state.getRoot()},e.prototype.accept=function(t,e,n,i){return t.visitRegion(this,e,n,i)},e.defaultName="default",e}(t.Element);t.Region=e}(i||(i={}));var i;!function(t){var e=function(e){function n(n,i){e.call(this,n,i=i instanceof t.State?i.defaultRegion():i),this.outgoing=[],this.region=i,this.region&&(this.region.vertices.push(this),this.region.getRoot().clean=!1)}return o(n,e),n.prototype.getRoot=function(){return this.region.getRoot()},n.prototype.to=function(e,n){return void 0===n&&(n=t.TransitionKind.External),new t.Transition(this,e,n)},n.prototype.accept=function(t,e,n,i){},n}(t.Element);t.Vertex=e}(i||(i={}));var i;!function(t){var e=function(e){function n(n,i,o){void 0===o&&(o=t.PseudoStateKind.Initial),e.call(this,n,i),this.kind=o}return o(n,e),n.prototype.isHistory=function(){return this.kind===t.PseudoStateKind.DeepHistory||this.kind===t.PseudoStateKind.ShallowHistory},n.prototype.isInitial=function(){return this.kind===t.PseudoStateKind.Initial||this.isHistory()},n.prototype.accept=function(t,e,n,i){return t.visitPseudoState(this,e,n,i)},n}(t.Vertex);t.PseudoState=e}(i||(i={}));var i;!function(t){var e=function(e){function n(n,i){e.call(this,n,i),this.exitBehavior=new t.Behavior,this.entryBehavior=new t.Behavior,this.regions=[]}return o(n,e),n.prototype.defaultRegion=function(){return this.regions.reduce(function(e,n){return n.name===t.Region.defaultName?n:e},void 0)||new t.Region(t.Region.defaultName,this)},n.prototype.isFinal=function(){return 0===this.outgoing.length},n.prototype.isSimple=function(){return 0===this.regions.length},n.prototype.isComposite=function(){return this.regions.length>0},n.prototype.isOrthogonal=function(){return this.regions.length>1},n.prototype.exit=function(t){return this.exitBehavior.push(t),this.getRoot().clean=!1,this},n.prototype.entry=function(t){return this.entryBehavior.push(t),this.getRoot().clean=!1,this},n.prototype.accept=function(t,e,n,i){return t.visitState(this,e,n,i)},n}(t.Vertex);t.State=e}(i||(i={}));var i;!function(t){var e=function(t){function e(e,n){t.call(this,e,n)}return o(e,t),e.prototype.accept=function(t,e,n,i){return t.visitFinalState(this,e,n,i)},e}(t.State);t.FinalState=e}(i||(i={}));var i;!function(t){var e=function(t){
-function e(e){t.call(this,e,void 0),this.clean=!1}return o(e,t),e.prototype.getRoot=function(){return this.region?this.region.getRoot():this},e.prototype.accept=function(t,e,n,i){return t.visitStateMachine(this,e,n,i)},e}(t.State);t.StateMachine=e}(i||(i={}));var i;!function(t){var e=function(){function e(n,i,o){var a=this;void 0===o&&(o=t.TransitionKind.External),this.transitionBehavior=new t.Behavior,this.onTraverse=new t.Behavior,this.source=n,this.target=i,this.kind=i?o:t.TransitionKind.Internal,this.guard=n instanceof t.PseudoState?e.TrueGuard:function(t){return t===a.source},this.source.outgoing.push(this),this.source.getRoot().clean=!1}return e.prototype.else=function(){return this.guard=e.FalseGuard,this},e.prototype.when=function(t){return this.guard=t,this},e.prototype.effect=function(t){return this.transitionBehavior.push(t),this.source.getRoot().clean=!1,this},e.prototype.accept=function(t,e,n,i){return t.visitTransition(this,e,n,i)},e.prototype.toString=function(){return"["+(this.target?this.source+" -> "+this.target:this.source)+"]"},e.TrueGuard=function(){return!0},e.FalseGuard=function(){return!1},e}();t.Transition=e}(i||(i={}));var i;!function(t){var e=function(){function t(){}return t.prototype.visitElement=function(t,e,n,i){},t.prototype.visitRegion=function(t,e,n,i){var o=this,a=this.visitElement(t,e,n,i);return t.vertices.forEach(function(t){t.accept(o,e,n,i)}),a},t.prototype.visitVertex=function(t,e,n,i){var o=this,a=this.visitElement(t,e,n,i);return t.outgoing.forEach(function(t){t.accept(o,e,n,i)}),a},t.prototype.visitPseudoState=function(t,e,n,i){return this.visitVertex(t,e,n,i)},t.prototype.visitState=function(t,e,n,i){var o=this,a=this.visitVertex(t,e,n,i);return t.regions.forEach(function(t){t.accept(o,e,n,i)}),a},t.prototype.visitFinalState=function(t,e,n,i){return this.visitState(t,e,n,i)},t.prototype.visitStateMachine=function(t,e,n,i){return this.visitState(t,e,n,i)},t.prototype.visitTransition=function(t,e,n,i){},t}();t.Visitor=e}(i||(i={}));var i;!function(t){var e=function(){function t(t){void 0===t&&(t="unnamed"),this.last={},this.isTerminated=!1,this.name=t}return t.prototype.setCurrent=function(t,e){this.last[t.qualifiedName]=e},t.prototype.getCurrent=function(t){return this.last[t.qualifiedName]},t.prototype.toString=function(){return this.name},t}();t.StateMachineInstance=e}(i||(i={}));var i;!function(t){function e(t){i=t}function n(){return i}t.setRandom=e,t.getRandom=n;var i=function(t){return Math.floor(Math.random()*t)}}(i||(i={}));var i;!function(t){function e(n,i){return n instanceof t.Region?e(n.state,i):n instanceof t.State?!n.region||e(n.region,i)&&i.getCurrent(n.region)===n:void 0}t.isActive=e}(i||(i={}));var i;!function(t){function e(n,i){return n instanceof t.Region?i.getCurrent(n).isFinal():!(n instanceof t.State)||n.regions.every(function(t){return e(t,i)})}t.isComplete=e}(i||(i={}));var i;!function(t){function e(n,i,o){void 0===o&&(o=!0),i?(o&&!1===n.clean&&e(n),t.console.log("initialise "+i),n.onInitialise.invoke(void 0,i)):(t.console.log("initialise "+n.name),n.accept(new f,!1),n.clean=!0)}function n(n,o,a,s){return void 0===s&&(s=!0),t.console.log(o+" evaluate "+a),s&&!1===n.clean&&e(n),!o.isTerminated&&i(n,o,a)}function i(e,n,o){var s=!1;if(e.regions.every(function(a){return!i(n.getCurrent(a),n,o)||(s=!0,t.isActive(e,n))}),s)o!==e&&t.isComplete(e,n)&&i(e,n,e);else{var r=e.outgoing.filter(function(t){return t.guard(o,n)});1===r.length?s=a(r[0],n,o):r.length>1&&t.console.error(e+": multiple outbound transitions evaluated true for message "+o)}return s}function a(e,n,o){for(var r=new t.Behavior(e.onTraverse),c=e.target;c&&c instanceof t.PseudoState&&c.kind===t.PseudoStateKind.Junction;)c=(e=s(c,n,o)).target,r.push(e.onTraverse);return r.invoke(o,n),c&&c instanceof t.PseudoState&&c.kind===t.PseudoStateKind.Choice?a(s(c,n,o),n,o):c&&c instanceof t.State&&t.isComplete(c,n)&&i(c,n,c),!0}function s(e,n,i){var o=e.outgoing.filter(function(t){return t.guard(i,n)});return e.kind===t.PseudoStateKind.Choice?0!==o.length?o[t.getRandom()(o.length)]:r(e):o.length>1?void t.console.error("Multiple outbound transition guards returned true at "+this+" for "+i):o[0]||r(e)}function r(e){return e.outgoing.filter(function(e){return e.guard===t.Transition.FalseGuard})[0]}function c(e){return e[0]||(e[0]=new t.Behavior)}function u(e){return e[1]||(e[1]=new t.Behavior)}function l(e){return e[2]||(e[2]=new t.Behavior)}function h(e){return new t.Behavior(u(e)).push(l(e))}function p(t){return(t.region?p(t.region.state):[]).concat(t)}t.initialise=e,t.evaluate=n;var d=function(e){function n(){e.apply(this,arguments)}return o(n,e),n.prototype.visitTransition=function(e,n){e.kind===t.TransitionKind.Internal?e.onTraverse.push(e.transitionBehavior):e.kind===t.TransitionKind.Local?this.visitLocalTransition(e,n):this.visitExternalTransition(e,n)},n.prototype.visitLocalTransition=function(e,n){var i=this;e.onTraverse.push(function(o,a){for(var s=p(e.target),r=0;t.isActive(s[r],a);)++r;for(c(n(a.getCurrent(s[r].region))).invoke(o,a),e.transitionBehavior.invoke(o,a);r<s.length;)i.cascadeElementEntry(e,n,s[r++],s[r],function(t){t.invoke(o,a)});l(n(e.target)).invoke(o,a)})},n.prototype.visitExternalTransition=function(t,e){for(var n=p(t.source),i=p(t.target),o=Math.min(n.length,i.length)-1;n[o-1]!==i[o-1];)--o;for(t.onTraverse.push(c(e(n[o]))),t.onTraverse.push(t.transitionBehavior);o<i.length;)this.cascadeElementEntry(t,e,i[o++],i[o],function(e){return t.onTraverse.push(e)});t.onTraverse.push(l(e(t.target)))},n.prototype.cascadeElementEntry=function(e,n,i,o,a){a(u(n(i))),o&&i instanceof t.State&&i.regions.forEach(function(t){a(u(n(t))),t!==o.region&&a(l(n(t)))})},n}(t.Visitor),f=function(e){function n(){e.apply(this,arguments),this.behaviours={}}return o(n,e),n.prototype.behaviour=function(t){return this.behaviours[t.qualifiedName]||(this.behaviours[t.qualifiedName]=[])},n.prototype.visitElement=function(e,n){t.console!==g&&(c(this.behaviour(e)).push(function(n,i){return t.console.log(i+" leave "+e)}),u(this.behaviour(e)).push(function(n,i){return t.console.log(i+" enter "+e)}))},n.prototype.visitRegion=function(e,n){var i=this,o=e.vertices.reduce(function(e,n){return n instanceof t.PseudoState&&n.isInitial()?n:e},void 0);e.vertices.forEach(function(e){e.accept(i,n||o&&o.kind===t.PseudoStateKind.DeepHistory)}),c(this.behaviour(e)).push(function(t,n){return c(i.behaviour(n.getCurrent(e))).invoke(t,n)}),n||!o||o.isHistory()?l(this.behaviour(e)).push(function(n,a,s){h(i.behaviour(s||o.isHistory()?a.getCurrent(e)||o:o)).invoke(n,a,s||o.kind===t.PseudoStateKind.DeepHistory)}):l(this.behaviour(e)).push(h(this.behaviour(o))),this.visitElement(e,n)},n.prototype.visitPseudoState=function(n,i){e.prototype.visitPseudoState.call(this,n,i),n.isInitial()?l(this.behaviour(n)).push(function(t,e){return a(n.outgoing[0],e)}):n.kind===t.PseudoStateKind.Terminate&&u(this.behaviour(n)).push(function(t,e){return e.isTerminated=!0})},n.prototype.visitState=function(t,e){var n=this;t.regions.forEach(function(i){i.accept(n,e),c(n.behaviour(t)).push(c(n.behaviour(i))),l(n.behaviour(t)).push(h(n.behaviour(i)))}),this.visitVertex(t,e),c(this.behaviour(t)).push(t.exitBehavior),u(this.behaviour(t)).push(t.entryBehavior),u(this.behaviour(t)).push(function(e,n){t.region&&n.setCurrent(t.region,t)})},n.prototype.visitStateMachine=function(t,n){var i=this;e.prototype.visitStateMachine.call(this,t,n),t.accept(new d,function(t){return i.behaviour(t)}),t.onInitialise=h(this.behaviour(t))},n}(t.Visitor),g={log:function(t){for(var e=[],n=1;n<arguments.length;n++)e[n-1]=arguments[n]},warn:function(t){for(var e=[],n=1;n<arguments.length;n++)e[n-1]=arguments[n]},error:function(t){for(var e=[],n=1;n<arguments.length;n++)e[n-1]=arguments[n];throw t}};t.console=g}(i||(i={}));var i;!function(t){function e(t){t.accept(new i)}function n(t){return(t.region?n(t.region.state):[]).concat(t)}t.validate=e;var i=function(e){function i(){e.apply(this,arguments)}return o(i,e),i.prototype.visitPseudoState=function(n){e.prototype.visitPseudoState.call(this,n),n.kind===t.PseudoStateKind.Choice||n.kind===t.PseudoStateKind.Junction?(0===n.outgoing.length&&t.console.error(n+": "+n.kind+" pseudo states must have at least one outgoing transition."),n.outgoing.filter(function(e){return e.guard===t.Transition.FalseGuard}).length>1&&t.console.error(n+": "+n.kind+" pseudo states cannot have more than one Else transitions.")):(0!==n.outgoing.filter(function(e){return e.guard===t.Transition.FalseGuard}).length&&t.console.error(n+": "+n.kind+" pseudo states cannot have Else transitions."),n.isInitial()&&(1!==n.outgoing.length?t.console.error(n+": initial pseudo states must have one outgoing transition."):n.outgoing[0].guard!==t.Transition.TrueGuard&&t.console.error(n+": initial pseudo states cannot have a guard condition.")))},i.prototype.visitRegion=function(n){e.prototype.visitRegion.call(this,n);var i;n.vertices.forEach(function(e){e instanceof t.PseudoState&&e.isInitial()&&(i&&t.console.error(n+": regions may have at most one initial pseudo state."),i=e)})},i.prototype.visitState=function(n){e.prototype.visitState.call(this,n),n.regions.filter(function(e){return e.name===t.Region.defaultName}).length>1&&t.console.error(n+": a state cannot have more than one region named "+t.Region.defaultName)},i.prototype.visitFinalState=function(n){e.prototype.visitFinalState.call(this,n),0!==n.outgoing.length&&t.console.error(n+": final states must not have outgoing transitions."),0!==n.regions.length&&t.console.error(n+": final states must not have child regions."),n.entryBehavior.hasActions()&&t.console.warn(n+": final states may not have entry behavior."),n.exitBehavior.hasActions()&&t.console.warn(n+": final states may not have exit behavior.")},i.prototype.visitTransition=function(i){e.prototype.visitTransition.call(this,i),i.kind===t.TransitionKind.Local&&-1===n(i.target).indexOf(i.source)&&t.console.error(i+": local transition target vertices must be a child of the source composite sate.")},i}(t.Visitor)}(i||(i={})),e.exports=i,cc._RF.pop()},{}]},{},["Actor","ActorRenderer","AssetMng","AudioMng","Bet","Card","CounterTest","Dealer","FXPlayer","Game","Menu","Player","SideSwitcher","TossChip","ButtonScaler","InGameUI","RankItem","RankList","state.com","Decks","HotUpdate","Mask","PlayerData","Types","Utils","game-fsm"]);
+require = function e(t, n, r) {
+    function s(o, u) {
+        if (!n[o]) {
+            if (!t[o]) {
+                var a = "function" == typeof require && require;
+                if (!u && a) {
+                    return a(o, !0);
+                }
+                if (i) {
+                    return i(o, !0);
+                }
+                var f = new Error("Cannot find module '" + o + "'");
+                throw f.code = "MODULE_NOT_FOUND", f;
+            }
+            var l = n[o] = {
+                exports: {}
+            };
+            t[o][0].call(l.exports, function(e) {
+                var n = t[o][1][e];
+                return s(n || e);
+            }, l, l.exports, e, t, n, r);
+        }
+        return n[o].exports;
+    }
+    var i = "function" == typeof require && require;
+    for (var o = 0; o < r.length; o++) {
+        s(r[o]);
+    }
+    return s;
+}({
+    ActorRenderer: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "1a792KO87NBg7vCCIp1jq+j", "ActorRenderer");
+        "use strict";
+        var Game = require("Game");
+        var Types = require("Types");
+        var Utils = require("Utils");
+        var ActorPlayingState = Types.ActorPlayingState;
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                playerInfo: {
+                    default: null,
+                    type: cc.Node
+                },
+                stakeOnTable: {
+                    default: null,
+                    type: cc.Node
+                },
+                cardInfo: {
+                    default: null,
+                    type: cc.Node
+                },
+                cardPrefab: {
+                    default: null,
+                    type: cc.Prefab
+                },
+                anchorCards: {
+                    default: null,
+                    type: cc.Node
+                },
+                spPlayerName: {
+                    default: null,
+                    type: cc.Sprite
+                },
+                labelPlayerName: {
+                    default: null,
+                    type: cc.Label
+                },
+                labelTotalStake: {
+                    default: null,
+                    type: cc.Label
+                },
+                spPlayerPhoto: {
+                    default: null,
+                    type: cc.Sprite
+                },
+                spCountdown: {
+                    default: null,
+                    type: cc.Sprite
+                },
+                labelStakeOnTable: {
+                    default: null,
+                    type: cc.Label
+                },
+                spChips: {
+                    default: [],
+                    type: cc.Sprite
+                },
+                labelCardInfo: {
+                    default: null,
+                    type: cc.Label
+                },
+                spCardInfo: {
+                    default: null,
+                    type: cc.Sprite
+                },
+                animFX: {
+                    default: null,
+                    type: cc.Node
+                },
+                cardSpace: 0
+            },
+            onLoad: function onLoad() {},
+            init: function init(playerInfo, playerInfoPos, stakePos, turnDuration, switchSide) {
+                this.actor = this.getComponent("Actor");
+                this.sgCountdown = null;
+                this.turnDuration = turnDuration;
+                this.playerInfo.position = playerInfoPos;
+                this.stakeOnTable.position = stakePos;
+                this.labelPlayerName.string = playerInfo.name;
+                this.updateTotalStake(playerInfo.gold);
+                var photoIdx = playerInfo.photoIdx % 5;
+                this.spPlayerPhoto.spriteFrame = Game.instance.assetMng.playerPhotos[photoIdx];
+                this.animFX = this.animFX.getComponent("FXPlayer");
+                this.animFX.init();
+                this.animFX.show(false);
+                this.cardInfo.active = false;
+                this.progressTimer = this.initCountdown();
+                if (switchSide) {
+                    this.spCardInfo.getComponent("SideSwitcher").switchSide();
+                    this.spPlayerName.getComponent("SideSwitcher").switchSide();
+                }
+            },
+            initDealer: function initDealer() {
+                this.actor = this.getComponent("Actor");
+                this.animFX = this.animFX.getComponent("FXPlayer");
+                this.animFX.init();
+                this.animFX.show(false);
+            },
+            updateTotalStake: function updateTotalStake(num) {
+                this.labelTotalStake.string = "$" + num;
+            },
+            initCountdown: function initCountdown() {},
+            startCountdown: function startCountdown() {
+                if (this.progressTimer) {
+                    var fromTo = cc.progressFromTo(this.turnDuration, 0, 100);
+                    this.progressTimer.runAction(fromTo);
+                }
+            },
+            resetCountdown: function resetCountdown() {
+                if (this.progressTimer) {
+                    this.progressTimer.stopAllActions();
+                    this.progressTimer.setPercentage(0);
+                }
+            },
+            playBlackJackFX: function playBlackJackFX() {
+                this.animFX.playFX("blackjack");
+            },
+            playBustFX: function playBustFX() {
+                this.animFX.playFX("bust");
+            },
+            onDeal: function onDeal(card, show) {
+                var newCard = cc.instantiate(this.cardPrefab).getComponent("Card");
+                this.anchorCards.addChild(newCard.node);
+                newCard.init(card);
+                newCard.reveal(show);
+                var startPos = cc.p(0, 0);
+                var index = this.actor.cards.length - 1;
+                var endPos = cc.p(this.cardSpace * index, 0);
+                newCard.node.setPosition(startPos);
+                var moveAction = cc.moveTo(.5, endPos);
+                var callback = cc.callFunc(this._onDealEnd, this, this.cardSpace * index);
+                newCard.node.runAction(cc.sequence(moveAction, callback));
+            },
+            _onDealEnd: function _onDealEnd(target, pointX) {
+                this.resetCountdown();
+                this.actor.state === ActorPlayingState.Normal && this.startCountdown();
+                this.updatePoint();
+                this._updatePointPos(pointX);
+            },
+            onReset: function onReset() {
+                this.cardInfo.active = false;
+                this.anchorCards.removeAllChildren();
+                this._resetChips();
+            },
+            onRevealHoldCard: function onRevealHoldCard() {
+                var card = cc.find("cardPrefab", this.anchorCards).getComponent("Card");
+                card.reveal(true);
+                this.updateState();
+            },
+            updatePoint: function updatePoint() {
+                this.cardInfo.active = true;
+                this.labelCardInfo.string = this.actor.bestPoint;
+                switch (this.actor.hand) {
+                  case Types.Hand.BlackJack:
+                    this.animFX.show(true);
+                    this.animFX.playFX("blackjack");
+                    break;
+
+                  case Types.Hand.FiveCard:
+                }
+            },
+            _updatePointPos: function _updatePointPos(xPos) {
+                this.cardInfo.setPositionX(xPos + 50);
+            },
+            showStakeChips: function showStakeChips(stake) {
+                var chips = this.spChips;
+                var count = 0;
+                stake > 5e4 ? count = 5 : stake > 25e3 ? count = 4 : stake > 1e4 ? count = 3 : stake > 5e3 ? count = 2 : stake > 0 && (count = 1);
+                for (var i = 0; i < count; ++i) {
+                    chips[i].enabled = true;
+                }
+            },
+            _resetChips: function _resetChips() {
+                for (var i = 0; i < this.spChips.length; ++i) {
+                    this.spChips.enabled = false;
+                }
+            },
+            updateState: function updateState() {
+                switch (this.actor.state) {
+                  case ActorPlayingState.Normal:
+                    this.cardInfo.active = true;
+                    this.spCardInfo.spriteFrame = Game.instance.assetMng.texCardInfo;
+                    this.updatePoint();
+                    break;
+
+                  case ActorPlayingState.Bust:
+                    var min = Utils.getMinMaxPoint(this.actor.cards).min;
+                    this.labelCardInfo.string = "爆牌(" + min + ")";
+                    this.spCardInfo.spriteFrame = Game.instance.assetMng.texBust;
+                    this.cardInfo.active = true;
+                    this.animFX.show(true);
+                    this.animFX.playFX("bust");
+                    this.resetCountdown();
+                    break;
+
+                  case ActorPlayingState.Stand:
+                    var max = Utils.getMinMaxPoint(this.actor.cards).max;
+                    this.labelCardInfo.string = "停牌(" + max + ")";
+                    this.spCardInfo.spriteFrame = Game.instance.assetMng.texCardInfo;
+                    this.resetCountdown();
+                }
+            }
+        });
+        cc._RF.pop();
+    }, {
+        Game: "Game",
+        Types: "Types",
+        Utils: "Utils"
+    } ],
+    Actor: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "7d008dTf6xB2Z0wCAdzh1Rx", "Actor");
+        "use strict";
+        var Types = require("Types");
+        var Utils = require("Utils");
+        var ActorPlayingState = Types.ActorPlayingState;
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                cards: {
+                    default: [],
+                    serializable: false,
+                    visible: false
+                },
+                holeCard: {
+                    default: null,
+                    serializable: false,
+                    visible: false
+                },
+                bestPoint: {
+                    get: function get() {
+                        var minMax = Utils.getMinMaxPoint(this.cards);
+                        return minMax.max;
+                    }
+                },
+                hand: {
+                    get: function get() {
+                        var count = this.cards.length;
+                        this.holeCard && ++count;
+                        if (count >= 5) {
+                            return Types.Hand.FiveCard;
+                        }
+                        if (2 === count && 21 === this.bestPoint) {
+                            return Types.Hand.BlackJack;
+                        }
+                        return Types.Hand.Normal;
+                    }
+                },
+                canReport: {
+                    get: function get() {
+                        return this.hand !== Types.Hand.Normal;
+                    },
+                    visible: false
+                },
+                renderer: {
+                    default: null,
+                    type: cc.Node
+                },
+                state: {
+                    default: ActorPlayingState.Normal,
+                    notify: function notify(oldState) {
+                        this.state !== oldState && this.renderer.updateState();
+                    },
+                    type: ActorPlayingState,
+                    serializable: false
+                }
+            },
+            init: function init() {
+                this.ready = true;
+                this.renderer = this.getComponent("ActorRenderer");
+            },
+            addCard: function addCard(card) {
+                this.cards.push(card);
+                this.renderer.onDeal(card, true);
+                var cards = this.holeCard ? [ this.holeCard ].concat(this.cards) : this.cards;
+                Utils.isBust(cards) && (this.state = ActorPlayingState.Bust);
+            },
+            addHoleCard: function addHoleCard(card) {
+                this.holeCard = card;
+                this.renderer.onDeal(card, false);
+            },
+            stand: function stand() {
+                this.state = ActorPlayingState.Stand;
+            },
+            revealHoldCard: function revealHoldCard() {
+                if (this.holeCard) {
+                    this.cards.unshift(this.holeCard);
+                    this.holeCard = null;
+                    this.renderer.onRevealHoldCard();
+                }
+            },
+            report: function report() {
+                this.state = ActorPlayingState.Report;
+            },
+            reset: function reset() {
+                this.cards = [];
+                this.holeCard = null;
+                this.reported = false;
+                this.state = ActorPlayingState.Normal;
+                this.renderer.onReset();
+            }
+        });
+        cc._RF.pop();
+    }, {
+        Types: "Types",
+        Utils: "Utils"
+    } ],
+    AssetMng: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "54522LcoVpPHbrqYgwp/1Qm", "AssetMng");
+        "use strict";
+        var AssetMng = cc.Class({
+            extends: cc.Component,
+            properties: {
+                texBust: {
+                    default: null,
+                    type: cc.SpriteFrame
+                },
+                texCardInfo: {
+                    default: null,
+                    type: cc.SpriteFrame
+                },
+                texCountdown: {
+                    default: null,
+                    type: cc.SpriteFrame
+                },
+                texBetCountdown: {
+                    default: null,
+                    type: cc.SpriteFrame
+                },
+                playerPhotos: {
+                    default: [],
+                    type: cc.SpriteFrame
+                }
+            }
+        });
+        cc._RF.pop();
+    }, {} ],
+    AudioMng: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "01ca4tStvVH+JmZ5TNcmuAu", "AudioMng");
+        "use strict";
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                winAudio: {
+                    default: null,
+                    url: cc.AudioClip
+                },
+                loseAudio: {
+                    default: null,
+                    url: cc.AudioClip
+                },
+                cardAudio: {
+                    default: null,
+                    url: cc.AudioClip
+                },
+                buttonAudio: {
+                    default: null,
+                    url: cc.AudioClip
+                },
+                chipsAudio: {
+                    default: null,
+                    url: cc.AudioClip
+                },
+                bgm: {
+                    default: null,
+                    url: cc.AudioClip
+                }
+            },
+            playMusic: function playMusic() {
+                cc.audioEngine.playMusic(this.bgm, true);
+            },
+            pauseMusic: function pauseMusic() {
+                cc.audioEngine.pauseMusic();
+            },
+            resumeMusic: function resumeMusic() {
+                cc.audioEngine.resumeMusic();
+            },
+            _playSFX: function _playSFX(clip) {
+                cc.audioEngine.playEffect(clip, false);
+            },
+            playWin: function playWin() {
+                this._playSFX(this.winAudio);
+            },
+            playLose: function playLose() {
+                this._playSFX(this.loseAudio);
+            },
+            playCard: function playCard() {
+                this._playSFX(this.cardAudio);
+            },
+            playChips: function playChips() {
+                this._playSFX(this.chipsAudio);
+            },
+            playButton: function playButton() {
+                this._playSFX(this.buttonAudio);
+            }
+        });
+        cc._RF.pop();
+    }, {} ],
+    Bet: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "28f38yToT1Pw7NgyeCvRxDC", "Bet");
+        "use strict";
+        var Game = require("Game");
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                chipPrefab: {
+                    default: null,
+                    type: cc.Prefab
+                },
+                btnChips: {
+                    default: [],
+                    type: cc.Node
+                },
+                chipValues: {
+                    default: [],
+                    type: "Integer"
+                },
+                anchorChipToss: {
+                    default: null,
+                    type: cc.Node
+                }
+            },
+            init: function init() {
+                this._registerBtns();
+            },
+            _registerBtns: function _registerBtns() {
+                var self = this;
+                var registerBtn = function registerBtn(index) {
+                    self.btnChips[i].on("touchstart", function(event) {
+                        Game.instance.addStake(self.chipValues[index]) && self.playAddChip();
+                    }, this);
+                };
+                for (var i = 0; i < self.btnChips.length; ++i) {
+                    registerBtn(i);
+                }
+            },
+            playAddChip: function playAddChip() {
+                var startPos = cc.p(50 * cc.randomMinus1To1(), 50 * cc.randomMinus1To1());
+                var chip = cc.instantiate(this.chipPrefab);
+                this.anchorChipToss.addChild(chip);
+                chip.setPosition(startPos);
+                chip.getComponent("TossChip").play();
+            },
+            resetChips: function resetChips() {
+                Game.instance.resetStake();
+                Game.instance.info.enabled = false;
+                this.resetTossedChips();
+            },
+            resetTossedChips: function resetTossedChips() {
+                this.anchorChipToss.removeAllChildren();
+            }
+        });
+        cc._RF.pop();
+    }, {
+        Game: "Game"
+    } ],
+    ButtonScaler: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "a171dSnCXFMRIqs1IWdvgWM", "ButtonScaler");
+        "use strict";
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                pressedScale: 1,
+                transDuration: 0
+            },
+            onLoad: function onLoad() {
+                var self = this;
+                var audioMng = cc.find("Menu/AudioMng") || cc.find("Game/AudioMng");
+                audioMng && (audioMng = audioMng.getComponent("AudioMng"));
+                self.initScale = this.node.scale;
+                self.button = self.getComponent(cc.Button);
+                self.scaleDownAction = cc.scaleTo(self.transDuration, self.pressedScale);
+                self.scaleUpAction = cc.scaleTo(self.transDuration, self.initScale);
+                function onTouchDown(event) {
+                    this.stopAllActions();
+                    audioMng && audioMng.playButton();
+                    this.runAction(self.scaleDownAction);
+                }
+                function onTouchUp(event) {
+                    this.stopAllActions();
+                    this.runAction(self.scaleUpAction);
+                }
+                this.node.on("touchstart", onTouchDown, this.node);
+                this.node.on("touchend", onTouchUp, this.node);
+                this.node.on("touchcancel", onTouchUp, this.node);
+            }
+        });
+        cc._RF.pop();
+    }, {} ],
+    Card: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "ab67e5QkiVCBZ3DIMlWhiAt", "Card");
+        "use strict";
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                point: {
+                    default: null,
+                    type: cc.Label
+                },
+                suit: {
+                    default: null,
+                    type: cc.Sprite
+                },
+                mainPic: {
+                    default: null,
+                    type: cc.Sprite
+                },
+                cardBG: {
+                    default: null,
+                    type: cc.Sprite
+                },
+                redTextColor: cc.Color.WHITE,
+                blackTextColor: cc.Color.WHITE,
+                texFrontBG: {
+                    default: null,
+                    type: cc.SpriteFrame
+                },
+                texBackBG: {
+                    default: null,
+                    type: cc.SpriteFrame
+                },
+                texFaces: {
+                    default: [],
+                    type: cc.SpriteFrame
+                },
+                texSuitBig: {
+                    default: [],
+                    type: cc.SpriteFrame
+                },
+                texSuitSmall: {
+                    default: [],
+                    type: cc.SpriteFrame
+                }
+            },
+            init: function init(card) {
+                var isFaceCard = card.point > 10;
+                this.mainPic.spriteFrame = isFaceCard ? this.texFaces[card.point - 10 - 1] : this.texSuitBig[card.suit - 1];
+                this.point.string = card.pointName;
+                card.isRedSuit ? this.point.node.color = this.redTextColor : this.point.node.color = this.blackTextColor;
+                this.suit.spriteFrame = this.texSuitSmall[card.suit - 1];
+            },
+            reveal: function reveal(isFaceUp) {
+                this.point.node.active = isFaceUp;
+                this.suit.node.active = isFaceUp;
+                this.mainPic.node.active = isFaceUp;
+                this.cardBG.spriteFrame = isFaceUp ? this.texFrontBG : this.texBackBG;
+            }
+        });
+        cc._RF.pop();
+    }, {} ],
+    CounterTest: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "b0926/aIatATYgTuL0RyW/q", "CounterTest");
+        "use strict";
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                target: {
+                    default: null,
+                    type: cc.Label
+                }
+            },
+            onLoad: function onLoad() {
+                this.target.node.color = cc.Color.GREEN;
+            },
+            update: function update(dt) {}
+        });
+        cc._RF.pop();
+    }, {} ],
+    Dealer: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "ce2dfoqEulHCLjS1Z9xPN7t", "Dealer");
+        "use strict";
+        var Actor = require("Actor");
+        var Utils = require("Utils");
+        cc.Class({
+            extends: Actor,
+            properties: {
+                bestPoint: {
+                    get: function get() {
+                        var cards = this.holeCard ? [ this.holeCard ].concat(this.cards) : this.cards;
+                        var minMax = Utils.getMinMaxPoint(cards);
+                        return minMax.max;
+                    },
+                    override: true
+                }
+            },
+            init: function init() {
+                this._super();
+                this.renderer.initDealer();
+            },
+            wantHit: function wantHit() {
+                var Game = require("Game");
+                var Types = require("Types");
+                var bestPoint = this.bestPoint;
+                if (21 === bestPoint) {
+                    return false;
+                }
+                if (bestPoint <= 11) {
+                    return true;
+                }
+                var player = Game.instance.player;
+                var outcome = Game.instance._getPlayerResult(player, this);
+                switch (outcome) {
+                  case Types.Outcome.Win:
+                    return true;
+
+                  case Types.Outcome.Lose:
+                    return false;
+                }
+                return this.bestPoint < 17;
+            }
+        });
+        cc._RF.pop();
+    }, {
+        Actor: "Actor",
+        Game: "Game",
+        Types: "Types",
+        Utils: "Utils"
+    } ],
+    Decks: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "17024G0JFpHcLI5GREbF8VN", "Decks");
+        "use strict";
+        var Types = require("Types");
+        function Decks(numberOfDecks) {
+            this._numberOfDecks = numberOfDecks;
+            this._cardIds = new Array(52 * numberOfDecks);
+            this.reset();
+        }
+        Decks.prototype.reset = function() {
+            this._cardIds.length = 52 * this._numberOfDecks;
+            var index = 0;
+            var fromId = Types.Card.fromId;
+            for (var i = 0; i < this._numberOfDecks; ++i) {
+                for (var cardId = 0; cardId < 52; ++cardId) {
+                    this._cardIds[index] = fromId(cardId);
+                    ++index;
+                }
+            }
+        };
+        Decks.prototype.draw = function() {
+            var cardIds = this._cardIds;
+            var len = cardIds.length;
+            if (0 === len) {
+                return null;
+            }
+            var random = Math.random();
+            var index = random * len | 0;
+            var result = cardIds[index];
+            var last = cardIds[len - 1];
+            cardIds[index] = last;
+            cardIds.length = len - 1;
+            return result;
+        };
+        module.exports = Decks;
+        cc._RF.pop();
+    }, {
+        Types: "Types"
+    } ],
+    FXPlayer: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "68da2yjdGVMSYhXLN9DukIB", "FXPlayer");
+        "use strict";
+        cc.Class({
+            extends: cc.Component,
+            init: function init() {
+                this.anim = this.getComponent(cc.Animation);
+                this.sprite = this.getComponent(cc.Sprite);
+            },
+            show: function show(_show) {
+                this.sprite.enabled = _show;
+            },
+            playFX: function playFX(name) {
+                this.anim.play(name);
+            },
+            hideFX: function hideFX() {
+                this.sprite.enabled = false;
+            }
+        });
+        cc._RF.pop();
+    }, {} ],
+    Game: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "63738OONCFKHqsf4QSeJSun", "Game");
+        "use strict";
+        var players = require("PlayerData").players;
+        var Decks = require("Decks");
+        var Types = require("Types");
+        var ActorPlayingState = Types.ActorPlayingState;
+        var Fsm = require("game-fsm");
+        var Game = cc.Class({
+            extends: cc.Component,
+            properties: {
+                playerAnchors: {
+                    default: [],
+                    type: cc.Node
+                },
+                playerPrefab: {
+                    default: null,
+                    type: cc.Prefab
+                },
+                dealer: {
+                    default: null,
+                    type: cc.Node
+                },
+                inGameUI: {
+                    default: null,
+                    type: cc.Node
+                },
+                betUI: {
+                    default: null,
+                    type: cc.Node
+                },
+                assetMng: {
+                    default: null,
+                    type: cc.Node
+                },
+                audioMng: {
+                    default: null,
+                    type: cc.Node
+                },
+                turnDuration: 0,
+                betDuration: 0,
+                totalChipsNum: 0,
+                totalDiamondNum: 0,
+                numberOfDecks: {
+                    default: 1,
+                    type: "Integer"
+                }
+            },
+            statics: {
+                instance: null
+            },
+            onLoad: function onLoad() {
+                Game.instance = this;
+                this.inGameUI = this.inGameUI.getComponent("InGameUI");
+                this.assetMng = this.assetMng.getComponent("AssetMng");
+                this.audioMng = this.audioMng.getComponent("AudioMng");
+                this.betUI = this.betUI.getComponent("Bet");
+                this.inGameUI.init(this.betDuration);
+                this.betUI.init();
+                this.dealer = this.dealer.getComponent("Dealer");
+                this.dealer.init();
+                this.player = null;
+                this.createPlayers();
+                this.info = this.inGameUI.resultTxt;
+                this.totalChips = this.inGameUI.labelTotalChips;
+                this.decks = new Decks(this.numberOfDecks);
+                this.fsm = Fsm;
+                this.fsm.init(this);
+                this.updateTotalChips();
+                this.audioMng.playMusic();
+            },
+            addStake: function addStake(delta) {
+                if (this.totalChipsNum < delta) {
+                    console.log("not enough chips!");
+                    this.info.enabled = true;
+                    this.info.string = "金币不足!";
+                    return false;
+                }
+                this.totalChipsNum -= delta;
+                this.updateTotalChips();
+                this.player.addStake(delta);
+                this.audioMng.playChips();
+                this.info.enabled = false;
+                this.info.string = "请下注";
+                return true;
+            },
+            resetStake: function resetStake() {
+                this.totalChipsNum += this.player.stakeNum;
+                this.player.resetStake();
+                this.updateTotalChips();
+            },
+            updateTotalChips: function updateTotalChips() {
+                this.totalChips.string = this.totalChipsNum;
+                this.player.renderer.updateTotalStake(this.totalChipsNum);
+            },
+            createPlayers: function createPlayers() {
+                for (var i = 0; i < 5; ++i) {
+                    var playerNode = cc.instantiate(this.playerPrefab);
+                    var anchor = this.playerAnchors[i];
+                    var switchSide = i > 2;
+                    anchor.addChild(playerNode);
+                    playerNode.position = cc.p(0, 0);
+                    var playerInfoPos = cc.find("anchorPlayerInfo", anchor).getPosition();
+                    var stakePos = cc.find("anchorStake", anchor).getPosition();
+                    var actorRenderer = playerNode.getComponent("ActorRenderer");
+                    actorRenderer.init(players[i], playerInfoPos, stakePos, this.turnDuration, switchSide);
+                    if (2 === i) {
+                        this.player = playerNode.getComponent("Player");
+                        this.player.init();
+                    }
+                }
+            },
+            hit: function hit() {
+                this.player.addCard(this.decks.draw());
+                this.player.state === ActorPlayingState.Bust && this.fsm.onPlayerActed();
+                this.audioMng.playCard();
+                this.audioMng.playButton();
+            },
+            stand: function stand() {
+                this.player.stand();
+                this.audioMng.playButton();
+                this.fsm.onPlayerActed();
+            },
+            deal: function deal() {
+                this.fsm.toDeal();
+                this.audioMng.playButton();
+            },
+            start: function start() {
+                this.fsm.toBet();
+                this.audioMng.playButton();
+            },
+            report: function report() {
+                this.player.report();
+                this.fsm.onPlayerActed();
+            },
+            quitToMenu: function quitToMenu() {
+                cc.director.loadScene("menu");
+            },
+            onEnterDealState: function onEnterDealState() {
+                this.betUI.resetTossedChips();
+                this.inGameUI.resetCountdown();
+                this.player.renderer.showStakeChips(this.player.stakeNum);
+                this.player.addCard(this.decks.draw());
+                var holdCard = this.decks.draw();
+                this.dealer.addHoleCard(holdCard);
+                this.player.addCard(this.decks.draw());
+                this.dealer.addCard(this.decks.draw());
+                this.audioMng.playCard();
+                this.fsm.onDealed();
+            },
+            onPlayersTurnState: function onPlayersTurnState(enter) {
+                enter && this.inGameUI.showGameState();
+            },
+            onEnterDealersTurnState: function onEnterDealersTurnState() {
+                while (this.dealer.state === ActorPlayingState.Normal) {
+                    this.dealer.wantHit() ? this.dealer.addCard(this.decks.draw()) : this.dealer.stand();
+                }
+                this.fsm.onDealerActed();
+            },
+            onEndState: function onEndState(enter) {
+                if (enter) {
+                    this.dealer.revealHoldCard();
+                    this.inGameUI.showResultState();
+                    var outcome = this._getPlayerResult(this.player, this.dealer);
+                    switch (outcome) {
+                      case Types.Outcome.Win:
+                        this.info.string = "You Win";
+                        this.audioMng.pauseMusic();
+                        this.audioMng.playWin();
+                        this.totalChipsNum += this.player.stakeNum;
+                        var winChipsNum = this.player.stakeNum;
+                        !this.player.state === Types.ActorPlayingState.Report && (this.player.hand === Types.Hand.BlackJack ? winChipsNum *= 1.5 : winChipsNum *= 2);
+                        this.totalChipsNum += winChipsNum;
+                        this.updateTotalChips();
+                        break;
+
+                      case Types.Outcome.Lose:
+                        this.info.string = "You Lose";
+                        this.audioMng.pauseMusic();
+                        this.audioMng.playLose();
+                        break;
+
+                      case Types.Outcome.Tie:
+                        this.info.string = "Draw";
+                        this.totalChipsNum += this.player.stakeNum;
+                        this.updateTotalChips();
+                    }
+                }
+                this.info.enabled = enter;
+            },
+            onBetState: function onBetState(enter) {
+                if (enter) {
+                    this.decks.reset();
+                    this.player.reset();
+                    this.dealer.reset();
+                    this.info.string = "请下注";
+                    this.inGameUI.showBetState();
+                    this.inGameUI.startCountdown();
+                    this.audioMng.resumeMusic();
+                }
+                this.info.enabled = enter;
+            },
+            _getPlayerResult: function _getPlayerResult(player, dealer) {
+                var Outcome = Types.Outcome;
+                return player.state === ActorPlayingState.Bust ? Outcome.Lose : dealer.state === ActorPlayingState.Bust ? Outcome.Win : player.state === ActorPlayingState.Report ? Outcome.Win : player.hand > dealer.hand ? Outcome.Win : player.hand < dealer.hand ? Outcome.Lose : player.bestPoint === dealer.bestPoint ? Outcome.Tie : player.bestPoint < dealer.bestPoint ? Outcome.Lose : Outcome.Win;
+            }
+        });
+        cc._RF.pop();
+    }, {
+        Decks: "Decks",
+        PlayerData: "PlayerData",
+        Types: "Types",
+        "game-fsm": "game-fsm"
+    } ],
+    HotUpdate: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "e390cpl5vpL54CRkH0xI8Ul", "HotUpdate");
+        "use strict";
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                updatePanel: {
+                    default: null,
+                    type: cc.Node
+                },
+                manifestUrl: {
+                    default: null,
+                    url: cc.RawAsset
+                },
+                percent: {
+                    default: null,
+                    type: cc.Label
+                }
+            },
+            checkCb: function checkCb(event) {
+                cc.log("Code: " + event.getEventCode());
+                switch (event.getEventCode()) {
+                  case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:
+                    cc.log("No local manifest file found, hot update skipped.");
+                    cc.eventManager.removeListener(this._checkListener);
+                    break;
+
+                  case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:
+                  case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST:
+                    cc.log("Fail to download manifest file, hot update skipped.");
+                    cc.eventManager.removeListener(this._checkListener);
+                    break;
+
+                  case jsb.EventAssetsManager.ALREADY_UP_TO_DATE:
+                    cc.log("Already up to date with the latest remote version.");
+                    cc.eventManager.removeListener(this._checkListener);
+                    break;
+
+                  case jsb.EventAssetsManager.NEW_VERSION_FOUND:
+                    this._needUpdate = true;
+                    this.updatePanel.active = true;
+                    cc.eventManager.removeListener(this._checkListener);
+                }
+            },
+            updateCb: function updateCb(event) {
+                var needRestart = false;
+                var failed = false;
+                switch (event.getEventCode()) {
+                  case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:
+                    cc.log("No local manifest file found, hot update skipped.");
+                    failed = true;
+                    break;
+
+                  case jsb.EventAssetsManager.UPDATE_PROGRESSION:
+                    var percent = event.getPercent();
+                    var percentByFile = event.getPercentByFile();
+                    var msg = event.getMessage();
+                    msg && cc.log(msg);
+                    cc.log(percent.toFixed(2) + "%");
+                    this.percent.string = percent + "%";
+                    break;
+
+                  case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:
+                  case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST:
+                    cc.log("Fail to download manifest file, hot update skipped.");
+                    failed = true;
+                    break;
+
+                  case jsb.EventAssetsManager.ALREADY_UP_TO_DATE:
+                    cc.log("Already up to date with the latest remote version.");
+                    failed = true;
+                    break;
+
+                  case jsb.EventAssetsManager.UPDATE_FINISHED:
+                    cc.log("Update finished. " + event.getMessage());
+                    needRestart = true;
+                    break;
+
+                  case jsb.EventAssetsManager.UPDATE_FAILED:
+                    cc.log("Update failed. " + event.getMessage());
+                    this._failCount++;
+                    if (this._failCount < 5) {
+                        this._am.downloadFailedAssets();
+                    } else {
+                        cc.log("Reach maximum fail count, exit update process");
+                        this._failCount = 0;
+                        failed = true;
+                    }
+                    break;
+
+                  case jsb.EventAssetsManager.ERROR_UPDATING:
+                    cc.log("Asset update error: " + event.getAssetId() + ", " + event.getMessage());
+                    break;
+
+                  case jsb.EventAssetsManager.ERROR_DECOMPRESS:
+                    cc.log(event.getMessage());
+                }
+                if (failed) {
+                    cc.eventManager.removeListener(this._updateListener);
+                    this.updatePanel.active = false;
+                }
+                if (needRestart) {
+                    cc.eventManager.removeListener(this._updateListener);
+                    var searchPaths = jsb.fileUtils.getSearchPaths();
+                    var newPaths = this._am.getLocalManifest().getSearchPaths();
+                    Array.prototype.unshift(searchPaths, newPaths);
+                    cc.sys.localStorage.setItem("HotUpdateSearchPaths", JSON.stringify(searchPaths));
+                    jsb.fileUtils.setSearchPaths(searchPaths);
+                    cc.game.restart();
+                }
+            },
+            hotUpdate: function hotUpdate() {
+                if (this._am && this._needUpdate) {
+                    this._updateListener = new jsb.EventListenerAssetsManager(this._am, this.updateCb.bind(this));
+                    cc.eventManager.addListener(this._updateListener, 1);
+                    this._failCount = 0;
+                    this._am.update();
+                }
+            },
+            onLoad: function onLoad() {
+                if (!cc.sys.isNative) {
+                    return;
+                }
+                var storagePath = (jsb.fileUtils ? jsb.fileUtils.getWritablePath() : "/") + "blackjack-remote-asset";
+                cc.log("Storage path for remote asset : " + storagePath);
+                this._am = new jsb.AssetsManager(this.manifestUrl, storagePath);
+                this._am.retain();
+                this._needUpdate = false;
+                if (this._am.getLocalManifest().isLoaded()) {
+                    this._checkListener = new jsb.EventListenerAssetsManager(this._am, this.checkCb.bind(this));
+                    cc.eventManager.addListener(this._checkListener, 1);
+                    this._am.checkUpdate();
+                }
+            },
+            onDestroy: function onDestroy() {
+                this._am && this._am.release();
+            }
+        });
+        cc._RF.pop();
+    }, {} ],
+    InGameUI: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "f192efroeFEyaxtfh8TVXYz", "InGameUI");
+        "use strict";
+        var Game = require("Game");
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                panelChat: {
+                    default: null,
+                    type: cc.Node
+                },
+                panelSocial: {
+                    default: null,
+                    type: cc.Node
+                },
+                betStateUI: {
+                    default: null,
+                    type: cc.Node
+                },
+                gameStateUI: {
+                    default: null,
+                    type: cc.Node
+                },
+                resultTxt: {
+                    default: null,
+                    type: cc.Label
+                },
+                betCounter: {
+                    default: null,
+                    type: cc.Node
+                },
+                btnStart: {
+                    default: null,
+                    type: cc.Node
+                },
+                labelTotalChips: {
+                    default: null,
+                    type: cc.Label
+                }
+            },
+            init: function init(betDuration) {
+                this.panelChat.active = false;
+                this.panelSocial.active = false;
+                this.resultTxt.enabled = false;
+                this.betStateUI.active = true;
+                this.gameStateUI.active = false;
+                this.btnStart.active = false;
+                this.betDuration = betDuration;
+                this.progressTimer = this.initCountdown();
+            },
+            initCountdown: function initCountdown() {},
+            startCountdown: function startCountdown() {
+                if (this.progressTimer) {
+                    var fromTo = cc.progressFromTo(this.betDuration, 0, 100);
+                    this.progressTimer.runAction(fromTo);
+                }
+            },
+            resetCountdown: function resetCountdown() {
+                if (this.progressTimer) {
+                    this.progressTimer.stopAllActions();
+                    this.progressTimer.setPercentage(100);
+                }
+            },
+            showBetState: function showBetState() {
+                this.betStateUI.active = true;
+                this.gameStateUI.active = false;
+                this.btnStart.active = false;
+            },
+            showGameState: function showGameState() {
+                this.betStateUI.active = false;
+                this.gameStateUI.active = true;
+                this.btnStart.active = false;
+            },
+            showResultState: function showResultState() {
+                this.betStateUI.active = false;
+                this.gameStateUI.active = false;
+                this.btnStart.active = true;
+            },
+            toggleChat: function toggleChat() {
+                this.panelChat.active = !this.panelChat.active;
+            },
+            toggleSocial: function toggleSocial() {
+                this.panelSocial.active = !this.panelSocial.active;
+            },
+            update: function update(dt) {}
+        });
+        cc._RF.pop();
+    }, {
+        Game: "Game"
+    } ],
+    Mask: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "3c16c3le6hCsrtnanqK8N2W", "Mask");
+        "use strict";
+        cc.Class({
+            extends: cc.Component,
+            properties: {},
+            onLoad: function onLoad() {
+                this.node.on("touchstart", function(event) {
+                    event.stopPropagation();
+                });
+                this.node.on("mousedown", function(event) {
+                    event.stopPropagation();
+                });
+                this.node.on("mousemove", function(event) {
+                    event.stopPropagation();
+                });
+                this.node.on("mouseup", function(event) {
+                    event.stopPropagation();
+                });
+            }
+        });
+        cc._RF.pop();
+    }, {} ],
+    Menu: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "20f60m+3RlGO7x2/ARzZ6Qc", "Menu");
+        "use strict";
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                audioMng: {
+                    default: null,
+                    type: cc.Node
+                }
+            },
+            onLoad: function onLoad() {
+                this.audioMng = this.audioMng.getComponent("AudioMng");
+                this.audioMng.playMusic();
+            },
+            playGame: function playGame() {
+                cc.director.loadScene("table");
+            },
+            update: function update(dt) {}
+        });
+        cc._RF.pop();
+    }, {} ],
+    PlayerData: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "4f9c5eXxqhHAKLxZeRmgHDB", "PlayerData");
+        "use strict";
+        var players = [ {
+            name: "燃烧吧，蛋蛋儿军",
+            gold: 3e3,
+            photoIdx: 0
+        }, {
+            name: "地方政府",
+            gold: 2e3,
+            photoIdx: 1
+        }, {
+            name: "手机超人",
+            gold: 1500,
+            photoIdx: 2
+        }, {
+            name: "天灵灵，地灵灵",
+            gold: 500,
+            photoIdx: 3
+        }, {
+            name: "哟哟，切克闹",
+            gold: 9e3,
+            photoIdx: 4
+        }, {
+            name: "学姐不要死",
+            gold: 5e3,
+            photoIdx: 5
+        }, {
+            name: "提百万",
+            gold: 1e4,
+            photoIdx: 6
+        } ];
+        module.exports = {
+            players: players
+        };
+        cc._RF.pop();
+    }, {} ],
+    Player: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "226a2AvzRpHL7SJGTMy5PDX", "Player");
+        "use strict";
+        var Actor = require("Actor");
+        cc.Class({
+            extends: Actor,
+            init: function init() {
+                this._super();
+                this.labelStake = this.renderer.labelStakeOnTable;
+                this.stakeNum = 0;
+            },
+            reset: function reset() {
+                this._super();
+                this.resetStake();
+            },
+            addCard: function addCard(card) {
+                this._super(card);
+            },
+            addStake: function addStake(delta) {
+                this.stakeNum += delta;
+                this.updateStake(this.stakeNum);
+            },
+            resetStake: function resetStake(delta) {
+                this.stakeNum = 0;
+                this.updateStake(this.stakeNum);
+            },
+            updateStake: function updateStake(number) {
+                this.labelStake.string = number;
+            }
+        });
+        cc._RF.pop();
+    }, {
+        Actor: "Actor"
+    } ],
+    RankItem: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "1657ewfijBOXLq5zGqr6PvE", "RankItem");
+        "use strict";
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                spRankBG: {
+                    default: null,
+                    type: cc.Sprite
+                },
+                labelRank: {
+                    default: null,
+                    type: cc.Label
+                },
+                labelPlayerName: {
+                    default: null,
+                    type: cc.Label
+                },
+                labelGold: {
+                    default: null,
+                    type: cc.Label
+                },
+                spPlayerPhoto: {
+                    default: null,
+                    type: cc.Sprite
+                },
+                texRankBG: {
+                    default: [],
+                    type: cc.SpriteFrame
+                },
+                texPlayerPhoto: {
+                    default: [],
+                    type: cc.SpriteFrame
+                }
+            },
+            init: function init(rank, playerInfo) {
+                if (rank < 3) {
+                    this.labelRank.node.active = false;
+                    this.spRankBG.spriteFrame = this.texRankBG[rank];
+                } else {
+                    this.labelRank.node.active = true;
+                    this.labelRank.string = (rank + 1).toString();
+                }
+                this.labelPlayerName.string = playerInfo.name;
+                this.labelGold.string = playerInfo.gold.toString();
+                this.spPlayerPhoto.spriteFrame = this.texPlayerPhoto[playerInfo.photoIdx];
+            },
+            update: function update(dt) {}
+        });
+        cc._RF.pop();
+    }, {} ],
+    RankList: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "fe3fcIxCFFLrKHg6s5+xRUU", "RankList");
+        "use strict";
+        var players = require("PlayerData").players;
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                scrollView: {
+                    default: null,
+                    type: cc.ScrollView
+                },
+                prefabRankItem: {
+                    default: null,
+                    type: cc.Prefab
+                },
+                rankCount: 0
+            },
+            onLoad: function onLoad() {
+                this.content = this.scrollView.content;
+                this.populateList();
+            },
+            populateList: function populateList() {
+                for (var i = 0; i < this.rankCount; ++i) {
+                    var playerInfo = players[i];
+                    var item = cc.instantiate(this.prefabRankItem);
+                    item.getComponent("RankItem").init(i, playerInfo);
+                    this.content.addChild(item);
+                }
+            },
+            update: function update(dt) {}
+        });
+        cc._RF.pop();
+    }, {
+        PlayerData: "PlayerData"
+    } ],
+    SideSwitcher: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "3aae7lZKyhPqqsLD3wMKl6X", "SideSwitcher");
+        "use strict";
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                retainSideNodes: {
+                    default: [],
+                    type: cc.Node
+                }
+            },
+            switchSide: function switchSide() {
+                this.node.scaleX = -this.node.scaleX;
+                for (var i = 0; i < this.retainSideNodes.length; ++i) {
+                    var curNode = this.retainSideNodes[i];
+                    curNode.scaleX = -curNode.scaleX;
+                }
+            }
+        });
+        cc._RF.pop();
+    }, {} ],
+    TossChip: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "b4eb5Lo6U1IZ4eJWuxShCdH", "TossChip");
+        "use strict";
+        cc.Class({
+            extends: cc.Component,
+            properties: {
+                anim: {
+                    default: null,
+                    type: cc.Animation
+                }
+            },
+            play: function play() {
+                this.anim.play("chip_toss");
+            }
+        });
+        cc._RF.pop();
+    }, {} ],
+    Types: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "5b633QMQxpFmYetofEvK2UD", "Types");
+        "use strict";
+        var Suit = cc.Enum({
+            Spade: 1,
+            Heart: 2,
+            Club: 3,
+            Diamond: 4
+        });
+        var A2_10JQK = "NAN,A,2,3,4,5,6,7,8,9,10,J,Q,K".split(",");
+        function Card(point, suit) {
+            Object.defineProperties(this, {
+                point: {
+                    value: point,
+                    writable: false
+                },
+                suit: {
+                    value: suit,
+                    writable: false
+                },
+                id: {
+                    value: 13 * (suit - 1) + (point - 1),
+                    writable: false
+                },
+                pointName: {
+                    get: function get() {
+                        return A2_10JQK[this.point];
+                    }
+                },
+                suitName: {
+                    get: function get() {
+                        return Suit[this.suit];
+                    }
+                },
+                isBlackSuit: {
+                    get: function get() {
+                        return this.suit === Suit.Spade || this.suit === Suit.Club;
+                    }
+                },
+                isRedSuit: {
+                    get: function get() {
+                        return this.suit === Suit.Heart || this.suit === Suit.Diamond;
+                    }
+                }
+            });
+        }
+        Card.prototype.toString = function() {
+            return this.suitName + " " + this.pointName;
+        };
+        var cards = new Array(52);
+        Card.fromId = function(id) {
+            return cards[id];
+        };
+        (function createCards() {
+            for (var s = 1; s <= 4; s++) {
+                for (var p = 1; p <= 13; p++) {
+                    var card = new Card(p, s);
+                    cards[card.id] = card;
+                }
+            }
+        })();
+        var ActorPlayingState = cc.Enum({
+            Normal: -1,
+            Stand: -1,
+            Report: -1,
+            Bust: -1
+        });
+        var Outcome = cc.Enum({
+            Win: -1,
+            Lose: -1,
+            Tie: -1
+        });
+        var Hand = cc.Enum({
+            Normal: -1,
+            BlackJack: -1,
+            FiveCard: -1
+        });
+        module.exports = {
+            Suit: Suit,
+            Card: Card,
+            ActorPlayingState: ActorPlayingState,
+            Hand: Hand,
+            Outcome: Outcome
+        };
+        cc._RF.pop();
+    }, {} ],
+    Utils: [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "73590esk6xP9ICqhfUZalMg", "Utils");
+        "use strict";
+        function getMinMaxPoint(cards) {
+            var hasAce = false;
+            var min = 0;
+            for (var i = 0; i < cards.length; i++) {
+                var card = cards[i];
+                1 === card.point && (hasAce = true);
+                min += Math.min(10, card.point);
+            }
+            var max = min;
+            hasAce && min + 10 <= 21 && (max += 10);
+            return {
+                min: min,
+                max: max
+            };
+        }
+        function isBust(cards) {
+            var sum = 0;
+            for (var i = 0; i < cards.length; i++) {
+                var card = cards[i];
+                sum += Math.min(10, card.point);
+            }
+            return sum > 21;
+        }
+        var isMobile = function isMobile() {
+            return cc.sys.isMobile;
+        };
+        module.exports = {
+            isBust: isBust,
+            getMinMaxPoint: getMinMaxPoint,
+            isMobile: isMobile
+        };
+        cc._RF.pop();
+    }, {} ],
+    "game-fsm": [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "6510d1SmQRMMYH8FEIA7zXq", "game-fsm");
+        "use strict";
+        var State = require("state.com");
+        var instance;
+        var model;
+        var playing;
+        function on(message) {
+            return function(msgToEvaluate) {
+                return msgToEvaluate === message;
+            };
+        }
+        var evaluating = false;
+        exports = {
+            init: function init(target) {
+                State.console = console;
+                model = new State.StateMachine("root");
+                var initial = new State.PseudoState("init-root", model, State.PseudoStateKind.Initial);
+                var bet = new State.State("下注", model);
+                playing = new State.State("已开局", model);
+                var settled = new State.State("结算", model);
+                initial.to(bet);
+                bet.to(playing).when(on("deal"));
+                playing.to(settled).when(on("end"));
+                settled.to(bet).when(on("bet"));
+                bet.entry(function() {
+                    target.onBetState(true);
+                });
+                bet.exit(function() {
+                    target.onBetState(false);
+                });
+                settled.entry(function() {
+                    target.onEndState(true);
+                });
+                settled.exit(function() {
+                    target.onEndState(false);
+                });
+                var initialP = new State.PseudoState("init 已开局", playing, State.PseudoStateKind.Initial);
+                var deal = new State.State("发牌", playing);
+                var playersTurn = new State.State("玩家决策", playing);
+                var dealersTurn = new State.State("庄家决策", playing);
+                initialP.to(deal);
+                deal.to(playersTurn).when(on("dealed"));
+                playersTurn.to(dealersTurn).when(on("player acted"));
+                deal.entry(function() {
+                    target.onEnterDealState();
+                });
+                playersTurn.entry(function() {
+                    target.onPlayersTurnState(true);
+                });
+                playersTurn.exit(function() {
+                    target.onPlayersTurnState(false);
+                });
+                dealersTurn.entry(function() {
+                    target.onEnterDealersTurnState();
+                });
+                instance = new State.StateMachineInstance("fsm");
+                State.initialise(model, instance);
+            },
+            toDeal: function toDeal() {
+                this._evaluate("deal");
+            },
+            toBet: function toBet() {
+                this._evaluate("bet");
+            },
+            onDealed: function onDealed() {
+                this._evaluate("dealed");
+            },
+            onPlayerActed: function onPlayerActed() {
+                this._evaluate("player acted");
+            },
+            onDealerActed: function onDealerActed() {
+                this._evaluate("end");
+            },
+            _evaluate: function _evaluate(message) {
+                if (evaluating) {
+                    setTimeout(function() {
+                        State.evaluate(model, instance, message);
+                    }, 1);
+                    return;
+                }
+                evaluating = true;
+                State.evaluate(model, instance, message);
+                evaluating = false;
+            },
+            _getInstance: function _getInstance() {
+                return instance;
+            },
+            _getModel: function _getModel() {
+                return model;
+            }
+        };
+        module.exports = exports;
+        cc._RF.pop();
+    }, {
+        "state.com": "state.com"
+    } ],
+    "state.com": [ function(require, module, exports) {
+        "use strict";
+        cc._RF.push(module, "71d9293mx9CFryhJvRw85ZS", "state.com");
+        "use strict";
+        var StateJS;
+        (function(StateJS) {
+            var Behavior = function() {
+                function Behavior(behavior) {
+                    this.actions = [];
+                    behavior && this.push(behavior);
+                }
+                Behavior.prototype.push = function(behavior) {
+                    Array.prototype.push.apply(this.actions, behavior instanceof Behavior ? behavior.actions : arguments);
+                    return this;
+                };
+                Behavior.prototype.hasActions = function() {
+                    return 0 !== this.actions.length;
+                };
+                Behavior.prototype.invoke = function(message, instance, history) {
+                    void 0 === history && (history = false);
+                    this.actions.forEach(function(action) {
+                        return action(message, instance, history);
+                    });
+                };
+                return Behavior;
+            }();
+            StateJS.Behavior = Behavior;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            (function(PseudoStateKind) {
+                PseudoStateKind[PseudoStateKind["Initial"] = 0] = "Initial";
+                PseudoStateKind[PseudoStateKind["ShallowHistory"] = 1] = "ShallowHistory";
+                PseudoStateKind[PseudoStateKind["DeepHistory"] = 2] = "DeepHistory";
+                PseudoStateKind[PseudoStateKind["Choice"] = 3] = "Choice";
+                PseudoStateKind[PseudoStateKind["Junction"] = 4] = "Junction";
+                PseudoStateKind[PseudoStateKind["Terminate"] = 5] = "Terminate";
+            })(StateJS.PseudoStateKind || (StateJS.PseudoStateKind = {}));
+            var PseudoStateKind = StateJS.PseudoStateKind;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            (function(TransitionKind) {
+                TransitionKind[TransitionKind["Internal"] = 0] = "Internal";
+                TransitionKind[TransitionKind["Local"] = 1] = "Local";
+                TransitionKind[TransitionKind["External"] = 2] = "External";
+            })(StateJS.TransitionKind || (StateJS.TransitionKind = {}));
+            var TransitionKind = StateJS.TransitionKind;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            var Element = function() {
+                function Element(name, parent) {
+                    this.name = name;
+                    this.qualifiedName = parent ? parent.qualifiedName + Element.namespaceSeparator + name : name;
+                }
+                Element.prototype.toString = function() {
+                    return this.qualifiedName;
+                };
+                Element.namespaceSeparator = ".";
+                return Element;
+            }();
+            StateJS.Element = Element;
+        })(StateJS || (StateJS = {}));
+        var __extends = function(d, b) {
+            for (var p in b) {
+                b.hasOwnProperty(p) && (d[p] = b[p]);
+            }
+            function __() {
+                this.constructor = d;
+            }
+            __.prototype = b.prototype;
+            d.prototype = new __();
+        };
+        var StateJS;
+        (function(StateJS) {
+            var Region = function(_super) {
+                __extends(Region, _super);
+                function Region(name, state) {
+                    _super.call(this, name, state);
+                    this.vertices = [];
+                    this.state = state;
+                    this.state.regions.push(this);
+                    this.state.getRoot().clean = false;
+                }
+                Region.prototype.getRoot = function() {
+                    return this.state.getRoot();
+                };
+                Region.prototype.accept = function(visitor, arg1, arg2, arg3) {
+                    return visitor.visitRegion(this, arg1, arg2, arg3);
+                };
+                Region.defaultName = "default";
+                return Region;
+            }(StateJS.Element);
+            StateJS.Region = Region;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            var Vertex = function(_super) {
+                __extends(Vertex, _super);
+                function Vertex(name, parent) {
+                    _super.call(this, name, parent = parent instanceof StateJS.State ? parent.defaultRegion() : parent);
+                    this.outgoing = [];
+                    this.region = parent;
+                    if (this.region) {
+                        this.region.vertices.push(this);
+                        this.region.getRoot().clean = false;
+                    }
+                }
+                Vertex.prototype.getRoot = function() {
+                    return this.region.getRoot();
+                };
+                Vertex.prototype.to = function(target, kind) {
+                    void 0 === kind && (kind = StateJS.TransitionKind.External);
+                    return new StateJS.Transition(this, target, kind);
+                };
+                Vertex.prototype.accept = function(visitor, arg1, arg2, arg3) {};
+                return Vertex;
+            }(StateJS.Element);
+            StateJS.Vertex = Vertex;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            var PseudoState = function(_super) {
+                __extends(PseudoState, _super);
+                function PseudoState(name, parent, kind) {
+                    void 0 === kind && (kind = StateJS.PseudoStateKind.Initial);
+                    _super.call(this, name, parent);
+                    this.kind = kind;
+                }
+                PseudoState.prototype.isHistory = function() {
+                    return this.kind === StateJS.PseudoStateKind.DeepHistory || this.kind === StateJS.PseudoStateKind.ShallowHistory;
+                };
+                PseudoState.prototype.isInitial = function() {
+                    return this.kind === StateJS.PseudoStateKind.Initial || this.isHistory();
+                };
+                PseudoState.prototype.accept = function(visitor, arg1, arg2, arg3) {
+                    return visitor.visitPseudoState(this, arg1, arg2, arg3);
+                };
+                return PseudoState;
+            }(StateJS.Vertex);
+            StateJS.PseudoState = PseudoState;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            var State = function(_super) {
+                __extends(State, _super);
+                function State(name, parent) {
+                    _super.call(this, name, parent);
+                    this.exitBehavior = new StateJS.Behavior();
+                    this.entryBehavior = new StateJS.Behavior();
+                    this.regions = [];
+                }
+                State.prototype.defaultRegion = function() {
+                    return this.regions.reduce(function(result, region) {
+                        return region.name === StateJS.Region.defaultName ? region : result;
+                    }, void 0) || new StateJS.Region(StateJS.Region.defaultName, this);
+                };
+                State.prototype.isFinal = function() {
+                    return 0 === this.outgoing.length;
+                };
+                State.prototype.isSimple = function() {
+                    return 0 === this.regions.length;
+                };
+                State.prototype.isComposite = function() {
+                    return this.regions.length > 0;
+                };
+                State.prototype.isOrthogonal = function() {
+                    return this.regions.length > 1;
+                };
+                State.prototype.exit = function(exitAction) {
+                    this.exitBehavior.push(exitAction);
+                    this.getRoot().clean = false;
+                    return this;
+                };
+                State.prototype.entry = function(entryAction) {
+                    this.entryBehavior.push(entryAction);
+                    this.getRoot().clean = false;
+                    return this;
+                };
+                State.prototype.accept = function(visitor, arg1, arg2, arg3) {
+                    return visitor.visitState(this, arg1, arg2, arg3);
+                };
+                return State;
+            }(StateJS.Vertex);
+            StateJS.State = State;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            var FinalState = function(_super) {
+                __extends(FinalState, _super);
+                function FinalState(name, parent) {
+                    _super.call(this, name, parent);
+                }
+                FinalState.prototype.accept = function(visitor, arg1, arg2, arg3) {
+                    return visitor.visitFinalState(this, arg1, arg2, arg3);
+                };
+                return FinalState;
+            }(StateJS.State);
+            StateJS.FinalState = FinalState;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            var StateMachine = function(_super) {
+                __extends(StateMachine, _super);
+                function StateMachine(name) {
+                    _super.call(this, name, void 0);
+                    this.clean = false;
+                }
+                StateMachine.prototype.getRoot = function() {
+                    return this.region ? this.region.getRoot() : this;
+                };
+                StateMachine.prototype.accept = function(visitor, arg1, arg2, arg3) {
+                    return visitor.visitStateMachine(this, arg1, arg2, arg3);
+                };
+                return StateMachine;
+            }(StateJS.State);
+            StateJS.StateMachine = StateMachine;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            var Transition = function() {
+                function Transition(source, target, kind) {
+                    var _this = this;
+                    void 0 === kind && (kind = StateJS.TransitionKind.External);
+                    this.transitionBehavior = new StateJS.Behavior();
+                    this.onTraverse = new StateJS.Behavior();
+                    this.source = source;
+                    this.target = target;
+                    this.kind = target ? kind : StateJS.TransitionKind.Internal;
+                    this.guard = source instanceof StateJS.PseudoState ? Transition.TrueGuard : function(message) {
+                        return message === _this.source;
+                    };
+                    this.source.outgoing.push(this);
+                    this.source.getRoot().clean = false;
+                }
+                Transition.prototype.else = function() {
+                    this.guard = Transition.FalseGuard;
+                    return this;
+                };
+                Transition.prototype.when = function(guard) {
+                    this.guard = guard;
+                    return this;
+                };
+                Transition.prototype.effect = function(transitionAction) {
+                    this.transitionBehavior.push(transitionAction);
+                    this.source.getRoot().clean = false;
+                    return this;
+                };
+                Transition.prototype.accept = function(visitor, arg1, arg2, arg3) {
+                    return visitor.visitTransition(this, arg1, arg2, arg3);
+                };
+                Transition.prototype.toString = function() {
+                    return "[" + (this.target ? this.source + " -> " + this.target : this.source) + "]";
+                };
+                Transition.TrueGuard = function() {
+                    return true;
+                };
+                Transition.FalseGuard = function() {
+                    return false;
+                };
+                return Transition;
+            }();
+            StateJS.Transition = Transition;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            var Visitor = function() {
+                function Visitor() {}
+                Visitor.prototype.visitElement = function(element, arg1, arg2, arg3) {};
+                Visitor.prototype.visitRegion = function(region, arg1, arg2, arg3) {
+                    var _this = this;
+                    var result = this.visitElement(region, arg1, arg2, arg3);
+                    region.vertices.forEach(function(vertex) {
+                        vertex.accept(_this, arg1, arg2, arg3);
+                    });
+                    return result;
+                };
+                Visitor.prototype.visitVertex = function(vertex, arg1, arg2, arg3) {
+                    var _this = this;
+                    var result = this.visitElement(vertex, arg1, arg2, arg3);
+                    vertex.outgoing.forEach(function(transition) {
+                        transition.accept(_this, arg1, arg2, arg3);
+                    });
+                    return result;
+                };
+                Visitor.prototype.visitPseudoState = function(pseudoState, arg1, arg2, arg3) {
+                    return this.visitVertex(pseudoState, arg1, arg2, arg3);
+                };
+                Visitor.prototype.visitState = function(state, arg1, arg2, arg3) {
+                    var _this = this;
+                    var result = this.visitVertex(state, arg1, arg2, arg3);
+                    state.regions.forEach(function(region) {
+                        region.accept(_this, arg1, arg2, arg3);
+                    });
+                    return result;
+                };
+                Visitor.prototype.visitFinalState = function(finalState, arg1, arg2, arg3) {
+                    return this.visitState(finalState, arg1, arg2, arg3);
+                };
+                Visitor.prototype.visitStateMachine = function(stateMachine, arg1, arg2, arg3) {
+                    return this.visitState(stateMachine, arg1, arg2, arg3);
+                };
+                Visitor.prototype.visitTransition = function(transition, arg1, arg2, arg3) {};
+                return Visitor;
+            }();
+            StateJS.Visitor = Visitor;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            var StateMachineInstance = function() {
+                function StateMachineInstance(name) {
+                    void 0 === name && (name = "unnamed");
+                    this.last = {};
+                    this.isTerminated = false;
+                    this.name = name;
+                }
+                StateMachineInstance.prototype.setCurrent = function(region, state) {
+                    this.last[region.qualifiedName] = state;
+                };
+                StateMachineInstance.prototype.getCurrent = function(region) {
+                    return this.last[region.qualifiedName];
+                };
+                StateMachineInstance.prototype.toString = function() {
+                    return this.name;
+                };
+                return StateMachineInstance;
+            }();
+            StateJS.StateMachineInstance = StateMachineInstance;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            function setRandom(generator) {
+                random = generator;
+            }
+            StateJS.setRandom = setRandom;
+            function getRandom() {
+                return random;
+            }
+            StateJS.getRandom = getRandom;
+            var random = function random(max) {
+                return Math.floor(Math.random() * max);
+            };
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            function isActive(element, stateMachineInstance) {
+                if (element instanceof StateJS.Region) {
+                    return isActive(element.state, stateMachineInstance);
+                }
+                if (element instanceof StateJS.State) {
+                    return !element.region || isActive(element.region, stateMachineInstance) && stateMachineInstance.getCurrent(element.region) === element;
+                }
+            }
+            StateJS.isActive = isActive;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            function isComplete(element, instance) {
+                if (element instanceof StateJS.Region) {
+                    return instance.getCurrent(element).isFinal();
+                }
+                if (element instanceof StateJS.State) {
+                    return element.regions.every(function(region) {
+                        return isComplete(region, instance);
+                    });
+                }
+                return true;
+            }
+            StateJS.isComplete = isComplete;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            function initialise(stateMachineModel, stateMachineInstance, autoInitialiseModel) {
+                void 0 === autoInitialiseModel && (autoInitialiseModel = true);
+                if (stateMachineInstance) {
+                    autoInitialiseModel && false === stateMachineModel.clean && initialise(stateMachineModel);
+                    StateJS.console.log("initialise " + stateMachineInstance);
+                    stateMachineModel.onInitialise.invoke(void 0, stateMachineInstance);
+                } else {
+                    StateJS.console.log("initialise " + stateMachineModel.name);
+                    stateMachineModel.accept(new InitialiseElements(), false);
+                    stateMachineModel.clean = true;
+                }
+            }
+            StateJS.initialise = initialise;
+            function evaluate(stateMachineModel, stateMachineInstance, message, autoInitialiseModel) {
+                void 0 === autoInitialiseModel && (autoInitialiseModel = true);
+                StateJS.console.log(stateMachineInstance + " evaluate " + message);
+                autoInitialiseModel && false === stateMachineModel.clean && initialise(stateMachineModel);
+                if (stateMachineInstance.isTerminated) {
+                    return false;
+                }
+                return evaluateState(stateMachineModel, stateMachineInstance, message);
+            }
+            StateJS.evaluate = evaluate;
+            function evaluateState(state, stateMachineInstance, message) {
+                var result = false;
+                state.regions.every(function(region) {
+                    if (evaluateState(stateMachineInstance.getCurrent(region), stateMachineInstance, message)) {
+                        result = true;
+                        return StateJS.isActive(state, stateMachineInstance);
+                    }
+                    return true;
+                });
+                if (result) {
+                    message !== state && StateJS.isComplete(state, stateMachineInstance) && evaluateState(state, stateMachineInstance, state);
+                } else {
+                    var transitions = state.outgoing.filter(function(transition) {
+                        return transition.guard(message, stateMachineInstance);
+                    });
+                    1 === transitions.length ? result = traverse(transitions[0], stateMachineInstance, message) : transitions.length > 1 && StateJS.console.error(state + ": multiple outbound transitions evaluated true for message " + message);
+                }
+                return result;
+            }
+            function traverse(transition, instance, message) {
+                var onTraverse = new StateJS.Behavior(transition.onTraverse), target = transition.target;
+                while (target && target instanceof StateJS.PseudoState && target.kind === StateJS.PseudoStateKind.Junction) {
+                    target = (transition = selectTransition(target, instance, message)).target;
+                    onTraverse.push(transition.onTraverse);
+                }
+                onTraverse.invoke(message, instance);
+                target && target instanceof StateJS.PseudoState && target.kind === StateJS.PseudoStateKind.Choice ? traverse(selectTransition(target, instance, message), instance, message) : target && target instanceof StateJS.State && StateJS.isComplete(target, instance) && evaluateState(target, instance, target);
+                return true;
+            }
+            function selectTransition(pseudoState, stateMachineInstance, message) {
+                var results = pseudoState.outgoing.filter(function(transition) {
+                    return transition.guard(message, stateMachineInstance);
+                });
+                if (pseudoState.kind === StateJS.PseudoStateKind.Choice) {
+                    return 0 !== results.length ? results[StateJS.getRandom()(results.length)] : findElse(pseudoState);
+                }
+                if (!(results.length > 1)) {
+                    return results[0] || findElse(pseudoState);
+                }
+                StateJS.console.error("Multiple outbound transition guards returned true at " + this + " for " + message);
+            }
+            function findElse(pseudoState) {
+                return pseudoState.outgoing.filter(function(transition) {
+                    return transition.guard === StateJS.Transition.FalseGuard;
+                })[0];
+            }
+            function leave(elementBehavior) {
+                return elementBehavior[0] || (elementBehavior[0] = new StateJS.Behavior());
+            }
+            function beginEnter(elementBehavior) {
+                return elementBehavior[1] || (elementBehavior[1] = new StateJS.Behavior());
+            }
+            function endEnter(elementBehavior) {
+                return elementBehavior[2] || (elementBehavior[2] = new StateJS.Behavior());
+            }
+            function enter(elementBehavior) {
+                return new StateJS.Behavior(beginEnter(elementBehavior)).push(endEnter(elementBehavior));
+            }
+            function ancestors(vertex) {
+                return (vertex.region ? ancestors(vertex.region.state) : []).concat(vertex);
+            }
+            var InitialiseTransitions = function(_super) {
+                __extends(InitialiseTransitions, _super);
+                function InitialiseTransitions() {
+                    _super.apply(this, arguments);
+                }
+                InitialiseTransitions.prototype.visitTransition = function(transition, behaviour) {
+                    transition.kind === StateJS.TransitionKind.Internal ? transition.onTraverse.push(transition.transitionBehavior) : transition.kind === StateJS.TransitionKind.Local ? this.visitLocalTransition(transition, behaviour) : this.visitExternalTransition(transition, behaviour);
+                };
+                InitialiseTransitions.prototype.visitLocalTransition = function(transition, behaviour) {
+                    var _this = this;
+                    transition.onTraverse.push(function(message, instance) {
+                        var targetAncestors = ancestors(transition.target), i = 0;
+                        while (StateJS.isActive(targetAncestors[i], instance)) {
+                            ++i;
+                        }
+                        leave(behaviour(instance.getCurrent(targetAncestors[i].region))).invoke(message, instance);
+                        transition.transitionBehavior.invoke(message, instance);
+                        while (i < targetAncestors.length) {
+                            _this.cascadeElementEntry(transition, behaviour, targetAncestors[i++], targetAncestors[i], function(behavior) {
+                                behavior.invoke(message, instance);
+                            });
+                        }
+                        endEnter(behaviour(transition.target)).invoke(message, instance);
+                    });
+                };
+                InitialiseTransitions.prototype.visitExternalTransition = function(transition, behaviour) {
+                    var sourceAncestors = ancestors(transition.source), targetAncestors = ancestors(transition.target), i = Math.min(sourceAncestors.length, targetAncestors.length) - 1;
+                    while (sourceAncestors[i - 1] !== targetAncestors[i - 1]) {
+                        --i;
+                    }
+                    transition.onTraverse.push(leave(behaviour(sourceAncestors[i])));
+                    transition.onTraverse.push(transition.transitionBehavior);
+                    while (i < targetAncestors.length) {
+                        this.cascadeElementEntry(transition, behaviour, targetAncestors[i++], targetAncestors[i], function(behavior) {
+                            return transition.onTraverse.push(behavior);
+                        });
+                    }
+                    transition.onTraverse.push(endEnter(behaviour(transition.target)));
+                };
+                InitialiseTransitions.prototype.cascadeElementEntry = function(transition, behaviour, element, next, task) {
+                    task(beginEnter(behaviour(element)));
+                    next && element instanceof StateJS.State && element.regions.forEach(function(region) {
+                        task(beginEnter(behaviour(region)));
+                        region !== next.region && task(endEnter(behaviour(region)));
+                    });
+                };
+                return InitialiseTransitions;
+            }(StateJS.Visitor);
+            var InitialiseElements = function(_super) {
+                __extends(InitialiseElements, _super);
+                function InitialiseElements() {
+                    _super.apply(this, arguments);
+                    this.behaviours = {};
+                }
+                InitialiseElements.prototype.behaviour = function(element) {
+                    return this.behaviours[element.qualifiedName] || (this.behaviours[element.qualifiedName] = []);
+                };
+                InitialiseElements.prototype.visitElement = function(element, deepHistoryAbove) {
+                    if (StateJS.console !== defaultConsole) {
+                        leave(this.behaviour(element)).push(function(message, instance) {
+                            return StateJS.console.log(instance + " leave " + element);
+                        });
+                        beginEnter(this.behaviour(element)).push(function(message, instance) {
+                            return StateJS.console.log(instance + " enter " + element);
+                        });
+                    }
+                };
+                InitialiseElements.prototype.visitRegion = function(region, deepHistoryAbove) {
+                    var _this = this;
+                    var regionInitial = region.vertices.reduce(function(result, vertex) {
+                        return vertex instanceof StateJS.PseudoState && vertex.isInitial() ? vertex : result;
+                    }, void 0);
+                    region.vertices.forEach(function(vertex) {
+                        vertex.accept(_this, deepHistoryAbove || regionInitial && regionInitial.kind === StateJS.PseudoStateKind.DeepHistory);
+                    });
+                    leave(this.behaviour(region)).push(function(message, stateMachineInstance) {
+                        return leave(_this.behaviour(stateMachineInstance.getCurrent(region))).invoke(message, stateMachineInstance);
+                    });
+                    deepHistoryAbove || !regionInitial || regionInitial.isHistory() ? endEnter(this.behaviour(region)).push(function(message, stateMachineInstance, history) {
+                        enter(_this.behaviour(history || regionInitial.isHistory() ? stateMachineInstance.getCurrent(region) || regionInitial : regionInitial)).invoke(message, stateMachineInstance, history || regionInitial.kind === StateJS.PseudoStateKind.DeepHistory);
+                    }) : endEnter(this.behaviour(region)).push(enter(this.behaviour(regionInitial)));
+                    this.visitElement(region, deepHistoryAbove);
+                };
+                InitialiseElements.prototype.visitPseudoState = function(pseudoState, deepHistoryAbove) {
+                    _super.prototype.visitPseudoState.call(this, pseudoState, deepHistoryAbove);
+                    pseudoState.isInitial() ? endEnter(this.behaviour(pseudoState)).push(function(message, stateMachineInstance) {
+                        return traverse(pseudoState.outgoing[0], stateMachineInstance);
+                    }) : pseudoState.kind === StateJS.PseudoStateKind.Terminate && beginEnter(this.behaviour(pseudoState)).push(function(message, stateMachineInstance) {
+                        return stateMachineInstance.isTerminated = true;
+                    });
+                };
+                InitialiseElements.prototype.visitState = function(state, deepHistoryAbove) {
+                    var _this = this;
+                    state.regions.forEach(function(region) {
+                        region.accept(_this, deepHistoryAbove);
+                        leave(_this.behaviour(state)).push(leave(_this.behaviour(region)));
+                        endEnter(_this.behaviour(state)).push(enter(_this.behaviour(region)));
+                    });
+                    this.visitVertex(state, deepHistoryAbove);
+                    leave(this.behaviour(state)).push(state.exitBehavior);
+                    beginEnter(this.behaviour(state)).push(state.entryBehavior);
+                    beginEnter(this.behaviour(state)).push(function(message, stateMachineInstance) {
+                        state.region && stateMachineInstance.setCurrent(state.region, state);
+                    });
+                };
+                InitialiseElements.prototype.visitStateMachine = function(stateMachine, deepHistoryAbove) {
+                    var _this = this;
+                    _super.prototype.visitStateMachine.call(this, stateMachine, deepHistoryAbove);
+                    stateMachine.accept(new InitialiseTransitions(), function(element) {
+                        return _this.behaviour(element);
+                    });
+                    stateMachine.onInitialise = enter(this.behaviour(stateMachine));
+                };
+                return InitialiseElements;
+            }(StateJS.Visitor);
+            var defaultConsole = {
+                log: function log(message) {
+                    var optionalParams = [];
+                    for (var _i = 1; _i < arguments.length; _i++) {
+                        optionalParams[_i - 1] = arguments[_i];
+                    }
+                },
+                warn: function warn(message) {
+                    var optionalParams = [];
+                    for (var _i = 1; _i < arguments.length; _i++) {
+                        optionalParams[_i - 1] = arguments[_i];
+                    }
+                },
+                error: function error(message) {
+                    var optionalParams = [];
+                    for (var _i = 1; _i < arguments.length; _i++) {
+                        optionalParams[_i - 1] = arguments[_i];
+                    }
+                    throw message;
+                }
+            };
+            StateJS.console = defaultConsole;
+        })(StateJS || (StateJS = {}));
+        var StateJS;
+        (function(StateJS) {
+            function validate(stateMachineModel) {
+                stateMachineModel.accept(new Validator());
+            }
+            StateJS.validate = validate;
+            function ancestors(vertex) {
+                return (vertex.region ? ancestors(vertex.region.state) : []).concat(vertex);
+            }
+            var Validator = function(_super) {
+                __extends(Validator, _super);
+                function Validator() {
+                    _super.apply(this, arguments);
+                }
+                Validator.prototype.visitPseudoState = function(pseudoState) {
+                    _super.prototype.visitPseudoState.call(this, pseudoState);
+                    if (pseudoState.kind === StateJS.PseudoStateKind.Choice || pseudoState.kind === StateJS.PseudoStateKind.Junction) {
+                        0 === pseudoState.outgoing.length && StateJS.console.error(pseudoState + ": " + pseudoState.kind + " pseudo states must have at least one outgoing transition.");
+                        pseudoState.outgoing.filter(function(transition) {
+                            return transition.guard === StateJS.Transition.FalseGuard;
+                        }).length > 1 && StateJS.console.error(pseudoState + ": " + pseudoState.kind + " pseudo states cannot have more than one Else transitions.");
+                    } else {
+                        0 !== pseudoState.outgoing.filter(function(transition) {
+                            return transition.guard === StateJS.Transition.FalseGuard;
+                        }).length && StateJS.console.error(pseudoState + ": " + pseudoState.kind + " pseudo states cannot have Else transitions.");
+                        pseudoState.isInitial() && (1 !== pseudoState.outgoing.length ? StateJS.console.error(pseudoState + ": initial pseudo states must have one outgoing transition.") : pseudoState.outgoing[0].guard !== StateJS.Transition.TrueGuard && StateJS.console.error(pseudoState + ": initial pseudo states cannot have a guard condition."));
+                    }
+                };
+                Validator.prototype.visitRegion = function(region) {
+                    _super.prototype.visitRegion.call(this, region);
+                    var initial;
+                    region.vertices.forEach(function(vertex) {
+                        if (vertex instanceof StateJS.PseudoState && vertex.isInitial()) {
+                            initial && StateJS.console.error(region + ": regions may have at most one initial pseudo state.");
+                            initial = vertex;
+                        }
+                    });
+                };
+                Validator.prototype.visitState = function(state) {
+                    _super.prototype.visitState.call(this, state);
+                    state.regions.filter(function(state) {
+                        return state.name === StateJS.Region.defaultName;
+                    }).length > 1 && StateJS.console.error(state + ": a state cannot have more than one region named " + StateJS.Region.defaultName);
+                };
+                Validator.prototype.visitFinalState = function(finalState) {
+                    _super.prototype.visitFinalState.call(this, finalState);
+                    0 !== finalState.outgoing.length && StateJS.console.error(finalState + ": final states must not have outgoing transitions.");
+                    0 !== finalState.regions.length && StateJS.console.error(finalState + ": final states must not have child regions.");
+                    finalState.entryBehavior.hasActions() && StateJS.console.warn(finalState + ": final states may not have entry behavior.");
+                    finalState.exitBehavior.hasActions() && StateJS.console.warn(finalState + ": final states may not have exit behavior.");
+                };
+                Validator.prototype.visitTransition = function(transition) {
+                    _super.prototype.visitTransition.call(this, transition);
+                    transition.kind === StateJS.TransitionKind.Local && -1 === ancestors(transition.target).indexOf(transition.source) && StateJS.console.error(transition + ": local transition target vertices must be a child of the source composite sate.");
+                };
+                return Validator;
+            }(StateJS.Visitor);
+        })(StateJS || (StateJS = {}));
+        module.exports = StateJS;
+        cc._RF.pop();
+    }, {} ]
+}, {}, [ "Actor", "ActorRenderer", "AssetMng", "AudioMng", "Bet", "Card", "CounterTest", "Dealer", "FXPlayer", "Game", "Menu", "Player", "SideSwitcher", "TossChip", "ButtonScaler", "InGameUI", "RankItem", "RankList", "state.com", "Decks", "HotUpdate", "Mask", "PlayerData", "Types", "Utils", "game-fsm" ]);

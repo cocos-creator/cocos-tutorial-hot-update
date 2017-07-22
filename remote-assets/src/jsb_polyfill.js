@@ -139,7 +139,7 @@
                 };
             }
         }), {
-            "./cocos2d/core/platform/CCEnum": 137
+            "./cocos2d/core/platform/CCEnum": 138
         } ],
         2: [ (function(require, module, exports) {
             var logs = {
@@ -4406,7 +4406,7 @@
             }
             module.exports = AnimationAnimator;
         }), {
-            "../core/utils/binary-search": 158,
+            "../core/utils/binary-search": 159,
             "./animation-curves": 12,
             "./animators": 15,
             "./motion-path-helper": 19,
@@ -4719,7 +4719,7 @@
                 computeRatioByType: computeRatioByType
             };
         }), {
-            "../core/utils/binary-search": 158,
+            "../core/utils/binary-search": 159,
             "./bezier": 16,
             "./types": 21
         } ],
@@ -5495,7 +5495,7 @@
                 Bezier: Bezier
             };
         }), {
-            "../core/utils/binary-search": 158,
+            "../core/utils/binary-search": 159,
             "./animation-curves": 12,
             "./bezier": 16
         } ],
@@ -6965,11 +6965,11 @@
             Node.EventType = EventType;
             cc.Node = module.exports = Node;
         }), {
-            "./event/event": 84,
-            "./utils/base-node": 157,
-            "./utils/misc": 161,
-            "./utils/prefab-helper": 163,
-            "./utils/scene-graph-helper": 164
+            "./event/event": 85,
+            "./utils/base-node": 158,
+            "./utils/misc": 162,
+            "./utils/prefab-helper": 164,
+            "./utils/scene-graph-helper": 165
         } ],
         24: [ (function(require, module, exports) {
             var NIL = function() {};
@@ -7140,7 +7140,7 @@
             cc.Prefab = module.exports = Prefab;
             cc.js.obsolete(cc, "cc._Prefab", "Prefab");
         }), {
-            "../platform/instantiate-jit": 148
+            "../platform/instantiate-jit": 149
         } ],
         31: [ (function(require, module, exports) {
             var CCObject = require("../platform/CCObject");
@@ -7164,7 +7164,7 @@
             });
             module.exports = cc.RawAsset;
         }), {
-            "../platform/CCObject": 139
+            "../platform/CCObject": 140
         } ],
         32: [ (function(require, module, exports) {
             var Scene = cc.Class({
@@ -7255,8 +7255,8 @@
             require("./CCBitmapFont");
             require("./CCLabelAtlas");
         }), {
-            "../sprites/CCSpriteFrame": 216,
-            "../textures/CCTexture2D": 216,
+            "../sprites/CCSpriteFrame": 217,
+            "../textures/CCTexture2D": 217,
             "./CCAsset": 25,
             "./CCAudioClip": 26,
             "./CCBitmapFont": 27,
@@ -7668,7 +7668,7 @@
             });
             module.exports = cc.Camera = Camera;
         }), {
-            "./CCSGCameraNode": 216
+            "./CCSGCameraNode": 217
         } ],
         39: [ (function(require, module, exports) {
             cc.Collider.Box = cc.Class({
@@ -8589,10 +8589,10 @@
             });
             module.exports = ComponentScheduler;
         }), {
-            "./platform/CCClass": 135,
-            "./platform/CCObject": 139,
-            "./platform/js": 150,
-            "./utils/misc": 161
+            "./platform/CCClass": 136,
+            "./platform/CCObject": 140,
+            "./platform/js": 151,
+            "./utils/misc": 162
         } ],
         48: [ (function(require, module, exports) {
             var AnimationAnimator = require("../../animation/animation-animator");
@@ -8864,7 +8864,7 @@
         }), {
             "../../animation/animation-animator": 10,
             "../../animation/animation-clip": 11,
-            "./CCComponent": 52
+            "./CCComponent": 53
         } ],
         49: [ (function(require, module, exports) {
             var AudioSource = cc.Class({
@@ -9058,9 +9058,37 @@
             });
             cc.AudioSource = module.exports = AudioSource;
         }), {
-            "./CCComponent": 52
+            "./CCComponent": 53
         } ],
         50: [ (function(require, module, exports) {
+            var BlockEvents = [ "touchstart", "touchmove", "touchend", "mousedown", "mousemove", "mouseup", "mouseenter", "mouseleave", "mousewheel" ];
+            function stopPropagation(event) {
+                event.stopPropagation();
+            }
+            var BlockInputEvents = cc.Class({
+                name: "cc.BlockInputEvents",
+                extends: require("./CCComponent"),
+                editor: {
+                    menu: "i18n:MAIN_MENU.component.ui/Block Input Events",
+                    inspector: "packages://inspector/inspectors/comps/block-input-events.js",
+                    help: "i18n:COMPONENT.help_url.block-input-events"
+                },
+                onEnable: function() {
+                    for (var i = 0; i < BlockEvents.length; i++) {
+                        this.node.on(BlockEvents[i], stopPropagation, this);
+                    }
+                },
+                onDisable: function() {
+                    for (var i = 0; i < BlockEvents.length; i++) {
+                        this.node.off(BlockEvents[i], stopPropagation, this);
+                    }
+                }
+            });
+            cc.BlockInputEvents = module.exports = BlockInputEvents;
+        }), {
+            "./CCComponent": 53
+        } ],
+        51: [ (function(require, module, exports) {
             var Transition = cc.Enum({
                 NONE: 0,
                 COLOR: 1,
@@ -9370,9 +9398,9 @@
             });
             cc.Button = module.exports = Button;
         }), {
-            "./CCComponent": 52
+            "./CCComponent": 53
         } ],
-        51: [ (function(require, module, exports) {
+        52: [ (function(require, module, exports) {
             var designResolutionWrapper = {
                 getContentSize: function() {
                     return cc.visibleRect;
@@ -9490,9 +9518,9 @@
             });
             cc.Canvas = module.exports = Canvas;
         }), {
-            "./CCComponent": 52
+            "./CCComponent": 53
         } ],
-        52: [ (function(require, module, exports) {
+        53: [ (function(require, module, exports) {
             var CCObject = require("../platform/CCObject");
             var JS = require("../platform/js");
             var idGenerater = new (require("../platform/id-generater"))("Comp");
@@ -9653,11 +9681,11 @@
             Component.prototype.__scriptUuid = "";
             cc.Component = module.exports = Component;
         }), {
-            "../platform/CCObject": 139,
-            "../platform/id-generater": 146,
-            "../platform/js": 150
+            "../platform/CCObject": 140,
+            "../platform/id-generater": 147,
+            "../platform/js": 151
         } ],
-        53: [ (function(require, module, exports) {
+        54: [ (function(require, module, exports) {
             cc.Component.EventHandler = cc.Class({
                 name: "cc.ClickEvent",
                 properties: {
@@ -9707,7 +9735,7 @@
                 }
             });
         }), {} ],
-        54: [ (function(require, module, exports) {
+        55: [ (function(require, module, exports) {
             require("../editbox/CCSGEditBox");
             var KeyboardReturnType = _ccsg.EditBox.KeyboardReturnType;
             var InputMode = _ccsg.EditBox.InputMode;
@@ -9942,9 +9970,9 @@
             };
             cc.EditBox = module.exports = EditBox;
         }), {
-            "../editbox/CCSGEditBox": 216
+            "../editbox/CCSGEditBox": 217
         } ],
-        55: [ (function(require, module, exports) {
+        56: [ (function(require, module, exports) {
             require("../label/CCSGLabel");
             require("../label/CCSGLabelCanvasRenderCmd");
             require("../label/CCSGLabelWebGLRenderCmd");
@@ -10213,11 +10241,11 @@
             });
             cc.Label = module.exports = Label;
         }), {
-            "../label/CCSGLabel": 216,
-            "../label/CCSGLabelCanvasRenderCmd": 216,
-            "../label/CCSGLabelWebGLRenderCmd": 216
+            "../label/CCSGLabel": 217,
+            "../label/CCSGLabelCanvasRenderCmd": 217,
+            "../label/CCSGLabelWebGLRenderCmd": 217
         } ],
-        56: [ (function(require, module, exports) {
+        57: [ (function(require, module, exports) {
             var LabelOutline = cc.Class({
                 name: "cc.LabelOutline",
                 extends: require("./CCComponent"),
@@ -10270,9 +10298,9 @@
             });
             cc.LabelOutline = module.exports = LabelOutline;
         }), {
-            "./CCComponent": 52
+            "./CCComponent": 53
         } ],
-        57: [ (function(require, module, exports) {
+        58: [ (function(require, module, exports) {
             var Type = cc.Enum({
                 NONE: 0,
                 HORIZONTAL: 1,
@@ -10788,9 +10816,9 @@
             });
             cc.Layout = module.exports = Layout;
         }), {
-            "./CCComponent": 52
+            "./CCComponent": 53
         } ],
-        58: [ (function(require, module, exports) {
+        59: [ (function(require, module, exports) {
             require("../../clipping-nodes/CCClippingNode");
             require("../../clipping-nodes/CCClippingNodeCanvasRenderCmd");
             require("../../clipping-nodes/CCClippingNodeWebGLRenderCmd");
@@ -10977,11 +11005,11 @@
             };
             cc.Mask = module.exports = Mask;
         }), {
-            "../../clipping-nodes/CCClippingNode": 216,
-            "../../clipping-nodes/CCClippingNodeCanvasRenderCmd": 216,
-            "../../clipping-nodes/CCClippingNodeWebGLRenderCmd": 216
+            "../../clipping-nodes/CCClippingNode": 217,
+            "../../clipping-nodes/CCClippingNodeCanvasRenderCmd": 217,
+            "../../clipping-nodes/CCClippingNodeWebGLRenderCmd": 217
         } ],
-        59: [ (function(require, module, exports) {
+        60: [ (function(require, module, exports) {
             var SizeMode = cc.Enum({
                 Unified: 0,
                 Free: 1
@@ -11334,7 +11362,7 @@
             });
             cc.PageView = module.exports = PageView;
         }), {} ],
-        60: [ (function(require, module, exports) {
+        61: [ (function(require, module, exports) {
             var Direction = cc.Enum({
                 HORIZONTAL: 0,
                 VERTICAL: 1
@@ -11442,9 +11470,9 @@
             });
             cc.PageViewIndicator = module.exports = PageViewIndicator;
         }), {
-            "./CCComponent": 52
+            "./CCComponent": 53
         } ],
-        61: [ (function(require, module, exports) {
+        62: [ (function(require, module, exports) {
             var Mode = cc.Enum({
                 HORIZONTAL: 0,
                 VERTICAL: 1,
@@ -11589,9 +11617,9 @@
             });
             cc.ProgressBar = module.exports = ProgressBar;
         }), {
-            "./CCComponent": 52
+            "./CCComponent": 53
         } ],
-        62: [ (function(require, module, exports) {
+        63: [ (function(require, module, exports) {
             var RendererInSG = cc.Class({
                 extends: require("./CCSGComponent"),
                 name: "cc._RendererInSG",
@@ -11653,9 +11681,9 @@
             });
             cc._RendererInSG = module.exports = RendererInSG;
         }), {
-            "./CCSGComponent": 65
+            "./CCSGComponent": 66
         } ],
-        63: [ (function(require, module, exports) {
+        64: [ (function(require, module, exports) {
             var RendererUnderSG = cc.Class({
                 extends: require("./CCSGComponent"),
                 name: "cc._RendererUnderSG",
@@ -11697,9 +11725,9 @@
             });
             cc._RendererUnderSG = module.exports = RendererUnderSG;
         }), {
-            "./CCSGComponent": 65
+            "./CCSGComponent": 66
         } ],
-        64: [ (function(require, module, exports) {
+        65: [ (function(require, module, exports) {
             require("../label/CCHtmlTextParser");
             require("../label/CCTextUtils");
             var HorizontalAlign = cc.TextAlignment;
@@ -12199,10 +12227,10 @@
             });
             cc.RichText = module.exports = RichText;
         }), {
-            "../label/CCHtmlTextParser": 95,
-            "../label/CCTextUtils": 96
+            "../label/CCHtmlTextParser": 96,
+            "../label/CCTextUtils": 97
         } ],
-        65: [ (function(require, module, exports) {
+        66: [ (function(require, module, exports) {
             var SceneGraphHelper = require("../utils/scene-graph-helper");
             var SGComponent = cc.Class({
                 extends: require("./CCComponent"),
@@ -12227,10 +12255,10 @@
             });
             cc._SGComponent = module.exports = SGComponent;
         }), {
-            "../utils/scene-graph-helper": 164,
-            "./CCComponent": 52
+            "../utils/scene-graph-helper": 165,
+            "./CCComponent": 53
         } ],
-        66: [ (function(require, module, exports) {
+        67: [ (function(require, module, exports) {
             var GETTINGSHORTERFACTOR = 20;
             var Direction = cc.Enum({
                 HORIZONTAL: 0,
@@ -12440,9 +12468,9 @@
             });
             cc.Scrollbar = module.exports = Scrollbar;
         }), {
-            "./CCComponent": 52
+            "./CCComponent": 53
         } ],
-        67: [ (function(require, module, exports) {
+        68: [ (function(require, module, exports) {
             var NUMBER_OF_GATHERED_TOUCHES_FOR_MOVE_SPEED = 5;
             var OUT_OF_BOUNDARY_BREAKING_FACTOR = .05;
             var EPSILON = 1e-4;
@@ -13260,9 +13288,9 @@
             });
             cc.ScrollView = module.exports = ScrollView;
         }), {
-            "./CCViewGroup": 75
+            "./CCViewGroup": 76
         } ],
-        68: [ (function(require, module, exports) {
+        69: [ (function(require, module, exports) {
             var Direction = cc.Enum({
                 Horizontal: 0,
                 Vertical: 1
@@ -13393,9 +13421,9 @@
             });
             cc.Slider = module.exports = Slider;
         }), {
-            "./CCComponent": 52
+            "./CCComponent": 53
         } ],
-        69: [ (function(require, module, exports) {
+        70: [ (function(require, module, exports) {
             var Base = require("./CCRendererUnderSG");
             var SpriteType = cc.Scale9Sprite.RenderingType;
             var FillType = cc.Scale9Sprite.FillType;
@@ -13669,10 +13697,10 @@
             misc.propertyDefine(Sprite, SameNameGetSets, DiffNameGetSets);
             cc.Sprite = module.exports = Sprite;
         }), {
-            "../utils/misc": 161,
-            "./CCRendererUnderSG": 63
+            "../utils/misc": 162,
+            "./CCRendererUnderSG": 64
         } ],
-        70: [ (function(require, module, exports) {
+        71: [ (function(require, module, exports) {
             var SpriteDistortion = cc.Class({
                 name: "cc.SpriteDistortion",
                 extends: require("./CCComponent"),
@@ -13720,9 +13748,9 @@
             });
             cc.SpriteDistortion = module.exports = SpriteDistortion;
         }), {
-            "./CCComponent": 52
+            "./CCComponent": 53
         } ],
-        71: [ (function(require, module, exports) {
+        72: [ (function(require, module, exports) {
             var ComponentType = cc.Enum({
                 NONE: 0,
                 CHECKBOX: 1,
@@ -13759,7 +13787,7 @@
             });
             cc.StudioComponent = module.exports = StudioComponent;
         }), {} ],
-        72: [ (function(require, module, exports) {
+        73: [ (function(require, module, exports) {
             var Toggle = cc.Class({
                 name: "cc.Toggle",
                 extends: require("./CCButton"),
@@ -13851,9 +13879,9 @@
             });
             cc.Toggle = module.exports = Toggle;
         }), {
-            "./CCButton": 50
+            "./CCButton": 51
         } ],
-        73: [ (function(require, module, exports) {
+        74: [ (function(require, module, exports) {
             var ToggleGroup = cc.Class({
                 name: "cc.ToggleGroup",
                 extends: cc.Component,
@@ -13908,7 +13936,7 @@
             });
             cc.ToggleGroup = module.exports = ToggleGroup;
         }), {} ],
-        74: [ (function(require, module, exports) {
+        75: [ (function(require, module, exports) {
             require("../videoplayer/CCSGVideoPlayer");
             var EventType = _ccsg.VideoPlayer.EventType;
             var ResourceType = cc.Enum({
@@ -14085,18 +14113,18 @@
             });
             cc.VideoPlayer = module.exports = VideoPlayer;
         }), {
-            "../videoplayer/CCSGVideoPlayer": 216
+            "../videoplayer/CCSGVideoPlayer": 217
         } ],
-        75: [ (function(require, module, exports) {
+        76: [ (function(require, module, exports) {
             var ViewGroup = cc.Class({
                 name: "cc.ViewGroup",
                 extends: require("./CCComponent")
             });
             cc.ViewGroup = module.exports = ViewGroup;
         }), {
-            "./CCComponent": 52
+            "./CCComponent": 53
         } ],
-        76: [ (function(require, module, exports) {
+        77: [ (function(require, module, exports) {
             require("../webview/CCSGWebView");
             var EventType = _ccsg.WebView.EventType;
             var WebView = cc.Class({
@@ -14163,9 +14191,9 @@
             });
             cc.WebView = module.exports = WebView;
         }), {
-            "../webview/CCSGWebView": 216
+            "../webview/CCSGWebView": 217
         } ],
-        77: [ (function(require, module, exports) {
+        78: [ (function(require, module, exports) {
             var WidgetManager = require("../base-ui/CCWidgetManager");
             var AlignFlags = WidgetManager._AlignFlags;
             var TOP = AlignFlags.TOP;
@@ -14438,46 +14466,47 @@
             cc.Widget = module.exports = Widget;
         }), {
             "../base-ui/CCWidgetManager": 37,
-            "./CCComponent": 52
+            "./CCComponent": 53
         } ],
-        78: [ (function(require, module, exports) {
+        79: [ (function(require, module, exports) {
             require("./CCComponent");
             require("./CCRendererInSG");
             require("./CCRendererUnderSG");
             require("./CCComponentEventHandler");
             require("./missing-script");
-            module.exports = [ require("./CCSprite"), require("./CCWidget"), require("./CCCanvas"), require("./CCAudioSource"), require("./CCAnimation"), require("./CCButton"), require("./CCLabel"), require("./CCProgressBar"), require("./CCMask"), require("./CCScrollBar"), require("./CCScrollView"), require("./CCPageViewIndicator"), require("./CCPageView"), require("./CCSlider"), require("./CCLayout"), require("./CCEditBox"), require("./CCVideoPlayer"), require("./CCWebView"), require("./CCSpriteDistortion"), require("./CCLabelOutline"), require("./CCRichText"), require("./CCToggleGroup"), require("./CCToggle") ];
+            module.exports = [ require("./CCSprite"), require("./CCWidget"), require("./CCCanvas"), require("./CCAudioSource"), require("./CCAnimation"), require("./CCButton"), require("./CCLabel"), require("./CCProgressBar"), require("./CCMask"), require("./CCScrollBar"), require("./CCScrollView"), require("./CCPageViewIndicator"), require("./CCPageView"), require("./CCSlider"), require("./CCLayout"), require("./CCEditBox"), require("./CCVideoPlayer"), require("./CCWebView"), require("./CCSpriteDistortion"), require("./CCLabelOutline"), require("./CCRichText"), require("./CCToggleGroup"), require("./CCToggle"), require("./CCBlockInputEvents") ];
         }), {
             "./CCAnimation": 48,
             "./CCAudioSource": 49,
-            "./CCButton": 50,
-            "./CCCanvas": 51,
-            "./CCComponent": 52,
-            "./CCComponentEventHandler": 53,
-            "./CCEditBox": 54,
-            "./CCLabel": 55,
-            "./CCLabelOutline": 56,
-            "./CCLayout": 57,
-            "./CCMask": 58,
-            "./CCPageView": 59,
-            "./CCPageViewIndicator": 60,
-            "./CCProgressBar": 61,
-            "./CCRendererInSG": 62,
-            "./CCRendererUnderSG": 63,
-            "./CCRichText": 64,
-            "./CCScrollBar": 66,
-            "./CCScrollView": 67,
-            "./CCSlider": 68,
-            "./CCSprite": 69,
-            "./CCSpriteDistortion": 70,
-            "./CCToggle": 72,
-            "./CCToggleGroup": 73,
-            "./CCVideoPlayer": 74,
-            "./CCWebView": 76,
-            "./CCWidget": 77,
-            "./missing-script": 79
+            "./CCBlockInputEvents": 50,
+            "./CCButton": 51,
+            "./CCCanvas": 52,
+            "./CCComponent": 53,
+            "./CCComponentEventHandler": 54,
+            "./CCEditBox": 55,
+            "./CCLabel": 56,
+            "./CCLabelOutline": 57,
+            "./CCLayout": 58,
+            "./CCMask": 59,
+            "./CCPageView": 60,
+            "./CCPageViewIndicator": 61,
+            "./CCProgressBar": 62,
+            "./CCRendererInSG": 63,
+            "./CCRendererUnderSG": 64,
+            "./CCRichText": 65,
+            "./CCScrollBar": 67,
+            "./CCScrollView": 68,
+            "./CCSlider": 69,
+            "./CCSprite": 70,
+            "./CCSpriteDistortion": 71,
+            "./CCToggle": 73,
+            "./CCToggleGroup": 74,
+            "./CCVideoPlayer": 75,
+            "./CCWebView": 77,
+            "./CCWidget": 78,
+            "./missing-script": 80
         } ],
-        79: [ (function(require, module, exports) {
+        80: [ (function(require, module, exports) {
             var JS = cc.js;
             var isBuiltinClassId = require("../utils/misc").isBuiltinClassId;
             var MissingClass = cc.Class({
@@ -14530,9 +14559,9 @@
             });
             cc._MissingScript = module.exports = MissingScript;
         }), {
-            "../utils/misc": 161
+            "../utils/misc": 162
         } ],
-        80: [ (function(require, module, exports) {
+        81: [ (function(require, module, exports) {
             var JS = cc.js;
             require("../event/event");
             var EventMouse = function(eventType, bubbles) {
@@ -14697,9 +14726,9 @@
             cc.Event.EventKeyboard = EventKeyboard;
             module.exports = cc.Event;
         }), {
-            "../event/event": 84
+            "../event/event": 85
         } ],
-        81: [ (function(require, module, exports) {
+        82: [ (function(require, module, exports) {
             var EventTarget = require("../event/event-target");
             var EventType = cc.Enum({
                 KEY_DOWN: "keydown",
@@ -14766,9 +14795,9 @@
             cc.SystemEvent = module.exports = SystemEvent;
             cc.systemEvent = new cc.SystemEvent();
         }), {
-            "../event/event-target": 83
+            "../event/event-target": 84
         } ],
-        82: [ (function(require, module, exports) {
+        83: [ (function(require, module, exports) {
             var JS = cc.js;
             var CallbacksHandler = require("../platform/callbacks-invoker").CallbacksHandler;
             var REMOVE_PLACEHOLDER = CallbacksHandler.REMOVE_PLACEHOLDER;
@@ -14810,9 +14839,9 @@
             };
             module.exports = EventListeners;
         }), {
-            "../platform/callbacks-invoker": 144
+            "../platform/callbacks-invoker": 145
         } ],
-        83: [ (function(require, module, exports) {
+        84: [ (function(require, module, exports) {
             var EventListeners = require("./event-listeners");
             require("./event");
             var JS = cc.js;
@@ -14952,10 +14981,10 @@
             EventTarget.prototype._EventTargetTargetOff = EventTarget.prototype.targetOff;
             cc.EventTarget = module.exports = EventTarget;
         }), {
-            "./event": 84,
-            "./event-listeners": 82
+            "./event": 85,
+            "./event-listeners": 83
         } ],
-        84: [ (function(require, module, exports) {
+        85: [ (function(require, module, exports) {
             var JS = require("../platform/js");
             cc.Event = function(type, bubbles) {
                 this.type = type;
@@ -15031,18 +15060,18 @@
             cc.Event.EventCustom = EventCustom;
             module.exports = cc.Event;
         }), {
-            "../platform/js": 150
+            "../platform/js": 151
         } ],
-        85: [ (function(require, module, exports) {
+        86: [ (function(require, module, exports) {
             require("./event");
             require("./event-listeners");
             require("./event-target");
         }), {
-            "./event": 84,
-            "./event-listeners": 82,
-            "./event-target": 83
+            "./event": 85,
+            "./event-listeners": 83,
+            "./event-target": 84
         } ],
-        86: [ (function(require, module, exports) {
+        87: [ (function(require, module, exports) {
             "use strict";
             module.exports = earcut;
             function earcut(data, holeIndices, dim) {
@@ -15492,7 +15521,7 @@
                 return result;
             };
         }), {} ],
-        87: [ (function(require, module, exports) {
+        88: [ (function(require, module, exports) {
             var Js = cc.js;
             var LineCap = require("./types").LineCap;
             var LineJoin = require("./types").LineJoin;
@@ -15626,10 +15655,10 @@
             };
             module.exports = CanvasRenderCmd;
         }), {
-            "./helper": 91,
-            "./types": 93
+            "./helper": 92,
+            "./types": 94
         } ],
-        88: [ (function(require, module, exports) {
+        89: [ (function(require, module, exports) {
             var CanvasRenderCmd = require("./graphics-canvas-cmd");
             var WebGLRenderCmd = require("./graphics-webgl-cmd");
             var LineCap = require("./types").LineCap;
@@ -15741,11 +15770,11 @@
             };
             module.exports = GraphicsNode;
         }), {
-            "./graphics-canvas-cmd": 87,
-            "./graphics-webgl-cmd": 89,
-            "./types": 93
+            "./graphics-canvas-cmd": 88,
+            "./graphics-webgl-cmd": 90,
+            "./types": 94
         } ],
-        89: [ (function(require, module, exports) {
+        90: [ (function(require, module, exports) {
             var LineCap = require("./types").LineCap;
             var LineJoin = require("./types").LineJoin;
             var Earcut = require("./earcut");
@@ -16484,11 +16513,11 @@
             };
             module.exports = WebGLRenderCmd;
         }), {
-            "./earcut": 86,
-            "./helper": 91,
-            "./types": 93
+            "./earcut": 87,
+            "./helper": 92,
+            "./types": 94
         } ],
-        90: [ (function(require, module, exports) {
+        91: [ (function(require, module, exports) {
             var LineCap = require("./types").LineCap;
             var LineJoin = require("./types").LineJoin;
             var Graphics = cc.Class({
@@ -16624,9 +16653,9 @@
             });
             cc.Graphics = module.exports = Graphics;
         }), {
-            "./types": 93
+            "./types": 94
         } ],
-        91: [ (function(require, module, exports) {
+        92: [ (function(require, module, exports) {
             var PI = Math.PI;
             var min = Math.min;
             var max = Math.max;
@@ -16709,7 +16738,7 @@
                 roundRect: roundRect
             };
         }), {} ],
-        92: [ (function(require, module, exports) {
+        93: [ (function(require, module, exports) {
             "use strict";
             var GraphicsNode;
             GraphicsNode = cc.sys.isNative ? _ccsg.GraphicsNode = cc.GraphicsNode : _ccsg.GraphicsNode = require("./graphics-node");
@@ -16719,11 +16748,11 @@
             }
             require("./graphics");
         }), {
-            "../utils/misc": 161,
-            "./graphics": 90,
-            "./graphics-node": 88
+            "../utils/misc": 162,
+            "./graphics": 91,
+            "./graphics-node": 89
         } ],
-        93: [ (function(require, module, exports) {
+        94: [ (function(require, module, exports) {
             "use strict";
             var LineCap = cc.Enum({
                 BUTT: 0,
@@ -16740,7 +16769,7 @@
                 LineJoin: LineJoin
             };
         }), {} ],
-        94: [ (function(require, module, exports) {
+        95: [ (function(require, module, exports) {
             require("./platform");
             require("./assets");
             require("./CCNode");
@@ -16758,12 +16787,12 @@
             "./base-ui/CCWidgetManager": 37,
             "./camera/CCCamera": 38,
             "./collider": 46,
-            "./components": 78,
-            "./graphics": 92,
-            "./physics": 123,
-            "./platform": 147
+            "./components": 79,
+            "./graphics": 93,
+            "./physics": 124,
+            "./platform": 148
         } ],
-        95: [ (function(require, module, exports) {
+        96: [ (function(require, module, exports) {
             var eventRegx = /^(click)(\s)*=/;
             cc.HtmlTextParser = function() {
                 this._parsedObject = {};
@@ -17009,7 +17038,7 @@
             };
             cc.htmlTextParser = new cc.HtmlTextParser();
         }), {} ],
-        96: [ (function(require, module, exports) {
+        97: [ (function(require, module, exports) {
             var CustomFontDescriptor = function() {
                 this._status = "unloaded";
                 this._observers = [];
@@ -17212,7 +17241,7 @@
             cc.TextUtils = module.exports = TextUtils;
             cc.CustomFontLoader = module.exports = CustomFontLoader;
         }), {} ],
-        97: [ (function(require, module, exports) {
+        98: [ (function(require, module, exports) {
             var JS = require("../platform/js");
             var Pipeline = require("./pipeline");
             var LoadingItems = require("./loading-items");
@@ -17580,17 +17609,17 @@
             cc.loader = new CCLoader();
             module.exports = cc.loader;
         }), {
-            "../platform/js": 150,
-            "../platform/utils": 155,
-            "./asset-loader": 98,
-            "./asset-table": 99,
-            "./auto-release-utils": 100,
-            "./downloader": 101,
-            "./loader": 104,
-            "./loading-items": 105,
-            "./pipeline": 108
+            "../platform/js": 151,
+            "../platform/utils": 156,
+            "./asset-loader": 99,
+            "./asset-table": 100,
+            "./auto-release-utils": 101,
+            "./downloader": 102,
+            "./loader": 105,
+            "./loading-items": 106,
+            "./pipeline": 109
         } ],
-        98: [ (function(require, module, exports) {
+        99: [ (function(require, module, exports) {
             var Path = require("../utils/CCPath");
             var Pipeline = require("./pipeline");
             var LoadingItems = require("./loading-items");
@@ -17643,11 +17672,11 @@
             };
             Pipeline.AssetLoader = module.exports = AssetLoader;
         }), {
-            "../utils/CCPath": 156,
-            "./loading-items": 105,
-            "./pipeline": 108
+            "../utils/CCPath": 157,
+            "./loading-items": 106,
+            "./pipeline": 109
         } ],
-        99: [ (function(require, module, exports) {
+        100: [ (function(require, module, exports) {
             function Entry(uuid, type) {
                 this.uuid = uuid;
                 this.type = type;
@@ -17727,7 +17756,7 @@
             };
             module.exports = AssetTable;
         }), {} ],
-        100: [ (function(require, module, exports) {
+        101: [ (function(require, module, exports) {
             function parseDepends(key, parsed) {
                 var item = cc.loader.getItem(key);
                 if (item) {
@@ -17769,7 +17798,7 @@
                 }
             };
         }), {} ],
-        101: [ (function(require, module, exports) {
+        102: [ (function(require, module, exports) {
             var JS = require("../platform/js");
             var Path = require("../utils/CCPath");
             var misc = require("../utils/misc");
@@ -17981,16 +18010,16 @@
             };
             Pipeline.Downloader = module.exports = Downloader;
         }), {
-            "../platform/js": 150,
-            "../utils/CCPath": 156,
-            "../utils/misc": 161,
-            "./audio-downloader": 216,
-            "./pack-downloader": 107,
-            "./pipeline": 108,
-            "./text-downloader": 109,
-            "./utils": 110
+            "../platform/js": 151,
+            "../utils/CCPath": 157,
+            "../utils/misc": 162,
+            "./audio-downloader": 217,
+            "./pack-downloader": 108,
+            "./pipeline": 109,
+            "./text-downloader": 110,
+            "./utils": 111
         } ],
-        102: [ (function(require, module, exports) {
+        103: [ (function(require, module, exports) {
             require("./downloader");
             require("./loader");
             require("./json-unpacker");
@@ -17998,14 +18027,14 @@
             require("./pipeline");
             require("./CCLoader");
         }), {
-            "./CCLoader": 97,
-            "./downloader": 101,
-            "./json-unpacker": 103,
-            "./loader": 104,
-            "./loading-items": 105,
-            "./pipeline": 108
+            "./CCLoader": 98,
+            "./downloader": 102,
+            "./json-unpacker": 104,
+            "./loader": 105,
+            "./loading-items": 106,
+            "./pipeline": 109
         } ],
-        103: [ (function(require, module, exports) {
+        104: [ (function(require, module, exports) {
             function JsonUnpacker() {
                 this.jsons = {};
                 this.state = -1;
@@ -18024,7 +18053,7 @@
             };
             module.exports = JsonUnpacker;
         }), {} ],
-        104: [ (function(require, module, exports) {
+        105: [ (function(require, module, exports) {
             var JS = require("../platform/js");
             var Pipeline = require("./pipeline");
             var Texture2D = require("../textures/CCTexture2D");
@@ -18100,13 +18129,13 @@
             };
             Pipeline.Loader = module.exports = Loader;
         }), {
-            "../platform/js": 150,
-            "../textures/CCTexture2D": 216,
-            "../utils/misc": 161,
-            "./pipeline": 108,
-            "./uuid-loader": 111
+            "../platform/js": 151,
+            "../textures/CCTexture2D": 217,
+            "../utils/misc": 162,
+            "./pipeline": 109,
+            "./uuid-loader": 112
         } ],
-        105: [ (function(require, module, exports) {
+        106: [ (function(require, module, exports) {
             var CallbacksInvoker = require("../platform/callbacks-invoker");
             var Path = require("../utils/CCPath");
             var JS = require("../platform/js");
@@ -18442,11 +18471,11 @@
             };
             cc.LoadingItems = module.exports = LoadingItems;
         }), {
-            "../platform/callbacks-invoker": 144,
-            "../platform/js": 150,
-            "../utils/CCPath": 156
+            "../platform/callbacks-invoker": 145,
+            "../platform/js": 151,
+            "../utils/CCPath": 157
         } ],
-        106: [ (function(require, module, exports) {
+        107: [ (function(require, module, exports) {
             var Pipeline = require("./pipeline");
             var ID = "MD5Pipe";
             var ExtnameRegex = /(\.[^.\n\\/]*)$/;
@@ -18482,9 +18511,9 @@
             };
             Pipeline.MD5Pipe = module.exports = MD5Pipe;
         }), {
-            "./pipeline": 108
+            "./pipeline": 109
         } ],
-        107: [ (function(require, module, exports) {
+        108: [ (function(require, module, exports) {
             var JsonUnpacker = require("./json-unpacker");
             var uuidToPack = {};
             var packIndices = {};
@@ -18583,9 +18612,9 @@
                 }
             };
         }), {
-            "./json-unpacker": 103
+            "./json-unpacker": 104
         } ],
-        108: [ (function(require, module, exports) {
+        109: [ (function(require, module, exports) {
             var JS = require("../platform/js");
             var LoadingItems = require("./loading-items");
             var ItemState = LoadingItems.ItemState;
@@ -18742,10 +18771,10 @@
             };
             cc.Pipeline = module.exports = Pipeline;
         }), {
-            "../platform/js": 150,
-            "./loading-items": 105
+            "../platform/js": 151,
+            "./loading-items": 106
         } ],
-        109: [ (function(require, module, exports) {
+        110: [ (function(require, module, exports) {
             var urlAppendTimestamp;
             module.exports = function(item, callback) {
                 var url = item.url;
@@ -18753,9 +18782,9 @@
                 return "string" === (__typeofVal = typeof result, "object" === __typeofVal ? __realTypeOfObj(result) : __typeofVal) && result ? result : new Error("Download text failed: " + url);
             };
         }), {
-            "./utils": 110
+            "./utils": 111
         } ],
-        110: [ (function(require, module, exports) {
+        111: [ (function(require, module, exports) {
             var _noCacheRex = /\?/;
             module.exports = {
                 urlAppendTimestamp: function(url) {
@@ -18764,7 +18793,7 @@
                 }
             };
         }), {} ],
-        111: [ (function(require, module, exports) {
+        112: [ (function(require, module, exports) {
             var JS = require("../platform/js");
             require("../platform/deserialize");
             var LoadingItems = require("./loading-items");
@@ -18920,11 +18949,11 @@
             module.exports = loadUuid;
             loadUuid.isSceneObj = isSceneObj;
         }), {
-            "../platform/deserialize": 145,
-            "../platform/js": 150,
-            "./loading-items": 105
+            "../platform/deserialize": 146,
+            "../platform/js": 151,
+            "./loading-items": 106
         } ],
-        112: [ (function(require, module, exports) {
+        113: [ (function(require, module, exports) {
             var CompScheduler = require("./component-scheduler");
             var Flags = require("./platform/CCObject").Flags;
             var JS = require("./platform/js");
@@ -19099,11 +19128,11 @@
             module.exports = NodeActivator;
         }), {
             "./component-scheduler": 47,
-            "./platform/CCObject": 139,
-            "./platform/js": 150,
-            "./utils/misc": 161
+            "./platform/CCObject": 140,
+            "./platform/js": 151,
+            "./utils/misc": 162
         } ],
-        113: [ (function(require, module, exports) {
+        114: [ (function(require, module, exports) {
             var PTM_RATIO = require("./CCPhysicsTypes").PTM_RATIO;
             var ContactType = require("./CCPhysicsTypes").ContactType;
             var pools = [];
@@ -19318,9 +19347,9 @@
             PhysicsContact.ContactType = ContactType;
             cc.PhysicsContact = module.exports = PhysicsContact;
         }), {
-            "./CCPhysicsTypes": 115
+            "./CCPhysicsTypes": 116
         } ],
-        114: [ (function(require, module, exports) {
+        115: [ (function(require, module, exports) {
             var ContactType = require("./CCPhysicsTypes").ContactType;
             var BodyType = require("./CCPhysicsTypes").BodyType;
             var RayCastType = require("./CCPhysicsTypes").RayCastType;
@@ -19616,9 +19645,9 @@
             }));
             cc.PhysicsManager = module.exports = PhysicsManager;
         }), {
-            "./CCPhysicsTypes": 115
+            "./CCPhysicsTypes": 116
         } ],
-        115: [ (function(require, module, exports) {
+        116: [ (function(require, module, exports) {
             var ContactType = {
                 BEGIN_CONTACT: "begin-contact",
                 END_CONTACT: "end-contact",
@@ -19648,7 +19677,7 @@
                 PHYSICS_ANGLE_TO_ANGLE: -180 / Math.PI
             };
         }), {} ],
-        116: [ (function(require, module, exports) {
+        117: [ (function(require, module, exports) {
             function At(i, vertices) {
                 var s = vertices.length;
                 return vertices[i < 0 ? s - -i % s : i % s];
@@ -19668,8 +19697,8 @@
                 var list = [];
                 var d, lowerDist, upperDist;
                 var p;
-                var lowervar = cc.v2();
-                var uppervar = cc.v2();
+                var lowerInt = cc.v2();
+                var upperInt = cc.v2();
                 var lowerIndex = 0, upperIndex = 0;
                 var lowerPoly, upperPoly;
                 for (var i = 0; i < vertices.length; ++i) {
@@ -19682,7 +19711,7 @@
                                     d = SquareDist(At(i, vertices), p);
                                     if (d < lowerDist) {
                                         lowerDist = d;
-                                        lowervar = p;
+                                        lowerInt = p;
                                         lowerIndex = j;
                                     }
                                 }
@@ -19694,17 +19723,17 @@
                                     if (d < upperDist) {
                                         upperDist = d;
                                         upperIndex = j;
-                                        uppervar = p;
+                                        upperInt = p;
                                     }
                                 }
                             }
                         }
                         if (lowerIndex == (upperIndex + 1) % vertices.length) {
-                            var sp = lowervar.add(upperInt).div(2);
+                            var sp = lowerInt.add(upperInt).div(2);
                             lowerPoly = Copy(i, upperIndex, vertices);
-                            lowerPoly.Add(sp);
+                            lowerPoly.push(sp);
                             upperPoly = Copy(lowerIndex, i, vertices);
-                            upperPoly.Add(sp);
+                            upperPoly.push(sp);
                         } else {
                             var highestScore = 0, bestIndex = lowerIndex;
                             while (upperIndex < lowerIndex) {
@@ -19870,7 +19899,7 @@
                 IsCounterClockWise: IsCounterClockWise
             };
         }), {} ],
-        117: [ (function(require, module, exports) {
+        118: [ (function(require, module, exports) {
             var PTM_RATIO = require("./CCPhysicsTypes").PTM_RATIO;
             var ANGLE_TO_PHYSICS_ANGLE = require("./CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
             var PHYSICS_ANGLE_TO_ANGLE = require("./CCPhysicsTypes").PHYSICS_ANGLE_TO_ANGLE;
@@ -20278,10 +20307,10 @@
             });
             cc.RigidBody = module.exports = RigidBody;
         }), {
-            "./CCPhysicsTypes": 115,
-            "./utils": 133
+            "./CCPhysicsTypes": 116,
+            "./utils": 134
         } ],
-        118: [ (function(require, module, exports) {
+        119: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var PhysicsBoxCollider = cc.Class({
                 name: "cc.PhysicsBoxCollider",
@@ -20305,9 +20334,9 @@
             });
             cc.PhysicsBoxCollider = module.exports = PhysicsBoxCollider;
         }), {
-            "../CCPhysicsTypes": 115
+            "../CCPhysicsTypes": 116
         } ],
-        119: [ (function(require, module, exports) {
+        120: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var PhysicsChainCollider = cc.Class({
                 name: "cc.PhysicsChainCollider",
@@ -20347,9 +20376,9 @@
             });
             cc.PhysicsChainCollider = module.exports = PhysicsChainCollider;
         }), {
-            "../CCPhysicsTypes": 115
+            "../CCPhysicsTypes": 116
         } ],
-        120: [ (function(require, module, exports) {
+        121: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var PhysicsCircleCollider = cc.Class({
                 name: "cc.PhysicsCircleCollider",
@@ -20372,9 +20401,9 @@
             });
             cc.PhysicsCircleCollider = module.exports = PhysicsCircleCollider;
         }), {
-            "../CCPhysicsTypes": 115
+            "../CCPhysicsTypes": 116
         } ],
-        121: [ (function(require, module, exports) {
+        122: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var getWorldScale = require("../utils").getWorldScale;
             var PhysicsCollider = cc.Class({
@@ -20553,10 +20582,10 @@
             });
             cc.PhysicsCollider = module.exports = PhysicsCollider;
         }), {
-            "../CCPhysicsTypes": 115,
-            "../utils": 133
+            "../CCPhysicsTypes": 116,
+            "../utils": 134
         } ],
-        122: [ (function(require, module, exports) {
+        123: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var PolygonSeparator = require("../CCPolygonSeparator");
             var PhysicsPolygonCollider = cc.Class({
@@ -20603,10 +20632,10 @@
             });
             cc.PhysicsPolygonCollider = module.exports = PhysicsPolygonCollider;
         }), {
-            "../CCPhysicsTypes": 115,
-            "../CCPolygonSeparator": 116
+            "../CCPhysicsTypes": 116,
+            "../CCPolygonSeparator": 117
         } ],
-        123: [ (function(require, module, exports) {
+        124: [ (function(require, module, exports) {
             require("./CCPhysicsManager");
             require("./CCRigidBody");
             require("./CCPhysicsContact");
@@ -20625,31 +20654,31 @@
             require("./joint/CCWheelJoint");
             require("./joint/CCRopeJoint");
         }), {
-            "../../../external/box2d/box2d": 216,
-            "./CCPhysicsContact": 113,
-            "./CCPhysicsManager": 114,
-            "./CCRigidBody": 117,
-            "./collider/CCPhysicsBoxCollider": 118,
-            "./collider/CCPhysicsChainCollider": 119,
-            "./collider/CCPhysicsCircleCollider": 120,
-            "./collider/CCPhysicsCollider": 121,
-            "./collider/CCPhysicsPolygonCollider": 122,
-            "./joint/CCDistanceJoint": 124,
-            "./joint/CCJoint": 125,
-            "./joint/CCMotorJoint": 126,
-            "./joint/CCMouseJoint": 127,
-            "./joint/CCPrismaticJoint": 128,
-            "./joint/CCRevoluteJoint": 129,
-            "./joint/CCRopeJoint": 130,
-            "./joint/CCWeldJoint": 131,
-            "./joint/CCWheelJoint": 132,
-            "./platform/CCPhysicsAABBQueryCallback": 216,
-            "./platform/CCPhysicsContactListner": 216,
-            "./platform/CCPhysicsDebugDraw": 216,
-            "./platform/CCPhysicsRayCastCallback": 216,
-            "./platform/CCPhysicsUtils": 216
+            "../../../external/box2d/box2d": 217,
+            "./CCPhysicsContact": 114,
+            "./CCPhysicsManager": 115,
+            "./CCRigidBody": 118,
+            "./collider/CCPhysicsBoxCollider": 119,
+            "./collider/CCPhysicsChainCollider": 120,
+            "./collider/CCPhysicsCircleCollider": 121,
+            "./collider/CCPhysicsCollider": 122,
+            "./collider/CCPhysicsPolygonCollider": 123,
+            "./joint/CCDistanceJoint": 125,
+            "./joint/CCJoint": 126,
+            "./joint/CCMotorJoint": 127,
+            "./joint/CCMouseJoint": 128,
+            "./joint/CCPrismaticJoint": 129,
+            "./joint/CCRevoluteJoint": 130,
+            "./joint/CCRopeJoint": 131,
+            "./joint/CCWeldJoint": 132,
+            "./joint/CCWheelJoint": 133,
+            "./platform/CCPhysicsAABBQueryCallback": 217,
+            "./platform/CCPhysicsContactListner": 217,
+            "./platform/CCPhysicsDebugDraw": 217,
+            "./platform/CCPhysicsRayCastCallback": 217,
+            "./platform/CCPhysicsUtils": 217
         } ],
-        124: [ (function(require, module, exports) {
+        125: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var DistanceJoint = cc.Class({
                 name: "cc.DistanceJoint",
@@ -20702,9 +20731,9 @@
             });
             cc.DistanceJoint = module.exports = DistanceJoint;
         }), {
-            "../CCPhysicsTypes": 115
+            "../CCPhysicsTypes": 116
         } ],
-        125: [ (function(require, module, exports) {
+        126: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var Joint = cc.Class({
                 name: "cc.Joint",
@@ -20810,9 +20839,9 @@
             });
             cc.Joint = module.exports = Joint;
         }), {
-            "../CCPhysicsTypes": 115
+            "../CCPhysicsTypes": 116
         } ],
-        126: [ (function(require, module, exports) {
+        127: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
             var MotorJoint = cc.Class({
@@ -20900,9 +20929,9 @@
             });
             cc.MotorJoint = module.exports = MotorJoint;
         }), {
-            "../CCPhysicsTypes": 115
+            "../CCPhysicsTypes": 116
         } ],
-        127: [ (function(require, module, exports) {
+        128: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var tempB2Vec2 = new b2.Vec2();
             var MouseJoint = cc.Class({
@@ -21037,9 +21066,9 @@
             });
             cc.MouseJoint = module.exports = MouseJoint;
         }), {
-            "../CCPhysicsTypes": 115
+            "../CCPhysicsTypes": 116
         } ],
-        128: [ (function(require, module, exports) {
+        129: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
             var PrismaticJoint = cc.Class({
@@ -21111,9 +21140,9 @@
             });
             cc.PrismaticJoint = module.exports = PrismaticJoint;
         }), {
-            "../CCPhysicsTypes": 115
+            "../CCPhysicsTypes": 116
         } ],
-        129: [ (function(require, module, exports) {
+        130: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
             var PHYSICS_ANGLE_TO_ANGLE = require("../CCPhysicsTypes").PHYSICS_ANGLE_TO_ANGLE;
@@ -21201,9 +21230,9 @@
             });
             cc.RevoluteJoint = module.exports = RevoluteJoint;
         }), {
-            "../CCPhysicsTypes": 115
+            "../CCPhysicsTypes": 116
         } ],
-        130: [ (function(require, module, exports) {
+        131: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var RopeJoint = cc.Class({
                 name: "cc.RopeJoint",
@@ -21232,9 +21261,9 @@
             });
             cc.RopeJoint = module.exports = RopeJoint;
         }), {
-            "../CCPhysicsTypes": 115
+            "../CCPhysicsTypes": 116
         } ],
-        131: [ (function(require, module, exports) {
+        132: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
             var WeldJoint = cc.Class({
@@ -21281,9 +21310,9 @@
             });
             cc.WeldJoint = module.exports = WeldJoint;
         }), {
-            "../CCPhysicsTypes": 115
+            "../CCPhysicsTypes": 116
         } ],
-        132: [ (function(require, module, exports) {
+        133: [ (function(require, module, exports) {
             var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
             var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
             var WheelJoint = cc.Class({
@@ -21366,9 +21395,9 @@
             });
             cc.WheelJoint = module.exports = WheelJoint;
         }), {
-            "../CCPhysicsTypes": 115
+            "../CCPhysicsTypes": 116
         } ],
-        133: [ (function(require, module, exports) {
+        134: [ (function(require, module, exports) {
             function getWorldRotation(node) {
                 var rot = node.rotationX;
                 var parent = node.parent;
@@ -21404,7 +21433,7 @@
                 convertToNodeRotation: convertToNodeRotation
             };
         }), {} ],
-        134: [ (function(require, module, exports) {
+        135: [ (function(require, module, exports) {
             var Asset = require("../assets/CCAsset");
             var callInNextTick = require("./utils").callInNextTick;
             var Loader = require("../load-pipeline/CCLoader");
@@ -21565,14 +21594,14 @@
             module.exports = cc.AssetLibrary = AssetLibrary;
         }), {
             "../assets/CCAsset": 25,
-            "../load-pipeline/CCLoader": 97,
-            "../load-pipeline/auto-release-utils": 100,
-            "../load-pipeline/md5-pipe": 106,
-            "../load-pipeline/pack-downloader": 107,
-            "../utils/decode-uuid": 159,
-            "./utils": 155
+            "../load-pipeline/CCLoader": 98,
+            "../load-pipeline/auto-release-utils": 101,
+            "../load-pipeline/md5-pipe": 107,
+            "../load-pipeline/pack-downloader": 108,
+            "../utils/decode-uuid": 160,
+            "./utils": 156
         } ],
-        135: [ (function(require, module, exports) {
+        136: [ (function(require, module, exports) {
             var JS = require("./js");
             var Enum = require("./CCEnum");
             var Utils = require("./utils");
@@ -22091,14 +22120,14 @@
                 getDefault: getDefault
             };
         }), {
-            "./CCEnum": 137,
-            "./attribute": 143,
-            "./js": 150,
-            "./preprocess-class": 152,
-            "./requiring-frame": 153,
-            "./utils": 155
+            "./CCEnum": 138,
+            "./attribute": 144,
+            "./js": 151,
+            "./preprocess-class": 153,
+            "./requiring-frame": 154,
+            "./utils": 156
         } ],
-        136: [ (function(require, module, exports) {
+        137: [ (function(require, module, exports) {
             require("./CCClass");
             var Preprocess = require("./preprocess-class");
             var JS = require("./js");
@@ -22235,12 +22264,12 @@
                 mixins: mixins
             };
         }), {
-            "./CCClass": 135,
-            "./js": 150,
-            "./preprocess-class": 152,
-            "./utils": 155
+            "./CCClass": 136,
+            "./js": 151,
+            "./preprocess-class": 153,
+            "./utils": 156
         } ],
-        137: [ (function(require, module, exports) {
+        138: [ (function(require, module, exports) {
             var JS = require("./js");
             function Enum(obj) {
                 if ("__enums__" in obj) {
@@ -22292,9 +22321,9 @@
             var _TestEnum;
             module.exports = cc.Enum = Enum;
         }), {
-            "./js": 150
+            "./js": 151
         } ],
-        138: [ (function(require, module, exports) {
+        139: [ (function(require, module, exports) {
             require("./_CCClass");
             cc.KEY = {
                 none: 0,
@@ -22534,7 +22563,7 @@
                 ENABLE_STACKABLE_ACTIONS: 1,
                 ENABLE_GL_STATE_CACHE: 1,
                 TOUCH_TIMEOUT: 5e3,
-                BATCH_VERTEX_COUNT: 2e3,
+                BATCH_VERTEX_COUNT: 2e4,
                 ENABLE_GC_FOR_NATIVE_OBJECTS: true,
                 ENABLE_TILEDMAP_CULLING: true,
                 DOWNLOAD_MAX_CONCURRENT: 64,
@@ -22576,9 +22605,9 @@
             };
             module.exports = cc.macro;
         }), {
-            "./_CCClass": 142
+            "./_CCClass": 143
         } ],
-        139: [ (function(require, module, exports) {
+        140: [ (function(require, module, exports) {
             var JS = require("./js");
             var CCClass = require("./CCClass");
             var Destroyed = 1;
@@ -22741,10 +22770,10 @@
             };
             cc.Object = module.exports = CCObject;
         }), {
-            "./CCClass": 135,
-            "./js": 150
+            "./CCClass": 136,
+            "./js": 151
         } ],
-        140: [ (function(require, module, exports) {
+        141: [ (function(require, module, exports) {
             if (cc.sys) {
                 return;
             }
@@ -23055,7 +23084,7 @@
             };
             module.exports = sys;
         }), {} ],
-        141: [ (function(require, module, exports) {
+        142: [ (function(require, module, exports) {
             cc.visibleRect = {
                 topLeft: cc.p(0, 0),
                 topRight: cc.p(0, 0),
@@ -23093,7 +23122,7 @@
                 }
             };
         }), {} ],
-        142: [ (function(require, module, exports) {
+        143: [ (function(require, module, exports) {
             var ClassManager = cc.ClassManager = {
                 instanceId: 0 | 998 * Math.random(),
                 getNewInstanceId: function() {
@@ -23210,7 +23239,7 @@
             };
             cc._Class = module.exports = Class;
         }), {} ],
-        143: [ (function(require, module, exports) {
+        144: [ (function(require, module, exports) {
             var JS = require("./js");
             var isPlainEmptyObj = require("./utils").isPlainEmptyObj_DEV;
             var DELIMETER = "$_$";
@@ -23300,11 +23329,11 @@
                 ScriptUuid: {}
             };
         }), {
-            "./CCClass": 135,
-            "./js": 150,
-            "./utils": 155
+            "./CCClass": 136,
+            "./js": 151,
+            "./utils": 156
         } ],
-        144: [ (function(require, module, exports) {
+        145: [ (function(require, module, exports) {
             var JS = require("./js");
             var CallbacksHandler = function() {
                 this._callbackTable = {};
@@ -23490,9 +23519,9 @@
             CallbacksInvoker.CallbacksHandler = CallbacksHandler;
             module.exports = CallbacksInvoker;
         }), {
-            "./js": 150
+            "./js": 151
         } ],
-        145: [ (function(require, module, exports) {
+        146: [ (function(require, module, exports) {
             var JS = require("./js");
             var CCObject = require("./CCObject");
             var Attr = require("./attribute");
@@ -23777,12 +23806,12 @@
                 cc.warnID(5302, id);
             };
         }), {
-            "./CCClass": 135,
-            "./CCObject": 139,
-            "./attribute": 143,
-            "./js": 150
+            "./CCClass": 136,
+            "./CCObject": 140,
+            "./attribute": 144,
+            "./js": 151
         } ],
-        146: [ (function(require, module, exports) {
+        147: [ (function(require, module, exports) {
             var NonUuidMark = ".";
             function IdGenerater(category) {
                 this.id = 0 | 998 * Math.random();
@@ -23794,7 +23823,7 @@
             IdGenerater.global = new IdGenerater("global");
             module.exports = IdGenerater;
         }), {} ],
-        147: [ (function(require, module, exports) {
+        148: [ (function(require, module, exports) {
             require("./js");
             require("./CCClass");
             require("./CCClassDecorator");
@@ -23810,24 +23839,24 @@
             require("./CCMacro");
             require("./CCAssetLibrary");
         }), {
-            "./CCAssetLibrary": 134,
-            "./CCClass": 135,
-            "./CCClassDecorator": 136,
-            "./CCEnum": 137,
-            "./CCMacro": 138,
-            "./CCObject": 139,
-            "./CCSys": 140,
-            "./CCVisibleRect": 141,
-            "./callbacks-invoker": 144,
-            "./deserialize": 145,
-            "./instantiate": 149,
-            "./instantiate-jit": 148,
-            "./js": 150,
-            "./miniFramework": 151,
-            "./requiring-frame": 153,
-            "./url": 154
+            "./CCAssetLibrary": 135,
+            "./CCClass": 136,
+            "./CCClassDecorator": 137,
+            "./CCEnum": 138,
+            "./CCMacro": 139,
+            "./CCObject": 140,
+            "./CCSys": 141,
+            "./CCVisibleRect": 142,
+            "./callbacks-invoker": 145,
+            "./deserialize": 146,
+            "./instantiate": 150,
+            "./instantiate-jit": 149,
+            "./js": 151,
+            "./miniFramework": 152,
+            "./requiring-frame": 154,
+            "./url": 155
         } ],
-        148: [ (function(require, module, exports) {
+        149: [ (function(require, module, exports) {
             var CCObject = require("./CCObject");
             var Destroyed = CCObject.Flags.Destroyed;
             var PersistentMask = CCObject.Flags.PersistentMask;
@@ -24143,12 +24172,12 @@
                 equalsToDefault: equalsToDefault
             };
         }), {
-            "./CCClass": 135,
-            "./CCObject": 139,
-            "./attribute": 143,
-            "./js": 150
+            "./CCClass": 136,
+            "./CCObject": 140,
+            "./attribute": 144,
+            "./js": 151
         } ],
-        149: [ (function(require, module, exports) {
+        150: [ (function(require, module, exports) {
             var CCObject = require("./CCObject");
             var Destroyed = CCObject.Flags.Destroyed;
             var PersistentMask = CCObject.Flags.PersistentMask;
@@ -24294,11 +24323,11 @@
             cc.instantiate = instantiate;
             module.exports = instantiate;
         }), {
-            "./CCObject": 139,
-            "./attribute": 143,
-            "./utils": 155
+            "./CCObject": 140,
+            "./attribute": 144,
+            "./utils": 156
         } ],
-        150: [ (function(require, module, exports) {
+        151: [ (function(require, module, exports) {
             var tempCIDGenerater = new (require("./id-generater"))("TmpCId.");
             function _getPropertyDescriptor(obj, name) {
                 while (obj) {
@@ -24683,10 +24712,10 @@
             cc.js = js;
             module.exports = js;
         }), {
-            "../utils/mutable-forward-iterator": 162,
-            "./id-generater": 146
+            "../utils/mutable-forward-iterator": 163,
+            "./id-generater": 147
         } ],
-        151: [ (function(require, module, exports) {
+        152: [ (function(require, module, exports) {
             cc.$ = function(x) {
                 var parent = this === cc ? document : this;
                 var el = x instanceof HTMLElement ? x : parent.querySelector(x);
@@ -24820,7 +24849,7 @@
                 };
             };
         }), {} ],
-        152: [ (function(require, module, exports) {
+        153: [ (function(require, module, exports) {
             var SerializableAttrs = {
                 url: {
                     canUsedInGet: true
@@ -24935,9 +24964,9 @@
                 return true;
             };
         }), {
-            "./CCClass": 135
+            "./CCClass": 136
         } ],
-        153: [ (function(require, module, exports) {
+        154: [ (function(require, module, exports) {
             var requiringFrames = [];
             cc._RF = {
                 push: function(module, uuid, script) {
@@ -24972,7 +25001,7 @@
             cc._RFpop = cc._RF.pop;
             cc._RFpeek = cc._RF.peek;
         }), {} ],
-        154: [ (function(require, module, exports) {
+        155: [ (function(require, module, exports) {
             var _mounts = {};
             cc.url = {
                 _rawAssets: "",
@@ -24999,7 +25028,7 @@
             };
             module.exports = cc.url;
         }), {} ],
-        155: [ (function(require, module, exports) {
+        156: [ (function(require, module, exports) {
             module.exports = {
                 contains: function(refNode, otherNode) {
                     if ("function" == (__typeofVal = typeof refNode.contains, "object" === __typeofVal ? __realTypeOfObj(refNode.contains) : __typeofVal)) {
@@ -25032,7 +25061,7 @@
                 }
             };
         }), {} ],
-        156: [ (function(require, module, exports) {
+        157: [ (function(require, module, exports) {
             require("../platform/CCSys");
             var EXTNAME_RE = /(\.[^\.\/\?\\]*)(\?.*)?$/;
             var NORMALIZE_RE = /[^\.\/]+\/\.\.\//;
@@ -25131,9 +25160,9 @@
             };
             module.exports = cc.path;
         }), {
-            "../platform/CCSys": 140
+            "../platform/CCSys": 141
         } ],
-        157: [ (function(require, module, exports) {
+        158: [ (function(require, module, exports) {
             var Flags = require("../platform/CCObject").Flags;
             var Misc = require("./misc");
             var IdGenerater = require("../platform/id-generater");
@@ -25579,11 +25608,11 @@
             Misc.propertyDefine(BaseNode, SameNameGetSets, {});
             cc._BaseNode = module.exports = BaseNode;
         }), {
-            "../platform/CCObject": 139,
-            "../platform/id-generater": 146,
-            "./misc": 161
+            "../platform/CCObject": 140,
+            "../platform/id-generater": 147,
+            "./misc": 162
         } ],
-        158: [ (function(require, module, exports) {
+        159: [ (function(require, module, exports) {
             var EPSILON = 1e-6;
             function binarySearchEpsilon(array, value) {
                 for (var l = 0, h = array.length - 1, m = h >>> 1; l <= h; m = l + h >>> 1) {
@@ -25603,7 +25632,7 @@
                 binarySearchEpsilon: binarySearchEpsilon
             };
         }), {} ],
-        159: [ (function(require, module, exports) {
+        160: [ (function(require, module, exports) {
             var Base64Values = require("./misc").BASE64_VALUES;
             var HexChars = "0123456789abcdef".split("");
             var _t = [ "", "", "", "" ];
@@ -25627,9 +25656,9 @@
                 return UuidTemplate.join("");
             };
         }), {
-            "./misc": 161
+            "./misc": 162
         } ],
-        160: [ (function(require, module, exports) {
+        161: [ (function(require, module, exports) {
             cc.find = module.exports = function(path, referenceNode) {
                 if (null == path) {
                     cc.errorID(5600);
@@ -25663,7 +25692,7 @@
                 return match;
             };
         }), {} ],
-        161: [ (function(require, module, exports) {
+        162: [ (function(require, module, exports) {
             var JS = require("../platform/js");
             var sys = require("../platform/CCSys");
             var misc = exports;
@@ -25724,10 +25753,10 @@
             }
             misc.BASE64_VALUES = BASE64_VALUES;
         }), {
-            "../platform/CCSys": 140,
-            "../platform/js": 150
+            "../platform/CCSys": 141,
+            "../platform/js": 151
         } ],
-        162: [ (function(require, module, exports) {
+        163: [ (function(require, module, exports) {
             function MutableForwardIterator(array) {
                 this.i = 0;
                 this.array = array;
@@ -25756,7 +25785,7 @@
             };
             module.exports = MutableForwardIterator;
         }), {} ],
-        163: [ (function(require, module, exports) {
+        164: [ (function(require, module, exports) {
             cc._PrefabInfo = cc.Class({
                 name: "cc.PrefabInfo",
                 properties: {
@@ -25806,7 +25835,7 @@
                 }
             };
         }), {} ],
-        164: [ (function(require, module, exports) {
+        165: [ (function(require, module, exports) {
             var SceneGraphUtils = {
                 removeSgNode: function() {
                     var node = this._sgNode;
@@ -25820,7 +25849,7 @@
             };
             module.exports = SceneGraphUtils;
         }), {} ],
-        165: [ (function(require, module, exports) {
+        166: [ (function(require, module, exports) {
             cc.AffineTransform = function(a, b, c, d, tx, ty) {
                 this.a = a;
                 this.b = b;
@@ -26047,7 +26076,7 @@
                 out.ty = determinant * (b * t.tx - a * t.ty);
             };
         }), {} ],
-        166: [ (function(require, module, exports) {
+        167: [ (function(require, module, exports) {
             var ValueType = require("./CCValueType");
             var JS = require("../platform/js");
             var Color = (function() {
@@ -26314,11 +26343,11 @@
             };
             module.exports = cc.Color;
         }), {
-            "../platform/CCClass": 135,
-            "../platform/js": 150,
-            "./CCValueType": 172
+            "../platform/CCClass": 136,
+            "../platform/js": 151,
+            "./CCValueType": 173
         } ],
-        167: [ (function(require, module, exports) {
+        168: [ (function(require, module, exports) {
             var POINT_EPSILON = parseFloat("1.192092896e-07F");
             cc.pNeg = function(point) {
                 return cc.p(-point.x, -point.y);
@@ -26498,7 +26527,7 @@
                 cc.pMultIn(v, 1 / Math.sqrt(v.x * v.x + v.y * v.y));
             };
         }), {} ],
-        168: [ (function(require, module, exports) {
+        169: [ (function(require, module, exports) {
             var ValueType = require("./CCValueType");
             var JS = require("../platform/js");
             function Rect(x, y, w, h) {
@@ -26667,11 +26696,11 @@
             };
             module.exports = cc.Rect;
         }), {
-            "../platform/CCClass": 135,
-            "../platform/js": 150,
-            "./CCValueType": 172
+            "../platform/CCClass": 136,
+            "../platform/js": 151,
+            "./CCValueType": 173
         } ],
-        169: [ (function(require, module, exports) {
+        170: [ (function(require, module, exports) {
             var ValueType = require("./CCValueType");
             var JS = require("../platform/js");
             function Size(width, height) {
@@ -26716,11 +26745,11 @@
             };
             cc.Size = module.exports = Size;
         }), {
-            "../platform/CCClass": 135,
-            "../platform/js": 150,
-            "./CCValueType": 172
+            "../platform/CCClass": 136,
+            "../platform/js": 151,
+            "./CCValueType": 173
         } ],
-        170: [ (function(require, module, exports) {
+        171: [ (function(require, module, exports) {
             cc.Acceleration = function(x, y, z, timestamp) {
                 this.x = x || 0;
                 this.y = y || 0;
@@ -26875,7 +26904,7 @@
                 }
             });
         }), {} ],
-        171: [ (function(require, module, exports) {
+        172: [ (function(require, module, exports) {
             cc.WebGLColor = function(r, g, b, a, arrayBuffer, offset) {
                 this._arrayBuffer = arrayBuffer || new ArrayBuffer(cc.WebGLColor.BYTES_PER_ELEMENT);
                 this._offset = offset || 0;
@@ -27332,7 +27361,7 @@
             cc.js.getset(_p, "b", _p._getB, _p._setB);
             cc.js.getset(_p, "c", _p._getC, _p._setC);
         }), {} ],
-        172: [ (function(require, module, exports) {
+        173: [ (function(require, module, exports) {
             var JS = require("../platform/js");
             function ValueType() {}
             JS.setClassName("cc.ValueType", ValueType);
@@ -27343,9 +27372,9 @@
             cc.ValueType = ValueType;
             module.exports = ValueType;
         }), {
-            "../platform/js": 150
+            "../platform/js": 151
         } ],
-        173: [ (function(require, module, exports) {
+        174: [ (function(require, module, exports) {
             var ValueType = require("./CCValueType");
             var JS = require("../platform/js");
             var CCClass = require("../platform/CCClass");
@@ -27535,11 +27564,11 @@
             };
             module.exports = cc.Vec2;
         }), {
-            "../platform/CCClass": 135,
-            "../platform/js": 150,
-            "./CCValueType": 172
+            "../platform/CCClass": 136,
+            "../platform/js": 151,
+            "./CCValueType": 173
         } ],
-        174: [ (function(require, module, exports) {
+        175: [ (function(require, module, exports) {
             require("./CCValueType");
             require("./CCVec2");
             require("./CCPointExtension");
@@ -27550,17 +27579,17 @@
             require("./CCAffineTransform");
             require("./CCTypesWebGL");
         }), {
-            "./CCAffineTransform": 165,
-            "./CCColor": 166,
-            "./CCPointExtension": 167,
-            "./CCRect": 168,
-            "./CCSize": 169,
-            "./CCTypes": 170,
-            "./CCTypesWebGL": 171,
-            "./CCValueType": 172,
-            "./CCVec2": 173
+            "./CCAffineTransform": 166,
+            "./CCColor": 167,
+            "./CCPointExtension": 168,
+            "./CCRect": 169,
+            "./CCSize": 170,
+            "./CCTypes": 171,
+            "./CCTypesWebGL": 172,
+            "./CCValueType": 173,
+            "./CCVec2": 174
         } ],
-        175: [ (function(require, module, exports) {
+        176: [ (function(require, module, exports) {
             var js = cc.js;
             function deprecateEnum(obj, oldPath, newPath, hasTypePrefixBefore) {
                 hasTypePrefixBefore = false !== hasTypePrefixBefore;
@@ -27650,7 +27679,7 @@
             var ERR;
             js.obsolete(cc.loader, "cc.loader.loadResAll", "loadResDir");
         }), {} ],
-        176: [ (function(require, module, exports) {
+        177: [ (function(require, module, exports) {
             require("./CCSGMotionStreak");
             require("./CCSGMotionStreakWebGLRenderCmd");
             var MotionStreak = cc.Class({
@@ -27715,7 +27744,7 @@
                         set: function(value) {
                             this._texture = value;
                             if (this._motionStreak) {
-                                cc.js.isString(value) && (value = cc.textureCache.addImage(value));
+                                value && cc.js.isString(value) && (value = cc.textureCache.addImage(value));
                                 this._motionStreak.setTexture(value);
                             }
                         },
@@ -27785,17 +27814,17 @@
             });
             cc.MotionStreak = module.exports = MotionStreak;
         }), {
-            "./CCSGMotionStreak": 216,
-            "./CCSGMotionStreakWebGLRenderCmd": 216
+            "./CCSGMotionStreak": 217,
+            "./CCSGMotionStreakWebGLRenderCmd": 217
         } ],
-        177: [ (function(require, module, exports) {
+        178: [ (function(require, module, exports) {
             var ParticleAsset = cc.Class({
                 name: "cc.ParticleAsset",
                 extends: cc.RawAsset
             });
             cc.ParticleAsset = module.exports = ParticleAsset;
         }), {} ],
-        178: [ (function(require, module, exports) {
+        179: [ (function(require, module, exports) {
             require("./CCParticleAsset");
             require("./CCSGParticleSystem");
             require("./CCSGParticleSystemCanvasRenderCmd");
@@ -28139,15 +28168,15 @@
             });
             cc.ParticleSystem = module.exports = ParticleSystem;
         }), {
-            "./CCParticleAsset": 177,
-            "./CCParticleBatchNode": 216,
-            "./CCParticleBatchNodeCanvasRenderCmd": 216,
-            "./CCParticleBatchNodeWebGLRenderCmd": 216,
-            "./CCSGParticleSystem": 216,
-            "./CCSGParticleSystemCanvasRenderCmd": 216,
-            "./CCSGParticleSystemWebGLRenderCmd": 216
+            "./CCParticleAsset": 178,
+            "./CCParticleBatchNode": 217,
+            "./CCParticleBatchNodeCanvasRenderCmd": 217,
+            "./CCParticleBatchNodeWebGLRenderCmd": 217,
+            "./CCSGParticleSystem": 217,
+            "./CCSGParticleSystemCanvasRenderCmd": 217,
+            "./CCSGParticleSystemWebGLRenderCmd": 217
         } ],
-        179: [ (function(require, module, exports) {
+        180: [ (function(require, module, exports) {
             require("./CCSGTMXLayer");
             require("./CCTMXLayerCanvasRenderCmd");
             require("./CCTMXLayerWebGLRenderCmd");
@@ -28326,11 +28355,11 @@
             });
             cc.TiledLayer = module.exports = TiledLayer;
         }), {
-            "./CCSGTMXLayer": 216,
-            "./CCTMXLayerCanvasRenderCmd": 216,
-            "./CCTMXLayerWebGLRenderCmd": 216
+            "./CCSGTMXLayer": 217,
+            "./CCTMXLayerCanvasRenderCmd": 217,
+            "./CCTMXLayerWebGLRenderCmd": 217
         } ],
-        180: [ (function(require, module, exports) {
+        181: [ (function(require, module, exports) {
             require("./CCTiledMapAsset");
             require("./CCTiledLayer");
             require("./CCTiledObjectGroup");
@@ -28759,12 +28788,12 @@
                 return [];
             }), false);
         }), {
-            "./CCSGTMXTiledMap": 216,
-            "./CCTiledLayer": 179,
-            "./CCTiledMapAsset": 181,
-            "./CCTiledObjectGroup": 182
+            "./CCSGTMXTiledMap": 217,
+            "./CCTiledLayer": 180,
+            "./CCTiledMapAsset": 182,
+            "./CCTiledObjectGroup": 183
         } ],
-        181: [ (function(require, module, exports) {
+        182: [ (function(require, module, exports) {
             var TiledMapAsset = cc.Class({
                 name: "cc.TiledMapAsset",
                 extends: cc.Asset,
@@ -28792,7 +28821,7 @@
             cc.TiledMapAsset = TiledMapAsset;
             module.exports = TiledMapAsset;
         }), {} ],
-        182: [ (function(require, module, exports) {
+        183: [ (function(require, module, exports) {
             require("./CCSGTMXObjectGroup");
             var TiledObjectGroup = cc.Class({
                 name: "cc.TiledObjectGroup",
@@ -28880,9 +28909,9 @@
             });
             cc.TiledObjectGroup = module.exports = TiledObjectGroup;
         }), {
-            "./CCSGTMXObjectGroup": 216
+            "./CCSGTMXObjectGroup": 217
         } ],
-        183: [ (function(require, module, exports) {
+        184: [ (function(require, module, exports) {
             require("./cocos2d/core");
             require("./cocos2d/animation");
             require("./cocos2d/particle/CCParticleSystem");
@@ -28897,21 +28926,21 @@
         }), {
             "./cocos2d/actions": 9,
             "./cocos2d/animation": 18,
-            "./cocos2d/core": 94,
-            "./cocos2d/core/components/CCStudioComponent": 71,
-            "./cocos2d/deprecated": 175,
-            "./cocos2d/motion-streak/CCMotionStreak": 176,
-            "./cocos2d/particle/CCParticleAsset": 177,
-            "./cocos2d/particle/CCParticleSystem": 178,
-            "./cocos2d/tilemap/CCTiledMap": 180,
-            "./cocos2d/tilemap/CCTiledMapAsset": 181,
-            "./extensions/ccpool/CCNodePool": 184,
-            "./extensions/ccpool/CCPool": 185,
-            "./extensions/dragonbones": 189,
-            "./extensions/spine": 193,
-            "./external/chipmunk/chipmunk": 194
+            "./cocos2d/core": 95,
+            "./cocos2d/core/components/CCStudioComponent": 72,
+            "./cocos2d/deprecated": 176,
+            "./cocos2d/motion-streak/CCMotionStreak": 177,
+            "./cocos2d/particle/CCParticleAsset": 178,
+            "./cocos2d/particle/CCParticleSystem": 179,
+            "./cocos2d/tilemap/CCTiledMap": 181,
+            "./cocos2d/tilemap/CCTiledMapAsset": 182,
+            "./extensions/ccpool/CCNodePool": 185,
+            "./extensions/ccpool/CCPool": 186,
+            "./extensions/dragonbones": 190,
+            "./extensions/spine": 194,
+            "./external/chipmunk/chipmunk": 195
         } ],
-        184: [ (function(require, module, exports) {
+        185: [ (function(require, module, exports) {
             cc.NodePool = function(poolHandlerComp) {
                 this.poolHandlerComp = poolHandlerComp;
                 this._pool = [];
@@ -28950,7 +28979,7 @@
             };
             module.exports = cc.NodePool;
         }), {} ],
-        185: [ (function(require, module, exports) {
+        186: [ (function(require, module, exports) {
             var _args = [];
             cc.pool = {
                 _pool: {},
@@ -29014,7 +29043,7 @@
                 }
             };
         }), {} ],
-        186: [ (function(require, module, exports) {
+        187: [ (function(require, module, exports) {
             var DefaultArmaturesEnum = cc.Enum({
                 default: -1
             });
@@ -29262,7 +29291,7 @@
                 }
             });
         }), {} ],
-        187: [ (function(require, module, exports) {
+        188: [ (function(require, module, exports) {
             var DragonBonesAsset = cc.Class({
                 name: "dragonBones.DragonBonesAsset",
                 extends: cc.Asset,
@@ -29289,7 +29318,7 @@
             });
             dragonBones.DragonBonesAsset = module.exports = DragonBonesAsset;
         }), {} ],
-        188: [ (function(require, module, exports) {
+        189: [ (function(require, module, exports) {
             var DragonBonesAtlasAsset = cc.Class({
                 name: "dragonBones.DragonBonesAtlasAsset",
                 extends: cc.Asset,
@@ -29315,7 +29344,7 @@
             });
             dragonBones.DragonBonesAtlasAsset = module.exports = DragonBonesAtlasAsset;
         }), {} ],
-        189: [ (function(require, module, exports) {
+        190: [ (function(require, module, exports) {
             dragonBones = dragonBones;
             dragonBones.DisplayType = {
                 Image: 0,
@@ -29360,16 +29389,16 @@
             require("./DragonBonesAtlasAsset");
             require("./ArmatureDisplay");
         }), {
-            "./ArmatureDisplay": 186,
-            "./CCArmatureDisplay": 216,
-            "./CCFactory": 216,
-            "./CCSlot": 216,
-            "./CCTextureData": 216,
-            "./DragonBonesAsset": 187,
-            "./DragonBonesAtlasAsset": 188,
-            "./lib/dragonBones": 216
+            "./ArmatureDisplay": 187,
+            "./CCArmatureDisplay": 217,
+            "./CCFactory": 217,
+            "./CCSlot": 217,
+            "./CCTextureData": 217,
+            "./DragonBonesAsset": 188,
+            "./DragonBonesAtlasAsset": 189,
+            "./lib/dragonBones": 217
         } ],
-        190: [ (function(require, module, exports) {
+        191: [ (function(require, module, exports) {
             sp.SkeletonTexture = cc.Class({
                 name: "sp.SkeletonTexture",
                 extends: sp.spine.Texture,
@@ -29402,7 +29431,7 @@
                 }
             });
         }), {} ],
-        191: [ (function(require, module, exports) {
+        192: [ (function(require, module, exports) {
             var DefaultSkinsEnum = cc.Enum({
                 default: -1
             });
@@ -29799,7 +29828,7 @@
                 }
             });
         }), {} ],
-        192: [ (function(require, module, exports) {
+        193: [ (function(require, module, exports) {
             var TextureLoader = false;
             var SkeletonData = cc.Class({
                 name: "sp.SkeletonData",
@@ -29853,7 +29882,7 @@
             });
             sp.SkeletonData = module.exports = SkeletonData;
         }), {} ],
-        193: [ (function(require, module, exports) {
+        194: [ (function(require, module, exports) {
             sp = sp;
             sp.VERTEX_INDEX = {
                 X1: 0,
@@ -29882,16 +29911,16 @@
             require("./SkeletonData");
             require("./Skeleton");
         }), {
-            "./SGSkeleton": 216,
-            "./SGSkeletonAnimation": 216,
-            "./SGSkeletonCanvasRenderCmd": 216,
-            "./SGSkeletonTexture": 190,
-            "./SGSkeletonWebGLRenderCmd": 216,
-            "./Skeleton": 191,
-            "./SkeletonData": 192,
-            "./lib/spine": 216
+            "./SGSkeleton": 217,
+            "./SGSkeletonAnimation": 217,
+            "./SGSkeletonCanvasRenderCmd": 217,
+            "./SGSkeletonTexture": 191,
+            "./SGSkeletonWebGLRenderCmd": 217,
+            "./Skeleton": 192,
+            "./SkeletonData": 193,
+            "./lib/spine": 217
         } ],
-        194: [ (function(require, module, exports) {
+        195: [ (function(require, module, exports) {
             Object.create = Object.create || function(o) {
                 function F() {}
                 F.prototype = o;
@@ -33107,7 +33136,7 @@
                 return Math.abs(this.jAcc);
             };
         }), {} ],
-        195: [ (function(require, module, exports) {
+        196: [ (function(require, module, exports) {
             "use strict";
             var _engineNumberVersion = (function() {
                 var result = /Cocos2d\-JS\sv([\d]+)\.([\d]+)/.exec(cc.ENGINE_VERSION);
@@ -33139,6 +33168,7 @@
             require("../cocos2d/core/event-manager/CCEvent");
             require("../cocos2d/core/event-manager/CCSystemEvent");
             require("../CCDebugger");
+            require("../DebugInfos");
             var macro = require("../cocos2d/core/platform/CCMacro");
             void 0 !== window.__ENABLE_GC_FOR_NATIVE_OBJECTS__ && (macro.ENABLE_GC_FOR_NATIVE_OBJECTS = window.__ENABLE_GC_FOR_NATIVE_OBJECTS__);
             require("./jsb-game");
@@ -33165,38 +33195,38 @@
         }), {
             "../CCDebugger": 1,
             "../DebugInfos": 2,
-            "../cocos2d/core/event": 85,
-            "../cocos2d/core/event-manager/CCEvent": 80,
-            "../cocos2d/core/event-manager/CCSystemEvent": 81,
-            "../cocos2d/core/platform/CCMacro": 138,
-            "../cocos2d/core/platform/js": 150,
-            "../cocos2d/core/utils/find": 160,
-            "../cocos2d/core/utils/mutable-forward-iterator": 162,
-            "../cocos2d/core/value-types": 174,
-            "../extends": 183,
-            "../polyfill/typescript": 217,
-            "./jsb-action": 196,
-            "./jsb-audio": 197,
-            "./jsb-box2d": 198,
-            "./jsb-director": 199,
-            "./jsb-dragonbones": 200,
-            "./jsb-editbox": 201,
-            "./jsb-enums": 202,
-            "./jsb-etc": 203,
-            "./jsb-event": 204,
-            "./jsb-game": 205,
-            "./jsb-label": 206,
-            "./jsb-loader": 207,
-            "./jsb-particle": 208,
-            "./jsb-scale9sprite": 209,
-            "./jsb-spine": 210,
-            "./jsb-tex-sprite-frame": 211,
-            "./jsb-tiledmap": 212,
-            "./jsb-videoplayer": 213,
-            "./jsb-webview": 214,
-            "./versions/jsb-polyfill-runtime": 215
+            "../cocos2d/core/event": 86,
+            "../cocos2d/core/event-manager/CCEvent": 81,
+            "../cocos2d/core/event-manager/CCSystemEvent": 82,
+            "../cocos2d/core/platform/CCMacro": 139,
+            "../cocos2d/core/platform/js": 151,
+            "../cocos2d/core/utils/find": 161,
+            "../cocos2d/core/utils/mutable-forward-iterator": 163,
+            "../cocos2d/core/value-types": 175,
+            "../extends": 184,
+            "../polyfill/typescript": 218,
+            "./jsb-action": 197,
+            "./jsb-audio": 198,
+            "./jsb-box2d": 199,
+            "./jsb-director": 200,
+            "./jsb-dragonbones": 201,
+            "./jsb-editbox": 202,
+            "./jsb-enums": 203,
+            "./jsb-etc": 204,
+            "./jsb-event": 205,
+            "./jsb-game": 206,
+            "./jsb-label": 207,
+            "./jsb-loader": 208,
+            "./jsb-particle": 209,
+            "./jsb-scale9sprite": 210,
+            "./jsb-spine": 211,
+            "./jsb-tex-sprite-frame": 212,
+            "./jsb-tiledmap": 213,
+            "./jsb-videoplayer": 214,
+            "./jsb-webview": 215,
+            "./versions/jsb-polyfill-runtime": 216
         } ],
-        196: [ (function(require, module, exports) {
+        197: [ (function(require, module, exports) {
             var ENABLE_GC_FOR_NATIVE_OBJECTS = cc.macro.ENABLE_GC_FOR_NATIVE_OBJECTS;
             var actionArr = [ "ActionEase", "EaseExponentialIn", "EaseExponentialOut", "EaseExponentialInOut", "EaseSineIn", "EaseSineOut", "EaseSineInOut", "EaseBounce", "EaseBounceIn", "EaseBounceOut", "EaseBounceInOut", "EaseBackIn", "EaseBackOut", "EaseBackInOut", "EaseRateAction", "EaseIn", "EaseElastic", "EaseElasticIn", "EaseElasticOut", "EaseElasticInOut", "RemoveSelf", "FlipX", "FlipY", "Place", "CallFunc", "DelayTime", "Speed", "Repeat", "RepeatForever", "Follow", "TargetedAction", "ActionInterval", "RotateTo", "RotateBy", "MoveBy", "MoveTo", "SkewTo", "SkewBy", "JumpTo", "JumpBy", "ScaleTo", "ScaleBy", "Blink", "FadeTo", "FadeIn", "FadeOut", "TintTo", "TintBy" ];
             cc.Action.prototype._getSgTarget = cc.Action.prototype.getTarget;
@@ -33351,11 +33381,11 @@
                 setRendererVisibility(this._getSgTarget(), true);
             };
             cc.callFunc = function(selector, selectorTarget, data) {
-                var callback = function(sender, data) {
+                var callback = function(sender) {
                     sender && (sender = sender._owner || sender);
                     selector.call(this, sender, data);
                 };
-                var action = cc.CallFunc.create(callback, selectorTarget, data);
+                var action = selectorTarget ? cc.CallFunc.create(callback, selectorTarget) : cc.CallFunc.create(callback);
                 if (!ENABLE_GC_FOR_NATIVE_OBJECTS) {
                     action.retain();
                     action._retained = true;
@@ -33364,11 +33394,11 @@
             };
             cc.CallFunc.prototype._ctor = function(selector, selectorTarget, data) {
                 if (void 0 !== selector) {
-                    var callback = function(sender, data) {
+                    var callback = function(sender) {
                         sender && (sender = sender._owner || sender);
                         selector.call(this, sender, data);
                     };
-                    void 0 === selectorTarget ? this.initWithFunction(callback) : this.initWithFunction(callback, selectorTarget, data);
+                    void 0 === selectorTarget ? this.initWithFunction(callback) : this.initWithFunction(callback, selectorTarget);
                 }
                 if (!ENABLE_GC_FOR_NATIVE_OBJECTS) {
                     this.retain();
@@ -33518,7 +33548,7 @@
                 action.prototype.update = actionUpdate[key];
             }
         }), {} ],
-        197: [ (function(require, module, exports) {
+        198: [ (function(require, module, exports) {
             cc.Audio = function(src) {
                 this.src = src;
                 this.volume = 1;
@@ -33626,7 +33656,7 @@
         }), {
             "../cocos2d/audio/deprecated": 22
         } ],
-        198: [ (function(require, module, exports) {
+        199: [ (function(require, module, exports) {
             (function() {
                 window.b2 || (window.b2 = {});
                 var Vec2 = b2.Vec2 = function(x_, y_) {
@@ -34031,7 +34061,7 @@
                 b2.maxManifoldPoints = 2;
             })();
         }), {} ],
-        199: [ (function(require, module, exports) {
+        200: [ (function(require, module, exports) {
             "use strict";
             var AutoReleaseUtils = require("../cocos2d/core/load-pipeline/auto-release-utils");
             var ComponentScheduler = require("../cocos2d/core/component-scheduler");
@@ -34304,11 +34334,11 @@
             cc.eventManager.addEventListenerWithFixedPriority(cc.EventListener.create(cc.Director._afterDrawListener), 1);
         }), {
             "../cocos2d/core/component-scheduler": 47,
-            "../cocos2d/core/event/event-listeners": 82,
-            "../cocos2d/core/load-pipeline/auto-release-utils": 100,
-            "../cocos2d/core/node-activator": 112
+            "../cocos2d/core/event/event-listeners": 83,
+            "../cocos2d/core/load-pipeline/auto-release-utils": 101,
+            "../cocos2d/core/node-activator": 113
         } ],
-        200: [ (function(require, module, exports) {
+        201: [ (function(require, module, exports) {
             var proto = dragonBones.CCArmatureDisplay.prototype;
             cc.js.mixin(proto, cc.EventTarget.prototype);
             proto.addEvent = function(type, listener, target) {
@@ -34345,7 +34375,7 @@
                 display.removeEvent(type, listener, target);
             };
         }), {} ],
-        201: [ (function(require, module, exports) {
+        202: [ (function(require, module, exports) {
             "use strict";
             var _p = cc.EditBox.prototype;
             _p._setMaxLength = _p.setMaxLength;
@@ -34379,7 +34409,7 @@
             };
             _p.stayOnTop = function() {};
         }), {} ],
-        202: [ (function(require, module, exports) {
+        203: [ (function(require, module, exports) {
             "use strict";
             cc.sys.os !== cc.sys.OS_OSX && cc.sys.os !== cc.sys.OS_WINDOWS || (cc.VideoPlayer = {});
             cc.sys.os !== cc.sys.OS_OSX && cc.sys.os !== cc.sys.OS_WINDOWS || (cc.WebView = {});
@@ -34473,7 +34503,7 @@
                 BOTH: 3
             });
         }), {} ],
-        203: [ (function(require, module, exports) {
+        204: [ (function(require, module, exports) {
             "use strict";
             cc.sys.now = function() {
                 return Date.now();
@@ -34600,7 +34630,7 @@
             cc.formatStr = cc.js.formatStr;
             cc.Image && cc.Image.setPNGPremultipliedAlphaEnabled && cc.Image.setPNGPremultipliedAlphaEnabled(false);
         }), {} ],
-        204: [ (function(require, module, exports) {
+        205: [ (function(require, module, exports) {
             "use strict";
             var Pool = require("../cocos2d/core/platform/js").Pool;
             var Event = require("../cocos2d/core/event/event");
@@ -34711,11 +34741,11 @@
             cc._EventListenerMouse = cc.EventListenerMouse;
             cc._EventListenerMouse.LISTENER_ID = "__cc_mouse";
         }), {
-            "../cocos2d/core/event-manager/CCEvent": 80,
-            "../cocos2d/core/event/event": 84,
-            "../cocos2d/core/platform/js": 150
+            "../cocos2d/core/event-manager/CCEvent": 81,
+            "../cocos2d/core/event/event": 85,
+            "../cocos2d/core/platform/js": 151
         } ],
-        205: [ (function(require, module, exports) {
+        206: [ (function(require, module, exports) {
             "use strict";
             cc.game = {
                 DEBUG_MODE_NONE: 0,
@@ -34895,7 +34925,7 @@
             }));
             cc._initDebugSetting(cc.game.DEBUG_MODE_INFO);
         }), {} ],
-        206: [ (function(require, module, exports) {
+        207: [ (function(require, module, exports) {
             "use strict";
             var jsbLabel = cc.Label;
             !jsbLabel.createWithTTF && jsbLabel.prototype.createWithTTF && (jsbLabel.createWithTTF = jsbLabel.prototype.createWithTTF);
@@ -35086,7 +35116,7 @@
                 return new _ccsg.Label(string, fontHandle);
             };
         }), {} ],
-        207: [ (function(require, module, exports) {
+        208: [ (function(require, module, exports) {
             "use strict";
             require("../cocos2d/core/load-pipeline");
             function empty(item, callback) {
@@ -35154,9 +35184,9 @@
                 default: empty
             });
         }), {
-            "../cocos2d/core/load-pipeline": 102
+            "../cocos2d/core/load-pipeline": 103
         } ],
-        208: [ (function(require, module, exports) {
+        209: [ (function(require, module, exports) {
             "use strict";
             cc.ParticleSystem.Mode = cc.Enum({
                 GRAVITY: 0,
@@ -35201,7 +35231,7 @@
                 }
             }
         }), {} ],
-        209: [ (function(require, module, exports) {
+        210: [ (function(require, module, exports) {
             "use strict";
             var v2Found = false;
             if (cc.Scale9SpriteV2) {
@@ -35378,13 +35408,13 @@
                 };
             }
         }), {} ],
-        210: [ (function(require, module, exports) {
+        211: [ (function(require, module, exports) {
             sp._SGSkeleton = sp.Skeleton;
             sp._SGSkeletonAnimation = sp.SkeletonAnimation;
             sp._SGSkeleton.prototype.setPremultipliedAlpha = sp._SGSkeleton.prototype.setOpacityModifyRGB;
             sp._SGSkeleton.prototype.setOpacityModifyRGB = function() {};
         }), {} ],
-        211: [ (function(require, module, exports) {
+        212: [ (function(require, module, exports) {
             "use strict";
             require("../cocos2d/core/platform/CCClass");
             require("../cocos2d/core/assets/CCAsset");
@@ -35551,9 +35581,9 @@
             }));
         }), {
             "../cocos2d/core/assets/CCAsset": 25,
-            "../cocos2d/core/platform/CCClass": 135
+            "../cocos2d/core/platform/CCClass": 136
         } ],
-        212: [ (function(require, module, exports) {
+        213: [ (function(require, module, exports) {
             "use strict";
             if (!cc.runtime) {
                 var _p = cc.TMXObject.prototype;
@@ -35568,13 +35598,13 @@
                 cc.defineGetterSetter(_p, "sgNode", _p.getNode, null);
             }
         }), {} ],
-        213: [ (function(require, module, exports) {
+        214: [ (function(require, module, exports) {
             cc.VideoPlayer = ccui.VideoPlayer;
         }), {} ],
-        214: [ (function(require, module, exports) {
+        215: [ (function(require, module, exports) {
             cc.WebView = ccui.WebView;
         }), {} ],
-        215: [ (function(require, module, exports) {
+        216: [ (function(require, module, exports) {
             var _imageArray = [];
             function _addDownloadList(url, picName, suffix, option, cb) {
                 var item = {
@@ -35699,8 +35729,8 @@
                 followedNode && (rect ? this.initWithTarget(followedNode, rect) : this.initWithTarget(followedNode));
             };
         }), {} ],
-        216: [ (function(require, module, exports) {}), {} ],
-        217: [ (function(require, module, exports) {
+        217: [ (function(require, module, exports) {}), {} ],
+        218: [ (function(require, module, exports) {
             var extendStatics = Object.setPrototypeOf || {
                 __proto__: []
             } instanceof Array && function(d, b) {
@@ -35997,7 +36027,7 @@
                 return m ? m.call(o) : "function" === (__typeofVal = typeof __values, "object" === __typeofVal ? __realTypeOfObj(__values) : __typeofVal) ? __values(o) : o[Symbol.iterator]();
             };
         }), {} ]
-    }, {}, [ 195 ]);
+    }, {}, [ 196 ]);
     function __realTypeOfObj(obj) {
         try {
             if ("" + obj === "[object CallbackConstructor]") {

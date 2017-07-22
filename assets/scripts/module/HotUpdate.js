@@ -5,9 +5,9 @@ var UpdatePanel = require('../UI/UpdatePanel');
 // 2. res/raw-assets/textures/UI/chat/gb_inputbox.png
 // So when custom manifest used, you should be able to find them in downloaded remote assets
 var customManifestStr = JSON.stringify({
-    "packageUrl": "http://192.168.54.57:5555/tutorial-hot-update/remote-assets/",
-    "remoteManifestUrl": "http://192.168.54.57:5555/tutorial-hot-update/remote-assets/project.manifest",
-    "remoteVersionUrl": "http://192.168.54.57:5555/tutorial-hot-update/remote-assets/version.manifest",
+    "packageUrl": "http://192.168.54.39:5555/tutorial-hot-update/remote-assets/",
+    "remoteManifestUrl": "http://192.168.54.39:5555/tutorial-hot-update/remote-assets/project.manifest",
+    "remoteVersionUrl": "http://192.168.54.39:5555/tutorial-hot-update/remote-assets/version.manifest",
     "version": "0.9.0",
     "assets": {
         "src/jsb_anysdk.js": {
