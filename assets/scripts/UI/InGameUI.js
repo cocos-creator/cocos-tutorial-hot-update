@@ -52,20 +52,20 @@ cc.Class({
     },
 
     initCountdown: function () {
-        var countdownTex = Game.instance.assetMng.texBetCountdown.getTexture();
-        this.sgCountdown = new _ccsg.Sprite(countdownTex);
-        this.sgCountdown.setColor(cc.Color.BLACK);
+        // var countdownTex = Game.instance.assetMng.texBetCountdown.getTexture();
+        // this.sgCountdown = new _ccsg.Sprite(countdownTex);
+        // this.sgCountdown.setColor(cc.Color.BLACK);
 
-        var progressTimer = new cc.ProgressTimer(this.sgCountdown);
-        progressTimer.setName('progressTimer');
-        progressTimer.setMidpoint(cc.p(0.5, 0.5));
-        progressTimer.setType(cc.ProgressTimer.Type.RADIAL);
-        progressTimer.reverseDir = true;
-        this.betCounter._sgNode.addChild(progressTimer);
-        progressTimer.setPosition(cc.p(0, -this.betCounter.height/2));
-        progressTimer.setPercentage(0);
+        // var progressTimer = new cc.ProgressTimer(this.sgCountdown);
+        // progressTimer.setName('progressTimer');
+        // progressTimer.setMidpoint(cc.p(0.5, 0.5));
+        // progressTimer.setType(cc.ProgressTimer.Type.RADIAL);
+        // progressTimer.reverseDir = true;
+        // this.betCounter._sgNode.addChild(progressTimer);
+        // progressTimer.setPosition(cc.p(0, -this.betCounter.height/2));
+        // progressTimer.setPercentage(0);
 
-        return progressTimer;
+        // return progressTimer;
     },
 
     startCountdown: function() {

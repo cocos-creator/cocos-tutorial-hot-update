@@ -20,5 +20,9 @@
   "privateKey": "",
   "renderMode": "0",
   "inlineSpriteFrames": true,
-  "mergeStartScene": false
+  "mergeStartScene": false,
+  "includeSDKBox": false,
+  "inlineSpriteFrames_native": true,
+  "optimizeHotUpdate": false,
+  "md5Cache": false
 }

@@ -117,18 +117,18 @@ cc.Class({
     },
 
     initCountdown: function () {
-        var countdownTex = Game.instance.assetMng.texCountdown.getTexture();
-        this.sgCountdown = new _ccsg.Sprite(countdownTex);
+        // var countdownTex = Game.instance.assetMng.texCountdown.getTexture();
+        // this.sgCountdown = new _ccsg.Sprite(countdownTex);
 
-        var progressTimer = new cc.ProgressTimer(this.sgCountdown);
-        progressTimer.setName('progressTimer');
-        progressTimer.setMidpoint(cc.p(0.5, 0.5));
-        progressTimer.setType(cc.ProgressTimer.Type.RADIAL);
-        this.playerInfo._sgNode.addChild(progressTimer);
-        progressTimer.setPosition(cc.p(0, 0));
-        progressTimer.setPercentage(0);
+        // var progressTimer = new cc.ProgressTimer(this.sgCountdown);
+        // progressTimer.setName('progressTimer');
+        // progressTimer.setMidpoint(cc.p(0.5, 0.5));
+        // progressTimer.setType(cc.ProgressTimer.Type.RADIAL);
+        // this.playerInfo._sgNode.addChild(progressTimer);
+        // progressTimer.setPosition(cc.p(0, 0));
+        // progressTimer.setPercentage(0);
 
-        return progressTimer;
+        // return progressTimer;
     },
 
     startCountdown: function() {
