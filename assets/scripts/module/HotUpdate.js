@@ -567,7 +567,7 @@ cc.Class({
         // if the return value greater than 0, versionA is greater than B,
         // if the return value equals 0, versionA equals to B,
         // if the return value smaller than 0, versionA is smaller than B.
-        var versionCompareHandle = function (versionA, versionB) {
+        this.versionCompareHandle = function (versionA, versionB) {
             cc.log("JS Custom Version Compare: version A is " + versionA + ', version B is ' + versionB);
             var vA = versionA.split('.');
             var vB = versionB.split('.');
@@ -590,7 +590,7 @@ cc.Class({
         };
 
         // Init with empty manifest url for testing custom manifest
-        this._am = new jsb.AssetsManager('', this._storagePath, versionCompareHandle);
+        this._am = new jsb.AssetsManager('', this._storagePath, this.versionCompareHandle);
         if (!cc.sys.ENABLE_GC_FOR_NATIVE_OBJECTS) {
             this._am.retain();
         }
