@@ -27,41 +27,7 @@
     return newRequire;
   })({
     1: [ (function(require, module, exports) {
-      cc._logToWebPage = function(msg) {
-        if (!cc._canvas) return;
-        var logList = cc._logList;
-        var doc = document;
-        if (!logList) {
-          var logDiv = doc.createElement("Div");
-          var logDivStyle = logDiv.style;
-          logDiv.setAttribute("id", "logInfoDiv");
-          cc._canvas.parentNode.appendChild(logDiv);
-          logDiv.setAttribute("width", "200");
-          logDiv.setAttribute("height", cc._canvas.height);
-          logDivStyle.zIndex = "99999";
-          logDivStyle.position = "absolute";
-          logDivStyle.top = "0";
-          logDivStyle.left = "0";
-          logList = cc._logList = doc.createElement("textarea");
-          var logListStyle = logList.style;
-          logList.setAttribute("rows", "20");
-          logList.setAttribute("cols", "30");
-          logList.setAttribute("disabled", true);
-          logDiv.appendChild(logList);
-          logListStyle.backgroundColor = "transparent";
-          logListStyle.borderBottom = "1px solid #cccccc";
-          logListStyle.borderRightWidth = "0px";
-          logListStyle.borderLeftWidth = "0px";
-          logListStyle.borderTopWidth = "0px";
-          logListStyle.borderTopStyle = "none";
-          logListStyle.borderRightStyle = "none";
-          logListStyle.borderLeftStyle = "none";
-          logListStyle.padding = "0px";
-          logListStyle.margin = 0;
-        }
-        logList.value = logList.value + msg + "\r\n";
-        logList.scrollTop = logList.scrollHeight;
-      };
+      var logList;
       var Enum = require("./cocos2d/core/platform/CCEnum");
       cc.DebugMode = Enum({
         NONE: 0,
@@ -72,11 +38,9 @@
         WARN_FOR_WEB_PAGE: 5,
         ERROR_FOR_WEB_PAGE: 6
       });
-      var jsbLog = cc.log || console.log;
       cc._initDebugSetting = function(mode) {
         cc.log = cc.logID = cc.warn = cc.warnID = cc.error = cc.errorID = cc._throw = cc.assert = cc.assertID = function() {};
         if (mode === cc.DebugMode.NONE) return;
-        var locLog;
         if (console && console.log.apply) {
           console.error || (console.error = console.log);
           console.warn || (console.warn = console.log);
@@ -90,8 +54,12 @@
         }
         mode !== cc.DebugMode.ERROR && (console.warn.bind ? cc.warn = console.warn.bind(console) : cc.warn = console.warn);
         if (mode === cc.DebugMode.INFO) {
-          cc.log = jsbLog;
-          cc.info = jsbLog;
+          "JavaScriptCore" === scriptEngineType ? cc.log = function() {
+            return console.log.apply(console, arguments);
+          } : cc.log = console.log;
+          cc.info = "JavaScriptCore" === scriptEngineType ? function() {
+            (console.info || console.log).apply(console, arguments);
+          } : console.info || console.log;
         }
         cc.warnID = genLogFunc(cc.warn, "Warning");
         cc.errorID = genLogFunc(cc.error, "Error");
@@ -125,7 +93,7 @@
         };
       }
     }), {
-      "./cocos2d/core/platform/CCEnum": 138
+      "./cocos2d/core/platform/CCEnum": 133
     } ],
     2: [ (function(require, module, exports) {
       var logs = {
@@ -414,7 +382,7 @@
         "3655": 'Can not specifiy "get" or "set"  attribute in decorator for "%s" property in "%s" class.\n  Please use:\n    @property(...)\n    get %s () {\n      ...\n    }\n    @property\n    set %s (value) {\n      ...\n    }',
         "3700": "internal error: _prefab is undefined",
         "3701": "Failed to load prefab asset for node '%s'",
-        "3800": "The target can not be made persist because it's not a cc.Node or it doesn't have _id property.",
+        "3800": "The target can not be made persist because it's invalid or it doesn't have _id property.",
         "3801": "The node can not be made persist because it's not under root node.",
         "3802": "The node can not be made persist because it's not in current scene.",
         "3803": "The target can not be made persist because it's not a cc.Node or it doesn't have _id property.",
@@ -646,8 +614,7 @@
         "8200": "Please set node's active instead of rigidbody's enabled.",
         "8300": "Should only one camera exists, please check your project.",
         "8301": "Camera does not support Canvas Mode.",
-        "8400": "Wrong type arguments, 'filePath' must be a String.",
-        "8500": "The ToggleGroup.toggleItems api will be removed in v2.0, please obtain toggles in other ways. 😰"
+        "8400": "Wrong type arguments, 'filePath' must be a String."
       };
       cc._LogInfos = logs;
     }), {} ],
@@ -4013,39 +3980,50 @@
     } ],
     10: [ (function(require, module, exports) {
       var JS = cc.js;
-      var Animator = require("./animators").Animator;
+      var Playable = require("./playable");
       var DynamicAnimCurve = require("./animation-curves").DynamicAnimCurve;
-      var SampledAnimCurve = require("./animation-curves").SampledAnimCurve;
+      var quickFindIndex = require("./animation-curves").quickFindIndex;
       var sampleMotionPaths = require("./motion-path-helper").sampleMotionPaths;
       var EventAnimCurve = require("./animation-curves").EventAnimCurve;
       var EventInfo = require("./animation-curves").EventInfo;
       var WrapModeMask = require("./types").WrapModeMask;
       var binarySearch = require("../core/utils/binary-search").binarySearchEpsilon;
       function AnimationAnimator(target, animation) {
-        Animator.call(this, target);
+        Playable.call(this);
+        this.target = target;
         this.animation = animation;
+        this._anims = new JS.array.MutableForwardIterator([]);
       }
-      JS.extend(AnimationAnimator, Animator);
+      JS.extend(AnimationAnimator, Playable);
       var p = AnimationAnimator.prototype;
       p.playState = function(state, startTime) {
         if (!state.clip) return;
         state.curveLoaded || initClipData(this.target, state);
-        this.addAnimation(state);
         state.animator = this;
         state.play();
         "number" === (__typeofVal = typeof startTime, "object" === __typeofVal ? __realTypeOfObj(startTime) : __typeofVal) && state.setTime(startTime);
         this.play();
       };
-      p.addAnimation = function(anim) {
-        Animator.prototype.addAnimation.call(this, anim);
-        var listeners = this.animation._listeners;
-        for (var i = 0, l = listeners.length; i < l; i++) {
-          var listener = listeners[i];
-          anim.on(listener[0], listener[1], listener[2], listener[3]);
+      p.stopStatesExcept = function(state) {
+        var iterator = this._anims;
+        var array = iterator.array;
+        for (iterator.i = 0; iterator.i < array.length; ++iterator.i) {
+          var anim = array[iterator.i];
+          if (anim === state) continue;
+          this.stopState(anim);
         }
       };
+      p.addAnimation = function(anim) {
+        var index = this._anims.array.indexOf(anim);
+        -1 === index && this._anims.push(anim);
+        anim._setListeners(this.animation);
+      };
       p.removeAnimation = function(anim) {
-        Animator.prototype.removeAnimation.call(this, anim);
+        var index = this._anims.array.indexOf(anim);
+        if (index >= 0) {
+          this._anims.fastRemoveAt(index);
+          0 === this._anims.array.length && this.stop();
+        } else cc.errorID(3908);
         anim.animator = null;
       };
       p.sample = function() {
@@ -4074,10 +4052,9 @@
           }
         } else {
           time = state;
-          var iterator = this._anims;
-          var array = iterator.array;
-          for (iterator.i = 0; iterator.i < array.length; ++iterator.i) {
-            var anim = array[iterator.i];
+          var array = this._anims.array;
+          for (var i = 0; i < array.length; ++i) {
+            var anim = array[i];
             anim.setTime(time);
             anim.sample();
           }
@@ -4090,7 +4067,6 @@
           var anim = array[iterator.i];
           anim.stop();
         }
-        Animator.prototype.onStop.call(this);
       };
       p.onPause = function() {
         var array = this._anims.array;
@@ -4099,7 +4075,6 @@
           anim.pause();
           anim.animator = null;
         }
-        Animator.prototype.onPause.call(this);
       };
       p.onResume = function() {
         var array = this._anims.array;
@@ -4108,7 +4083,6 @@
           anim.animator = this;
           anim.resume();
         }
-        Animator.prototype.onResume.call(this);
       };
       p._reloadClip = function(state) {
         initClipData(this.target, state);
@@ -4153,8 +4127,7 @@
         function createPropCurve(target, propPath, keyframes) {
           var isMotionPathProp = target instanceof cc.Node && "position" === propPath;
           var motionPaths = [];
-          var curve;
-          curve = isMotionPathProp ? new SampledAnimCurve() : new DynamicAnimCurve();
+          var curve = new DynamicAnimCurve();
           curve.target = target;
           var propName, propValue;
           var dotIndex = propPath.indexOf(".");
@@ -4165,14 +4138,14 @@
           } else propName = propPath;
           curve.prop = propName;
           curve.subProps = splitPropPath(propPath);
-          for (var j = 0, l = keyframes.length; j < l; j++) {
-            var keyframe = keyframes[j];
+          for (var i = 0, l = keyframes.length; i < l; i++) {
+            var keyframe = keyframes[i];
             var ratio = keyframe.frame / state.duration;
             curve.ratios.push(ratio);
             if (isMotionPathProp) {
               var motionPath = keyframe.motionPath;
               if (motionPath && !checkMotionPath(motionPath)) {
-                cc.errorID(3904, target.name, propPath, j);
+                cc.errorID(3904, target.name, propPath, i);
                 motionPath = null;
               }
               motionPaths.push(motionPath);
@@ -4193,6 +4166,18 @@
             curve.types.push(DynamicAnimCurve.Linear);
           }
           isMotionPathProp && sampleMotionPaths(motionPaths, curve, clip.duration, clip.sample);
+          var ratios = curve.ratios;
+          var currRatioDif, lastRatioDif;
+          var canOptimize = true;
+          var EPSILON = 1e-6;
+          for (var _i = 1, _l = ratios.length; _i < _l; _i++) {
+            currRatioDif = ratios[_i] - ratios[_i - 1];
+            if (1 === _i) lastRatioDif = currRatioDif; else if (Math.abs(currRatioDif - lastRatioDif) > EPSILON) {
+              canOptimize = false;
+              break;
+            }
+          }
+          curve._findFrameIndex = canOptimize ? quickFindIndex : binarySearch;
           return curve;
         }
         function createTargetCurves(target, curveData) {
@@ -4247,11 +4232,11 @@
       }
       module.exports = AnimationAnimator;
     }), {
-      "../core/utils/binary-search": 159,
+      "../core/utils/binary-search": 154,
       "./animation-curves": 12,
-      "./animators": 15,
-      "./motion-path-helper": 19,
-      "./types": 21
+      "./motion-path-helper": 18,
+      "./playable": 19,
+      "./types": 20
     } ],
     11: [ (function(require, module, exports) {
       var AnimationClip = cc.Class({
@@ -4327,9 +4312,24 @@
       }
       var AnimCurve = cc.Class({
         name: "cc.AnimCurve",
-        sample: function(time, ratio, animationNode) {},
-        onTimeChangedManually: function() {}
+        sample: function(time, ratio, state) {},
+        onTimeChangedManually: void 0
       });
+      function quickFindIndex(ratios, ratio) {
+        var length = ratios.length - 1;
+        if (0 === length) return 0;
+        var start = ratios[0];
+        if (ratio < start) return 0;
+        var end = ratios[length];
+        if (ratio > end) return length;
+        ratio = (ratio - start) / (end - start);
+        var eachLength = 1 / length;
+        var index = ratio / eachLength;
+        var floorIndex = 0 | index;
+        var EPSILON = 1e-6;
+        if (index - floorIndex < EPSILON) return floorIndex;
+        return ~(floorIndex + 1);
+      }
       var DynamicAnimCurve = cc.Class({
         name: "cc.DynamicAnimCurve",
         extends: AnimCurve,
@@ -4341,19 +4341,8 @@
           types: [],
           subProps: null
         },
-        _calcValue: function(frameIndex, ratio) {
-          var values = this.values;
-          var fromVal = values[frameIndex - 1];
-          var toVal = values[frameIndex];
-          var value;
-          value = "number" === (__typeofVal = typeof fromVal, "object" === __typeofVal ? __realTypeOfObj(fromVal) : __typeofVal) ? fromVal + (toVal - fromVal) * ratio : fromVal && fromVal.lerp ? fromVal.lerp(toVal, ratio) : fromVal;
-          return value;
-        },
-        _applyValue: function(target, prop, value) {
-          target[prop] = value;
-        },
         _findFrameIndex: binarySearch,
-        sample: function(time, ratio, animationNode) {
+        sample: function(time, ratio, state) {
           var values = this.values;
           var ratios = this.ratios;
           var frameCount = ratios.length;
@@ -4363,12 +4352,18 @@
           if (index < 0) {
             index = ~index;
             if (index <= 0) value = values[0]; else if (index >= frameCount) value = values[frameCount - 1]; else {
-              var fromRatio = ratios[index - 1];
-              var toRatio = ratios[index];
-              var type = this.types[index - 1];
-              var ratioBetweenFrames = (ratio - fromRatio) / (toRatio - fromRatio);
-              ratioBetweenFrames = computeRatioByType(ratioBetweenFrames, type);
-              value = this._calcValue(index, ratioBetweenFrames);
+              var fromVal = values[index - 1];
+              var isNumber = "number" === (__typeofVal = typeof fromVal, "object" === __typeofVal ? __realTypeOfObj(fromVal) : __typeofVal);
+              var canLerp = fromVal && fromVal.lerp;
+              if (isNumber || canLerp) {
+                var fromRatio = ratios[index - 1];
+                var toRatio = ratios[index];
+                var type = this.types[index - 1];
+                var ratioBetweenFrames = (ratio - fromRatio) / (toRatio - fromRatio);
+                type && (ratioBetweenFrames = computeRatioByType(ratioBetweenFrames, type));
+                var toVal = values[index];
+                isNumber ? value = fromVal + (toVal - fromVal) * ratioBetweenFrames : canLerp && (value = fromVal.lerp(toVal, ratioBetweenFrames));
+              } else value = fromVal;
             }
           } else value = values[index];
           var subProps = this.subProps;
@@ -4382,35 +4377,16 @@
             }
             var propName = subProps[subProps.length - 1];
             if (!subProp) return;
-            this._applyValue(subProp, propName, value);
+            subProp[propName] = value;
             value = mainProp;
           }
-          this._applyValue(this.target, this.prop, value);
+          this.target[this.prop] = value;
         }
       });
       DynamicAnimCurve.Linear = null;
       DynamicAnimCurve.Bezier = function(controlPoints) {
         return controlPoints;
       };
-      var SampledAnimCurve = cc.Class({
-        name: "cc.SampledAnimCurve",
-        extends: DynamicAnimCurve,
-        _findFrameIndex: function(ratios, ratio) {
-          var length = ratios.length - 1;
-          if (0 === length) return 0;
-          var start = ratios[0];
-          if (ratio < start) return 0;
-          var end = ratios[length];
-          if (ratio > end) return length;
-          ratio = (ratio - start) / (end - start);
-          var eachLength = 1 / length;
-          var index = ratio / eachLength;
-          var floorIndex = 0 | index;
-          var EPSILON = 1e-6;
-          if (index - floorIndex < EPSILON) return floorIndex;
-          return ~(floorIndex + 1);
-        }
-      });
       var EventInfo = function() {
         this.events = [];
       };
@@ -4439,9 +4415,9 @@
           iterations - (0 | iterations) === 0 && (iterations -= 1);
           return 0 | iterations;
         },
-        sample: function(time, ratio, animationNode) {
+        sample: function(time, ratio, state) {
           var length = this.ratios.length;
-          var currentWrappedInfo = animationNode.getWrappedInfo(animationNode.time, this._wrappedInfo);
+          var currentWrappedInfo = state.getWrappedInfo(state.time, this._wrappedInfo);
           var direction = currentWrappedInfo.direction;
           var currentIndex = binarySearch(this.ratios, currentWrappedInfo.ratio);
           if (currentIndex < 0) {
@@ -4455,7 +4431,7 @@
             this._lastWrappedInfo = new WrappedInfo(currentWrappedInfo);
             return;
           }
-          var wrapMode = animationNode.wrapMode;
+          var wrapMode = state.wrapMode;
           var currentIterations = this._wrapIterations(currentWrappedInfo.iterations);
           var lastWrappedInfo = this._lastWrappedInfo;
           var lastIterations = this._wrapIterations(lastWrappedInfo.iterations);
@@ -4498,10 +4474,10 @@
             }
           }
         },
-        onTimeChangedManually: function(time, animationNode) {
+        onTimeChangedManually: function(time, state) {
           this._lastWrappedInfo = null;
           this._ignoreIndex = NaN;
-          var info = animationNode.getWrappedInfo(time, this._wrappedInfo);
+          var info = state.getWrappedInfo(time, this._wrappedInfo);
           var direction = info.direction;
           var frameIndex = binarySearch(this.ratios, info.ratio);
           if (frameIndex < 0) {
@@ -4514,30 +4490,30 @@
       module.exports = {
         AnimCurve: AnimCurve,
         DynamicAnimCurve: DynamicAnimCurve,
-        SampledAnimCurve: SampledAnimCurve,
         EventAnimCurve: EventAnimCurve,
         EventInfo: EventInfo,
-        computeRatioByType: computeRatioByType
+        computeRatioByType: computeRatioByType,
+        quickFindIndex: quickFindIndex
       };
     }), {
-      "../core/utils/binary-search": 159,
-      "./bezier": 16,
-      "./types": 21
+      "../core/utils/binary-search": 154,
+      "./bezier": 15,
+      "./types": 20
     } ],
     13: [ (function(require, module, exports) {
       var JS = cc.js;
       var AnimationManager = cc.Class({
         ctor: function() {
           this.__instanceId = cc.ClassManager.getNewInstanceId();
-          this._animators = new JS.array.MutableForwardIterator([]);
+          this._anims = new JS.array.MutableForwardIterator([]);
           this._delayEvents = [];
         },
         update: function(dt) {
-          var iterator = this._animators;
+          var iterator = this._anims;
           var array = iterator.array;
           for (iterator.i = 0; iterator.i < array.length; ++iterator.i) {
-            var animator = array[iterator.i];
-            animator._isPlaying && !animator._isPaused && animator.update(dt);
+            var anim = array[iterator.i];
+            anim._isPlaying && !anim._isPaused && anim.update(dt);
           }
           var events = this._delayEvents;
           for (i = 0, l = events.length; i < l; i++) {
@@ -4547,13 +4523,13 @@
           events.length = 0;
         },
         destruct: function() {},
-        addAnimator: function(animator) {
-          var index = this._animators.array.indexOf(animator);
-          -1 === index && this._animators.push(animator);
+        addAnimation: function(anim) {
+          var index = this._anims.array.indexOf(anim);
+          -1 === index && this._anims.push(anim);
         },
-        removeAnimator: function(animator) {
-          var index = this._animators.array.indexOf(animator);
-          index >= 0 ? this._animators.fastRemoveAt(index) : cc.errorID(3907);
+        removeAnimation: function(anim) {
+          var index = this._anims.array.indexOf(anim);
+          index >= 0 ? this._anims.fastRemoveAt(index) : cc.errorID(3907);
         },
         pushDelayEvent: function(target, func, args) {
           this._delayEvents.push({
@@ -4567,210 +4543,212 @@
     }), {} ],
     14: [ (function(require, module, exports) {
       var JS = cc.js;
-      var AnimationNode = require("./types").AnimationNode;
+      var Playable = require("./playable");
+      var Types = require("./types");
+      var WrappedInfo = Types.WrappedInfo;
+      var WrapMode = Types.WrapMode;
+      var WrapModeMask = Types.WrapModeMask;
       function AnimationState(clip, name) {
-        AnimationNode.call(this, null, null, {
-          duration: clip.length
-        });
+        Playable.call(this);
+        cc.EventTarget.call(this);
+        this._firstFramePlayed = false;
+        this._delay = 0;
+        this._delayTime = 0;
+        this._wrappedInfo = new WrappedInfo();
+        this._lastWrappedInfo = null;
+        this._process = process;
+        this._clip = clip;
+        this._name = name || clip && clip.name;
+        this.animator = null;
+        this.curves = [];
+        this.delay = 0;
+        this.repeatCount = 1;
+        this.duration = 1;
+        this.speed = 1;
+        this.wrapMode = WrapMode.Normal;
+        this.time = 0;
         this._emit = this.emit;
         this.emit = function() {
           var args = new Array(arguments.length);
           for (var i = 0, l = args.length; i < l; i++) args[i] = arguments[i];
           cc.director.getAnimationManager().pushDelayEvent(this, "_emit", args);
         };
-        this._clip = clip;
-        this._name = name || clip.name;
       }
-      JS.extend(AnimationState, AnimationNode);
-      var state = AnimationState.prototype;
-      JS.get(state, "clip", (function() {
+      JS.extend(AnimationState, Playable);
+      var proto = AnimationState.prototype;
+      cc.js.mixin(proto, cc.EventTarget.prototype);
+      proto._setListeners = function(target) {
+        this._capturingListeners = target ? target._capturingListeners : null;
+        this._bubblingListeners = target ? target._bubblingListeners : null;
+        this._hasListenerCache = target ? target._hasListenerCache : null;
+      };
+      proto.onPlay = function() {
+        this.setTime(0);
+        this._delayTime = this._delay;
+        cc.director.getAnimationManager().addAnimation(this);
+        this.animator && this.animator.addAnimation(this);
+        this.emit("play", this);
+      };
+      proto.onStop = function() {
+        this.isPaused || cc.director.getAnimationManager().removeAnimation(this);
+        this.animator && this.animator.removeAnimation(this);
+        this.emit("stop", this);
+      };
+      proto.onResume = function() {
+        cc.director.getAnimationManager().addAnimation(this);
+        this.emit("resume", this);
+      };
+      proto.onPause = function() {
+        cc.director.getAnimationManager().removeAnimation(this);
+        this.emit("pause", this);
+      };
+      proto.setTime = function(time) {
+        this.time = time || 0;
+        var curves = this.curves;
+        for (var i = 0, l = curves.length; i < l; i++) {
+          var curve = curves[i];
+          curve.onTimeChangedManually && curve.onTimeChangedManually(time, this);
+        }
+      };
+      function process() {
+        var info = this.sample();
+        var cache = this._hasListenerCache;
+        if (cache && cache["lastframe"]) {
+          var lastInfo;
+          lastInfo || (lastInfo = this._lastWrappedInfo = new WrappedInfo(info));
+          this.repeatCount > 1 && (0 | info.iterations) > (0 | lastInfo.iterations) && ((this.wrapMode & WrapModeMask.Reverse) === WrapModeMask.Reverse ? lastInfo.direction < 0 && this.emit("lastframe", this) : lastInfo.direction > 0 && this.emit("lastframe", this));
+          lastInfo.set(info);
+        }
+        if (info.stopped) {
+          this.stop();
+          this.emit("finished", this);
+        }
+      }
+      function simpleProcess() {
+        var time = this.time;
+        var duration = this.duration;
+        if (time > duration) {
+          time %= duration;
+          0 === time && (time = duration);
+        } else if (time < 0) {
+          time %= duration;
+          0 !== time && (time += duration);
+        }
+        var ratio = time / duration;
+        var curves = this.curves;
+        for (var i = 0, len = curves.length; i < len; i++) {
+          var curve = curves[i];
+          curve.sample(time, ratio, this);
+        }
+        var cache = this._hasListenerCache;
+        if (cache && cache["lastframe"]) {
+          var currentIterations = time > 0 ? time / duration : -time / duration;
+          var lastIterations = this._lastIterations;
+          void 0 === lastIterations && (lastIterations = this._lastIterations = currentIterations);
+          (0 | currentIterations) > (0 | lastIterations) && this.emit("lastframe", this);
+          this._lastIterations = currentIterations;
+        }
+      }
+      proto.update = function(delta) {
+        if (this._delayTime > 0) {
+          this._delayTime -= delta;
+          if (this._delayTime > 0) return;
+        }
+        this._firstFramePlayed ? this.time += delta * this.speed : this._firstFramePlayed = true;
+        this._process();
+      };
+      proto._needRevers = function(currentIterations) {
+        var wrapMode = this.wrapMode;
+        var needRevers = false;
+        if ((wrapMode & WrapModeMask.PingPong) === WrapModeMask.PingPong) {
+          var isEnd = currentIterations - (0 | currentIterations) === 0;
+          isEnd && currentIterations > 0 && (currentIterations -= 1);
+          var isOddIteration = 1 & currentIterations;
+          isOddIteration && (needRevers = !needRevers);
+        }
+        (wrapMode & WrapModeMask.Reverse) === WrapModeMask.Reverse && (needRevers = !needRevers);
+        return needRevers;
+      };
+      proto.getWrappedInfo = function(time, info) {
+        info = info || new WrappedInfo();
+        var stopped = false;
+        var duration = this.duration;
+        var repeatCount = this.repeatCount;
+        var currentIterations = time > 0 ? time / duration : -time / duration;
+        if (currentIterations >= repeatCount) {
+          currentIterations = repeatCount;
+          stopped = true;
+          var tempRatio = repeatCount - (0 | repeatCount);
+          0 === tempRatio && (tempRatio = 1);
+          time = tempRatio * duration * (time > 0 ? 1 : -1);
+        }
+        if (time > duration) {
+          var tempTime = time % duration;
+          time = 0 === tempTime ? duration : tempTime;
+        } else if (time < 0) {
+          time %= duration;
+          0 !== time && (time += duration);
+        }
+        var needRevers = false;
+        var shouldWrap = this._wrapMode & WrapModeMask.ShouldWrap;
+        shouldWrap && (needRevers = this._needRevers(currentIterations));
+        var direction = needRevers ? -1 : 1;
+        this.speed < 0 && (direction *= -1);
+        shouldWrap && needRevers && (time = duration - time);
+        info.ratio = time / duration;
+        info.time = time;
+        info.direction = direction;
+        info.stopped = stopped;
+        info.iterations = currentIterations;
+        return info;
+      };
+      proto.sample = function() {
+        var info = this.getWrappedInfo(this.time, this._wrappedInfo);
+        var curves = this.curves;
+        for (var i = 0, len = curves.length; i < len; i++) {
+          var curve = curves[i];
+          curve.sample(info.time, info.ratio, this);
+        }
+        return info;
+      };
+      JS.get(proto, "clip", (function() {
         return this._clip;
       }));
-      JS.get(state, "name", (function() {
+      JS.get(proto, "name", (function() {
         return this._name;
       }));
-      JS.obsolete(state, "AnimationState.length", "duration");
-      JS.getset(state, "curveLoaded", (function() {
+      JS.obsolete(proto, "AnimationState.length", "duration");
+      JS.getset(proto, "curveLoaded", (function() {
         return this.curves.length > 0;
       }), (function() {
         this.curves.length = 0;
       }));
-      state.onPlay = function() {
-        this.setTime(0);
-        AnimationNode.prototype.onPlay.call(this);
-      };
-      state.onStop = function() {
-        AnimationNode.prototype.onStop.call(this);
-        this.animator && this.animator.removeAnimation(this);
-      };
-      state.setTime = function(time) {
-        this.time = time || 0;
-        var self = this;
-        this.curves.forEach((function(curve) {
-          curve.onTimeChangedManually(time, self);
-        }));
-      };
+      JS.getset(proto, "wrapMode", (function() {
+        return this._wrapMode;
+      }), (function(value) {
+        this._wrapMode = value;
+        this.time = 0;
+        value & WrapModeMask.Loop ? this.repeatCount = Infinity : this.repeatCount = 1;
+      }));
+      JS.getset(proto, "repeatCount", (function() {
+        return this._repeatCount;
+      }), (function(value) {
+        this._repeatCount = value;
+        var shouldWrap = this._wrapMode & WrapModeMask.ShouldWrap;
+        var reverse = (this.wrapMode & WrapModeMask.Reverse) === WrapModeMask.Reverse;
+        this._process = Infinity !== value || shouldWrap || reverse ? process : simpleProcess;
+      }));
+      JS.getset(proto, "delay", (function() {
+        return this._delay;
+      }), (function(value) {
+        this._delayTime = this._delay = value;
+      }));
       cc.AnimationState = module.exports = AnimationState;
     }), {
-      "./types": 21
+      "./playable": 19,
+      "./types": 20
     } ],
     15: [ (function(require, module, exports) {
-      var JS = cc.js;
-      var Playable = require("./playable");
-      var AnimationNode = require("./types").AnimationNode;
-      var DynamicAnimCurve = require("./animation-curves").DynamicAnimCurve;
-      function Animator(target) {
-        this.target = target;
-        this._anims = new JS.array.MutableForwardIterator([]);
-      }
-      JS.extend(Animator, Playable);
-      var animProto = Animator.prototype;
-      animProto.update = function(dt) {
-        var iterator = this._anims;
-        var array = iterator.array;
-        var stoppedCount = 0;
-        var originLength = array.length;
-        for (iterator.i = 0; iterator.i < array.length; ++iterator.i) {
-          var anim = array[iterator.i];
-          if (anim._isPlaying && !anim._isPaused) {
-            anim.update(dt);
-            anim._isPlaying || stoppedCount++;
-          }
-        }
-        var allRemoved = 0 === array.length;
-        var allStopped = stoppedCount >= originLength;
-        (allRemoved || allStopped) && this.stop();
-      };
-      animProto.stopStatesExcept = function(state) {
-        var iterator = this._anims;
-        var array = iterator.array;
-        for (iterator.i = 0; iterator.i < array.length; ++iterator.i) {
-          var anim = array[iterator.i];
-          if (anim === state) continue;
-          this.stopState(anim);
-        }
-      };
-      animProto.on = function(type, callback, target, useCapture) {
-        var array = this._anims.array;
-        for (var i = 0; i < array.length; ++i) array[i].on(type, callback, target, useCapture);
-      };
-      animProto.onPlay = function() {
-        cc.director.getAnimationManager().addAnimator(this);
-      };
-      animProto.onStop = function() {
-        this._isPaused || cc.director.getAnimationManager().removeAnimator(this);
-      };
-      animProto.onResume = function() {
-        cc.director.getAnimationManager().addAnimator(this);
-      };
-      animProto.onPause = function() {
-        cc.director.getAnimationManager().removeAnimator(this);
-      };
-      animProto.addAnimation = function(anim) {
-        var index = this._anims.array.indexOf(anim);
-        -1 === index && this._anims.push(anim);
-      };
-      animProto.removeAnimation = function(anim) {
-        var index = this._anims.array.indexOf(anim);
-        index >= 0 ? this._anims.fastRemoveAt(index) : cc.errorID(3908);
-      };
-      function EntityAnimator(target) {
-        Animator.call(this, target);
-      }
-      JS.extend(EntityAnimator, Animator);
-      var entProto = EntityAnimator.prototype;
-      function computeNullRatios(keyFrames) {
-        var lastIndex = 0;
-        var lastRatio = 0;
-        var len = keyFrames.length;
-        for (var i = 0; i < len; i++) {
-          var frame = keyFrames[i];
-          var ratio = frame.ratio;
-          0 === i && "number" !== (__typeofVal = typeof ratio, "object" === __typeofVal ? __realTypeOfObj(ratio) : __typeofVal) ? frame.computedRatio = ratio = 0 : i === len - 1 && "number" !== (__typeofVal = typeof ratio, 
-          "object" === __typeofVal ? __realTypeOfObj(ratio) : __typeofVal) && (frame.computedRatio = ratio = 1);
-          if ("number" === (__typeofVal = typeof ratio, "object" === __typeofVal ? __realTypeOfObj(ratio) : __typeofVal)) {
-            if (lastIndex + 1 < i) {
-              var count = i - lastIndex;
-              var step = (ratio - lastRatio) / count;
-              for (var j = lastIndex + 1; j < i; j++) {
-                lastRatio += step;
-                keyFrames[j].computedRatio = lastRatio;
-              }
-            }
-            lastIndex = i;
-            lastRatio = ratio;
-          }
-        }
-      }
-      entProto.animate = function(keyFrames, timingInput) {
-        if (!keyFrames) {
-          cc.errorID(3909);
-          return null;
-        }
-        computeNullRatios(keyFrames);
-        var anim = this._doAnimate(keyFrames, timingInput);
-        this.play();
-        return anim;
-      };
-      function findCurve(curves, target, propName) {
-        var i = 0, curve;
-        for (;i < curves.length; i++) {
-          curve = curves[i];
-          if (curve.target === target && curve.prop === propName) return curve;
-        }
-        return null;
-      }
-      function createPropCurve(curves, target, propName, value, ratio) {
-        var curve = findCurve(curves, target, propName);
-        if (!curve) {
-          curve = new DynamicAnimCurve();
-          curves.push(curve);
-          curve.target = target;
-          curve.prop = propName;
-        }
-        curve.values.push(value);
-        curve.ratios.push(ratio);
-      }
-      entProto._doAnimate = function(keyFrames, timingInput) {
-        var anim = new AnimationNode(this, null, timingInput);
-        anim.play();
-        var curves = anim.curves;
-        var lastRatio = -1;
-        for (var i = 0; i < keyFrames.length; i++) {
-          var frame = keyFrames[i];
-          var ratio = frame.ratio;
-          "number" !== (__typeofVal = typeof ratio, "object" === __typeofVal ? __realTypeOfObj(ratio) : __typeofVal) && (ratio = frame.computedRatio);
-          if (ratio < 0) {
-            cc.errorID(3910);
-            continue;
-          }
-          if (ratio < lastRatio) {
-            cc.errorID(3911);
-            continue;
-          }
-          lastRatio = ratio;
-          for (var key in frame) {
-            var data = frame[key];
-            if ("props" === key) for (var propName in data) createPropCurve(curves, this.target, propName, data[propName], ratio); else if ("comps" === key) for (var compName in data) {
-              var comp = this.target.getComponent(compName);
-              var compData = data[compName];
-              for (var propName in compData) createPropCurve(curves, comp, propName, compData[propName], ratio);
-            }
-          }
-        }
-        this._anims.push(anim);
-        return anim;
-      };
-      module.exports = {
-        Animator: Animator,
-        EntityAnimator: EntityAnimator
-      };
-    }), {
-      "./animation-curves": 12,
-      "./playable": 20,
-      "./types": 21
-    } ],
-    16: [ (function(require, module, exports) {
       function bezier(C1, C2, C3, C4, t) {
         var t1 = 1 - t;
         return C1 * t1 * t1 * t1 + 3 * C2 * t1 * t1 * t + 3 * C3 * t1 * t * t + C4 * t * t * t;
@@ -4821,7 +4799,7 @@
         bezierByTime: bezierByTime
       };
     }), {} ],
-    17: [ (function(require, module, exports) {
+    16: [ (function(require, module, exports) {
       var Easing = {
         constant: function() {
           return 0;
@@ -4983,14 +4961,13 @@
       Easing.bounceOutIn = _makeOutIn(Easing.bounceIn, Easing.bounceOut);
       cc.Easing = module.exports = Easing;
     }), {} ],
-    18: [ (function(require, module, exports) {
+    17: [ (function(require, module, exports) {
       require("./bezier");
       require("./easing");
       require("./types");
       require("./motion-path-helper");
       require("./animation-curves");
       require("./animation-clip");
-      require("./animators");
       require("./animation-manager");
       require("./animation-state");
       require("./animation-animator");
@@ -5000,13 +4977,12 @@
       "./animation-curves": 12,
       "./animation-manager": 13,
       "./animation-state": 14,
-      "./animators": 15,
-      "./bezier": 16,
-      "./easing": 17,
-      "./motion-path-helper": 19,
-      "./types": 21
+      "./bezier": 15,
+      "./easing": 16,
+      "./motion-path-helper": 18,
+      "./types": 20
     } ],
-    19: [ (function(require, module, exports) {
+    18: [ (function(require, module, exports) {
       var DynamicAnimCurve = require("./animation-curves").DynamicAnimCurve;
       var computeRatioByType = require("./animation-curves").computeRatioByType;
       var bezier = require("./bezier").bezier;
@@ -5220,11 +5196,11 @@
         Bezier: Bezier
       };
     }), {
-      "../core/utils/binary-search": 159,
+      "../core/utils/binary-search": 154,
       "./animation-curves": 12,
-      "./bezier": 16
+      "./bezier": 15
     } ],
-    20: [ (function(require, module, exports) {
+    19: [ (function(require, module, exports) {
       var JS = cc.js;
       function Playable() {
         this._isPlaying = false;
@@ -5261,7 +5237,7 @@
         }
       };
       prototype.pause = function() {
-        if (this._isPlaying) {
+        if (this._isPlaying && !this._isPaused) {
           this._isPaused = true;
           this.onPause();
         }
@@ -5279,9 +5255,8 @@
       };
       module.exports = Playable;
     }), {} ],
-    21: [ (function(require, module, exports) {
+    20: [ (function(require, module, exports) {
       var JS = cc.js;
-      var Playable = require("./playable");
       var WrapModeMask = {
         Loop: 2,
         ShouldWrap: 4,
@@ -5318,151 +5293,13 @@
         this.iterations = info.iterations;
         this.frameIndex = info.frameIndex;
       };
-      function AnimationNodeBase() {
-        Playable.call(this);
-      }
-      JS.extend(AnimationNodeBase, Playable);
-      AnimationNodeBase.prototype.update = function(deltaTime) {};
-      function AnimationNode(animator, curves, timingInput) {
-        AnimationNodeBase.call(this);
-        this._firstFramePlayed = false;
-        this._delay = 0;
-        this._delayTime = 0;
-        this._wrappedInfo = new WrappedInfo();
-        this._lastWrappedInfo = null;
-        this.animator = animator;
-        this.curves = curves || [];
-        this.delay = 0;
-        this.repeatCount = 1;
-        this.duration = 1;
-        this.speed = 1;
-        this.wrapMode = WrapMode.Normal;
-        if (timingInput) {
-          this.delay = timingInput.delay || this.delay;
-          var duration = timingInput.duration;
-          "undefined" !== (__typeofVal = typeof duration, "object" === __typeofVal ? __realTypeOfObj(duration) : __typeofVal) && (this.duration = duration);
-          var speed = timingInput.speed;
-          "undefined" !== (__typeofVal = typeof speed, "object" === __typeofVal ? __realTypeOfObj(speed) : __typeofVal) && (this.speed = speed);
-          var wrapMode = timingInput.wrapMode;
-          if ("undefined" !== (__typeofVal = typeof wrapMode, "object" === __typeofVal ? __realTypeOfObj(wrapMode) : __typeofVal)) {
-            var isEnum = "number" === (__typeofVal = typeof wrapMode, "object" === __typeofVal ? __realTypeOfObj(wrapMode) : __typeofVal);
-            this.wrapMode = isEnum ? wrapMode : WrapMode[wrapMode];
-          }
-          var repeatCount = timingInput.repeatCount;
-          "undefined" !== (__typeofVal = typeof repeatCount, "object" === __typeofVal ? __realTypeOfObj(repeatCount) : __typeofVal) ? this.repeatCount = repeatCount : this.wrapMode & WrapModeMask.Loop && (this.repeatCount = Infinity);
-        }
-        this.time = 0;
-      }
-      JS.extend(AnimationNode, AnimationNodeBase);
-      var proto = AnimationNode.prototype;
-      proto.update = function(delta) {
-        if (this._delayTime > 0) {
-          this._delayTime -= delta;
-          if (this._delayTime > 0) return;
-        }
-        this._firstFramePlayed ? this.time += delta * this.speed : this._firstFramePlayed = true;
-        var info = this.sample();
-        this._lastWrappedInfo || (this._lastWrappedInfo = new WrappedInfo(info));
-        var anotherIteration = (0 | info.iterations) > (0 | this._lastWrappedInfo.iterations);
-        this.repeatCount > 1 && anotherIteration && ((this.wrapMode & WrapModeMask.Reverse) === WrapModeMask.Reverse ? this._lastWrappedInfo.direction < 0 && this.emit("lastframe", this) : this._lastWrappedInfo.direction > 0 && this.emit("lastframe", this));
-        if (info.stopped) {
-          this.stop();
-          this.emit("finished", this);
-        }
-        this._lastWrappedInfo.set(info);
-      };
-      proto._needRevers = function(currentIterations) {
-        var wrapMode = this.wrapMode;
-        var needRevers = false;
-        if ((wrapMode & WrapModeMask.PingPong) === WrapModeMask.PingPong) {
-          var isEnd = currentIterations - (0 | currentIterations) === 0;
-          isEnd && currentIterations > 0 && (currentIterations -= 1);
-          var isOddIteration = 1 & currentIterations;
-          isOddIteration && (needRevers = !needRevers);
-        }
-        (wrapMode & WrapModeMask.Reverse) === WrapModeMask.Reverse && (needRevers = !needRevers);
-        return needRevers;
-      };
-      proto.getWrappedInfo = function(time, info) {
-        info = info || new WrappedInfo();
-        var stopped = false;
-        var duration = this.duration;
-        var ratio = 0;
-        var wrapMode = this.wrapMode;
-        var currentIterations = Math.abs(time / duration);
-        currentIterations > this.repeatCount && (currentIterations = this.repeatCount);
-        var needRevers = false;
-        wrapMode & WrapModeMask.ShouldWrap && (needRevers = this._needRevers(currentIterations));
-        var direction = needRevers ? -1 : 1;
-        this.speed < 0 && (direction *= -1);
-        if (currentIterations >= this.repeatCount) {
-          stopped = true;
-          var tempRatio = this.repeatCount - (0 | this.repeatCount);
-          0 === tempRatio && (tempRatio = 1);
-          time = tempRatio * duration * (time > 0 ? 1 : -1);
-        }
-        if (time > duration) {
-          var tempTime = time % duration;
-          time = 0 === tempTime ? duration : tempTime;
-        } else if (time < 0) {
-          time %= duration;
-          0 !== time && (time += duration);
-        }
-        wrapMode & WrapModeMask.ShouldWrap && needRevers && (time = duration - time);
-        ratio = time / duration;
-        info.ratio = ratio;
-        info.time = time;
-        info.direction = direction;
-        info.stopped = stopped;
-        info.iterations = currentIterations;
-        return info;
-      };
-      proto.sample = function() {
-        var info = this.getWrappedInfo(this.time, this._wrappedInfo);
-        var curves = this.curves;
-        for (var i = 0, len = curves.length; i < len; i++) {
-          var curve = curves[i];
-          curve.sample(info.time, info.ratio, this);
-        }
-        return info;
-      };
-      proto.onStop = function() {
-        this.emit("stop", this);
-      };
-      proto.onPlay = function() {
-        this._delayTime = this._delay;
-        this.emit("play", this);
-      };
-      proto.onPause = function() {
-        this.emit("pause", this);
-      };
-      proto.onResume = function() {
-        this.emit("resume", this);
-      };
-      JS.getset(proto, "wrapMode", (function() {
-        return this._wrapMode;
-      }), (function(value) {
-        this._wrapMode = value;
-        this.time = 0;
-        value & WrapModeMask.Loop ? this.repeatCount = Infinity : this.repeatCount = 1;
-      }));
-      JS.getset(proto, "delay", (function() {
-        return this._delay;
-      }), (function(value) {
-        this._delayTime = this._delay = value;
-      }));
-      cc.js.mixin(proto, cc.EventTarget.prototype);
-      cc.AnimationNode = AnimationNode;
       module.exports = {
         WrapModeMask: WrapModeMask,
         WrapMode: WrapMode,
-        AnimationNode: AnimationNode,
         WrappedInfo: WrappedInfo
       };
-    }), {
-      "./playable": 20
-    } ],
-    22: [ (function(require, module, exports) {
+    }), {} ],
+    21: [ (function(require, module, exports) {
       var js = cc.js;
       exports.removed = function(audioEngine) {
         function willPlayMusicError() {
@@ -5594,7 +5431,7 @@
         }));
       };
     }), {} ],
-    23: [ (function(require, module, exports) {
+    22: [ (function(require, module, exports) {
       "use strict";
       var PrefabHelper = require("./utils/prefab-helper");
       var SgHelper = require("./utils/scene-graph-helper");
@@ -5660,9 +5497,9 @@
         var pos = event.getLocation();
         var node = this.owner;
         if (node._hitTest(pos, this)) {
-          event.stopPropagation();
           event = Event.EventMouse.pool.get(event);
           event.type = EventType.MOUSE_DOWN;
+          event.bubbles = true;
           node.dispatchEvent(event);
         }
       };
@@ -5670,7 +5507,6 @@
         var pos = event.getLocation();
         var node = this.owner;
         if (node._hitTest(pos, this)) {
-          event.stopPropagation();
           event = Event.EventMouse.pool.get(event);
           if (!this._previousIn) {
             if (_currentHovered) {
@@ -5684,6 +5520,7 @@
             this._previousIn = true;
           }
           event.type = EventType.MOUSE_MOVE;
+          event.bubbles = true;
           node.dispatchEvent(event);
         } else if (this._previousIn) {
           event = Event.EventMouse.pool.get(event);
@@ -5697,9 +5534,9 @@
         var pos = event.getLocation();
         var node = this.owner;
         if (node._hitTest(pos, this)) {
-          event.stopPropagation();
           event = Event.EventMouse.pool.get(event);
           event.type = EventType.MOUSE_UP;
+          event.bubbles = true;
           node.dispatchEvent(event);
         }
       };
@@ -5709,6 +5546,7 @@
         if (node._hitTest(pos, this)) {
           event = Event.EventMouse.pool.get(event);
           event.type = EventType.MOUSE_WHEEL;
+          event.bubbles = true;
           node.dispatchEvent(event);
         }
       };
@@ -5768,9 +5606,8 @@
                 var oldValue;
                 localPosition.x = value;
                 this._sgNode.setPositionX(value);
-                var capListeners = this._capturingListeners && this._capturingListeners._callbackTable[POSITION_CHANGED];
-                var bubListeners = this._bubblingListeners && this._bubblingListeners._callbackTable[POSITION_CHANGED];
-                (capListeners && capListeners.length > 0 || bubListeners && bubListeners.length > 0) && this.emit(POSITION_CHANGED);
+                var cache = this._hasListenerCache;
+                cache && cache[POSITION_CHANGED] && this.emit(POSITION_CHANGED);
               }
             }
           },
@@ -5784,9 +5621,8 @@
                 var oldValue;
                 localPosition.y = value;
                 this._sgNode.setPositionY(value);
-                var capListeners = this._capturingListeners && this._capturingListeners._callbackTable[POSITION_CHANGED];
-                var bubListeners = this._bubblingListeners && this._bubblingListeners._callbackTable[POSITION_CHANGED];
-                (capListeners && capListeners.length > 0 || bubListeners && bubListeners.length > 0) && this.emit(POSITION_CHANGED);
+                var cache = this._hasListenerCache;
+                cache && cache[POSITION_CHANGED] && this.emit(POSITION_CHANGED);
               }
             }
           },
@@ -5799,7 +5635,8 @@
               if (this._rotationX !== value || this._rotationY !== value) {
                 this._rotationX = this._rotationY = value;
                 this._sgNode.rotation = value;
-                this.emit(ROTATION_CHANGED);
+                var cache = this._hasListenerCache;
+                cache && cache[ROTATION_CHANGED] && this.emit(ROTATION_CHANGED);
               }
             }
           },
@@ -5811,7 +5648,8 @@
               if (this._rotationX !== value) {
                 this._rotationX = value;
                 this._sgNode.rotationX = value;
-                this.emit(ROTATION_CHANGED);
+                var cache = this._hasListenerCache;
+                cache && cache[ROTATION_CHANGED] && this.emit(ROTATION_CHANGED);
               }
             }
           },
@@ -5823,7 +5661,8 @@
               if (this._rotationY !== value) {
                 this._rotationY = value;
                 this._sgNode.rotationY = value;
-                this.emit(ROTATION_CHANGED);
+                var cache = this._hasListenerCache;
+                cache && cache[ROTATION_CHANGED] && this.emit(ROTATION_CHANGED);
               }
             }
           },
@@ -5835,7 +5674,8 @@
               if (this._scaleX !== value) {
                 this._scaleX = value;
                 this._sgNode.scaleX = value;
-                this.emit(SCALE_CHANGED);
+                var cache = this._hasListenerCache;
+                cache && cache[SCALE_CHANGED] && this.emit(SCALE_CHANGED);
               }
             }
           },
@@ -5847,7 +5687,8 @@
               if (this._scaleY !== value) {
                 this._scaleY = value;
                 this._sgNode.scaleY = value;
-                this.emit(SCALE_CHANGED);
+                var cache = this._hasListenerCache;
+                cache && cache[SCALE_CHANGED] && this.emit(SCALE_CHANGED);
               }
             }
           },
@@ -6058,7 +5899,6 @@
           this._reorderChildDirty && cc.director.__fastOff(cc.Director.EVENT_AFTER_UPDATE, this.sortAllChildren, this);
           cc.eventManager.removeListeners(this);
           if (destroyByParent) {
-            this._sgNode.release();
             this._sgNode._entity = null;
             this._sgNode = null;
           } else this._removeSgNode();
@@ -6275,9 +6115,8 @@
           locPosition.x = x;
           locPosition.y = y;
           this._sgNode.setPosition(x, y);
-          var capListeners = this._capturingListeners && this._capturingListeners._callbackTable[POSITION_CHANGED];
-          var bubListeners = this._bubblingListeners && this._bubblingListeners._callbackTable[POSITION_CHANGED];
-          (capListeners && capListeners.length > 0 || bubListeners && bubListeners.length > 0) && this.emit(POSITION_CHANGED);
+          var cache = this._hasListenerCache;
+          cache && cache[POSITION_CHANGED] && this.emit(POSITION_CHANGED);
         },
         getScale: function() {
           this._scaleX !== this._scaleY && cc.logID(1603);
@@ -6292,7 +6131,8 @@
             this._scaleX = scaleX;
             this._scaleY = scaleY;
             this._sgNode.setScale(scaleX, scaleY);
-            this.emit(SCALE_CHANGED);
+            var cache = this._hasListenerCache;
+            cache && cache[SCALE_CHANGED] && this.emit(SCALE_CHANGED);
           }
         },
         getContentSize: function(ignoreSizeProvider) {
@@ -6611,13 +6451,13 @@
       Node.EventType = EventType;
       cc.Node = module.exports = Node;
     }), {
-      "./event/event": 85,
-      "./utils/base-node": 158,
-      "./utils/misc": 162,
-      "./utils/prefab-helper": 164,
-      "./utils/scene-graph-helper": 165
+      "./event/event": 84,
+      "./utils/base-node": 153,
+      "./utils/misc": 157,
+      "./utils/prefab-helper": 159,
+      "./utils/scene-graph-helper": 160
     } ],
-    24: [ (function(require, module, exports) {
+    23: [ (function(require, module, exports) {
       var NIL = function() {};
       cc.Scene = cc.Class({
         name: "cc.Scene",
@@ -6654,9 +6494,9 @@
       });
       module.exports = cc.Scene;
     }), {
-      "./CCNode": 23
+      "./CCNode": 22
     } ],
-    25: [ (function(require, module, exports) {
+    24: [ (function(require, module, exports) {
       var RawAsset = require("./CCRawAsset");
       cc.Asset = cc.Class({
         name: "cc.Asset",
@@ -6706,9 +6546,9 @@
       });
       module.exports = cc.Asset;
     }), {
-      "./CCRawAsset": 31
+      "./CCRawAsset": 30
     } ],
-    26: [ (function(require, module, exports) {
+    25: [ (function(require, module, exports) {
       var AudioClip = cc.Class({
         name: "cc.AudioClip",
         extends: cc.RawAsset
@@ -6716,7 +6556,7 @@
       cc.AudioClip = AudioClip;
       module.exports = AudioClip;
     }), {} ],
-    27: [ (function(require, module, exports) {
+    26: [ (function(require, module, exports) {
       var BitmapFont = cc.Class({
         name: "cc.BitmapFont",
         extends: cc.Font,
@@ -6737,7 +6577,7 @@
       cc.BitmapFont = BitmapFont;
       module.exports = BitmapFont;
     }), {} ],
-    28: [ (function(require, module, exports) {
+    27: [ (function(require, module, exports) {
       var Font = cc.Class({
         name: "cc.Font",
         extends: cc.Asset
@@ -6745,7 +6585,7 @@
       cc.Font = Font;
       module.exports = Font;
     }), {} ],
-    29: [ (function(require, module, exports) {
+    28: [ (function(require, module, exports) {
       var LabelAtlas = cc.Class({
         name: "cc.LabelAtlas",
         extends: cc.BitmapFont
@@ -6753,7 +6593,7 @@
       cc.LabelAtlas = LabelAtlas;
       module.exports = LabelAtlas;
     }), {} ],
-    30: [ (function(require, module, exports) {
+    29: [ (function(require, module, exports) {
       var Prefab = cc.Class({
         name: "cc.Prefab",
         extends: cc.Asset,
@@ -6776,17 +6616,23 @@
           return this._createFunction(rootToRedirect);
         },
         _instantiate: function() {
-          var node = this._doInstantiate();
-          this.data._instantiate(node);
+          var node;
+          if (cc.supportJit) {
+            node = this._doInstantiate();
+            this.data._instantiate(node);
+          } else {
+            this.data._prefab._synced = true;
+            node = this.data._instantiate();
+          }
           return node;
         }
       });
       cc.Prefab = module.exports = Prefab;
       cc.js.obsolete(cc, "cc._Prefab", "Prefab");
     }), {
-      "../platform/instantiate-jit": 149
+      "../platform/instantiate-jit": 145
     } ],
-    31: [ (function(require, module, exports) {
+    30: [ (function(require, module, exports) {
       var CCObject = require("../platform/CCObject");
       cc.RawAsset = cc.Class({
         name: "cc.RawAsset",
@@ -6808,9 +6654,9 @@
       });
       module.exports = cc.RawAsset;
     }), {
-      "../platform/CCObject": 140
+      "../platform/CCObject": 135
     } ],
-    32: [ (function(require, module, exports) {
+    31: [ (function(require, module, exports) {
       var Scene = cc.Class({
         name: "cc.SceneAsset",
         extends: cc.Asset,
@@ -6822,7 +6668,7 @@
       cc.SceneAsset = Scene;
       module.exports = Scene;
     }), {} ],
-    33: [ (function(require, module, exports) {
+    32: [ (function(require, module, exports) {
       var Script = cc.Class({
         name: "cc.Script",
         extends: cc.Asset
@@ -6844,7 +6690,7 @@
       });
       cc._TypeScript = TypeScript;
     }), {} ],
-    34: [ (function(require, module, exports) {
+    33: [ (function(require, module, exports) {
       var SpriteAtlas = cc.Class({
         name: "cc.SpriteAtlas",
         extends: cc.Asset,
@@ -6874,7 +6720,7 @@
       cc.SpriteAtlas = SpriteAtlas;
       module.exports = SpriteAtlas;
     }), {} ],
-    35: [ (function(require, module, exports) {
+    34: [ (function(require, module, exports) {
       var TTFFont = cc.Class({
         name: "cc.TTFFont",
         extends: cc.Font
@@ -6882,7 +6728,7 @@
       cc.TTFFont = TTFFont;
       module.exports = TTFFont;
     }), {} ],
-    36: [ (function(require, module, exports) {
+    35: [ (function(require, module, exports) {
       require("./CCRawAsset");
       require("./CCAsset");
       require("./CCFont");
@@ -6897,21 +6743,21 @@
       require("./CCBitmapFont");
       require("./CCLabelAtlas");
     }), {
-      "../sprites/CCSpriteFrame": 216,
-      "../textures/CCTexture2D": 216,
-      "./CCAsset": 25,
-      "./CCAudioClip": 26,
-      "./CCBitmapFont": 27,
-      "./CCFont": 28,
-      "./CCLabelAtlas": 29,
-      "./CCPrefab": 30,
-      "./CCRawAsset": 31,
-      "./CCSceneAsset": 32,
-      "./CCScripts": 33,
-      "./CCSpriteAtlas": 34,
-      "./CCTTFFont": 35
+      "../sprites/CCSpriteFrame": 211,
+      "../textures/CCTexture2D": 211,
+      "./CCAsset": 24,
+      "./CCAudioClip": 25,
+      "./CCBitmapFont": 26,
+      "./CCFont": 27,
+      "./CCLabelAtlas": 28,
+      "./CCPrefab": 29,
+      "./CCRawAsset": 30,
+      "./CCSceneAsset": 31,
+      "./CCScripts": 32,
+      "./CCSpriteAtlas": 33,
+      "./CCTTFFont": 34
     } ],
-    37: [ (function(require, module, exports) {
+    36: [ (function(require, module, exports) {
       var TOP = 1;
       var MID = 2;
       var BOT = 4;
@@ -7121,8 +6967,8 @@
         updateAlignment: updateAlignment
       };
     }), {} ],
-    38: [ (function(require, module, exports) {
-      var transformDirtyFlag;
+    37: [ (function(require, module, exports) {
+      var cullingDirtyFlag;
       var Camera = cc.Class({
         name: "cc.Camera",
         extends: cc._RendererUnderSG,
@@ -7161,7 +7007,9 @@
           }
           return new _ccsg.CameraNode();
         },
-        _initSgNode: function() {},
+        _initSgNode: function() {
+          this._sgNode.setContentSize(this.node.getContentSize(true));
+        },
         _addSgTargetInSg: function(target) {
           var sgNode;
           target instanceof cc.Node ? sgNode = target._sgNode : target instanceof _ccsg.Node && (sgNode = target);
@@ -7228,9 +7076,9 @@
           }
           return false;
         },
-        _setSgNodesTransformDirty: function() {
+        _setSgNodesCullingDirty: function() {
           var sgTarges = this._sgTarges;
-          for (var i = 0; i < sgTarges.length; i++) sgTarges[i].markTransformUpdated();
+          for (var i = 0; i < sgTarges.length; i++) sgTarges[i].markCullingDirty();
         },
         _checkSgTargets: function() {
           var targets = this._targets;
@@ -7292,7 +7140,7 @@
           this._sgNode.setTransform(a, b, c, d, m.tx, m.ty);
           var lvm = this._lastViewMatrix;
           if (lvm.a !== m.a || lvm.b !== m.b || lvm.c !== m.c || lvm.d !== m.d || lvm.tx !== m.tx || lvm.ty !== m.ty) {
-            this._setSgNodesTransformDirty();
+            this._setSgNodesCullingDirty();
             lvm.a = m.a;
             lvm.b = m.b;
             lvm.c = m.c;
@@ -7308,9 +7156,9 @@
       });
       module.exports = cc.Camera = Camera;
     }), {
-      "./CCSGCameraNode": 216
+      "./CCSGCameraNode": 211
     } ],
-    39: [ (function(require, module, exports) {
+    38: [ (function(require, module, exports) {
       cc.Collider.Box = cc.Class({
         properties: {
           _offset: cc.v2(0, 0),
@@ -7347,7 +7195,7 @@
       });
       cc.BoxCollider = module.exports = BoxCollider;
     }), {} ],
-    40: [ (function(require, module, exports) {
+    39: [ (function(require, module, exports) {
       cc.Collider.Circle = cc.Class({
         properties: {
           _offset: cc.v2(0, 0),
@@ -7381,7 +7229,7 @@
       });
       cc.CircleCollider = module.exports = CircleCollider;
     }), {} ],
-    41: [ (function(require, module, exports) {
+    40: [ (function(require, module, exports) {
       var Collider = cc.Class({
         name: "cc.Collider",
         extends: cc.Component,
@@ -7407,7 +7255,7 @@
       });
       cc.Collider = module.exports = Collider;
     }), {} ],
-    42: [ (function(require, module, exports) {
+    41: [ (function(require, module, exports) {
       var Contact = require("./CCContact");
       var CollisionType = Contact.CollisionType;
       var tempRect = cc.rect();
@@ -7669,9 +7517,9 @@
       }));
       cc.CollisionManager = module.exports = CollisionManager;
     }), {
-      "./CCContact": 43
+      "./CCContact": 42
     } ],
-    43: [ (function(require, module, exports) {
+    42: [ (function(require, module, exports) {
       var Intersection = require("./CCIntersection");
       var CollisionType = cc.Enum({
         None: 0,
@@ -7717,9 +7565,9 @@
       Contact.CollisionType = CollisionType;
       module.exports = Contact;
     }), {
-      "./CCIntersection": 44
+      "./CCIntersection": 43
     } ],
-    44: [ (function(require, module, exports) {
+    43: [ (function(require, module, exports) {
       var Intersection = {};
       function lineLine(a1, a2, b1, b2) {
         var ua_t = (b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x);
@@ -7839,7 +7687,7 @@
       Intersection.pointLineDistance = pointLineDistance;
       cc.Intersection = module.exports = Intersection;
     }), {} ],
-    45: [ (function(require, module, exports) {
+    44: [ (function(require, module, exports) {
       cc.Collider.Polygon = cc.Class({
         properties: {
           threshold: {
@@ -7875,20 +7723,20 @@
       });
       cc.PolygonCollider = module.exports = PolygonCollider;
     }), {} ],
-    46: [ (function(require, module, exports) {
+    45: [ (function(require, module, exports) {
       require("./CCCollisionManager");
       require("./CCCollider");
       require("./CCBoxCollider");
       require("./CCCircleCollider");
       require("./CCPolygonCollider");
     }), {
-      "./CCBoxCollider": 39,
-      "./CCCircleCollider": 40,
-      "./CCCollider": 41,
-      "./CCCollisionManager": 42,
-      "./CCPolygonCollider": 45
+      "./CCBoxCollider": 38,
+      "./CCCircleCollider": 39,
+      "./CCCollider": 40,
+      "./CCCollisionManager": 41,
+      "./CCPolygonCollider": 44
     } ],
-    47: [ (function(require, module, exports) {
+    46: [ (function(require, module, exports) {
       require("./platform/CCClass");
       var Flags = require("./platform/CCObject").Flags;
       var JsArray = require("./platform/js").array;
@@ -7901,6 +7749,17 @@
       var callUpdateInTryCatch = false;
       var callLateUpdateInTryCatch = false;
       var callOnDisableInTryCatch = false;
+      var supportJit = cc.supportJit;
+      var callStart = supportJit ? "c.start();c._objFlags|=" + IsStartCalled : function(c) {
+        c.start();
+        c._objFlags |= IsStartCalled;
+      };
+      var callUpdate = supportJit ? "c.update(dt)" : function(c, dt) {
+        c.update(dt);
+      };
+      var callLateUpdate = supportJit ? "c.lateUpdate(dt)" : function(c, dt) {
+        c.lateUpdate(dt);
+      };
       function sortedIndex(array, comp) {
         var order = comp.constructor._executionOrder;
         var id = comp.__instanceId;
@@ -8008,14 +7867,27 @@
           comp._objFlags |= IsEditorOnEnableCalled;
         }
       }
-      function createInvokeImpl(code, useDt) {
-        var body = "var a=it.array;for(it.i=0;it.i<a.length;++it.i){var c=a[it.i];" + code + "}";
+      function createInvokeImpl(funcOrCode, useDt) {
+        if ("function" === (__typeofVal = typeof funcOrCode, "object" === __typeofVal ? __realTypeOfObj(funcOrCode) : __typeofVal)) return useDt ? function(iterator, dt) {
+          var array = iterator.array;
+          for (iterator.i = 0; iterator.i < array.length; ++iterator.i) {
+            var comp = array[iterator.i];
+            funcOrCode(comp, dt);
+          }
+        } : function(iterator) {
+          var array = iterator.array;
+          for (iterator.i = 0; iterator.i < array.length; ++iterator.i) {
+            var comp = array[iterator.i];
+            funcOrCode(comp);
+          }
+        };
+        var body = "var a=it.array;for(it.i=0;it.i<a.length;++it.i){var c=a[it.i];" + funcOrCode + "}";
         return useDt ? Function("it", "dt", body) : Function("it", body);
       }
       function ctor() {
-        this.startInvoker = new OneOffInvoker(createInvokeImpl("c.start();c._objFlags|=" + IsStartCalled));
-        this.updateInvoker = new ReusableInvoker(createInvokeImpl("c.update(dt)", true));
-        this.lateUpdateInvoker = new ReusableInvoker(createInvokeImpl("c.lateUpdate(dt)", true));
+        this.startInvoker = new OneOffInvoker(createInvokeImpl(callStart));
+        this.updateInvoker = new ReusableInvoker(createInvokeImpl(callUpdate, true));
+        this.lateUpdateInvoker = new ReusableInvoker(createInvokeImpl(callLateUpdate, true));
         this.scheduleInNextFrame = [];
         this._updating = false;
       }
@@ -8042,11 +7914,7 @@
         _onEnabled: function(comp) {
           cc.director.getScheduler().resumeTarget(comp);
           comp._objFlags |= IsOnEnableCalled;
-          if (this._updating) {
-            this.scheduleInNextFrame.push(comp);
-            return;
-          }
-          this._scheduleImmediate(comp);
+          this._updating ? this.scheduleInNextFrame.push(comp) : this._scheduleImmediate(comp);
         },
         _onDisabled: function(comp) {
           cc.director.getScheduler().pauseTarget(comp);
@@ -8108,12 +7976,12 @@
       });
       module.exports = ComponentScheduler;
     }), {
-      "./platform/CCClass": 136,
-      "./platform/CCObject": 140,
-      "./platform/js": 151,
-      "./utils/misc": 162
+      "./platform/CCClass": 131,
+      "./platform/CCObject": 135,
+      "./platform/js": 147,
+      "./utils/misc": 157
     } ],
-    48: [ (function(require, module, exports) {
+    47: [ (function(require, module, exports) {
       var AnimationAnimator = require("../../animation/animation-animator");
       var AnimationClip = require("../../animation/animation-clip");
       function equalClips(clip1, clip2) {
@@ -8126,11 +7994,11 @@
         mixins: [ cc.EventTarget ],
         editor: false,
         ctor: function() {
+          cc.EventTarget.call(this);
           this._animator = null;
           this._nameToState = {};
           this._didInit = false;
           this._currentClip = null;
-          this._listeners = [];
         },
         properties: {
           _defaultClip: {
@@ -8302,28 +8170,18 @@
         },
         on: function(type, callback, target, useCapture) {
           this._init();
-          var listeners = this._listeners;
-          for (var i = 0, l = listeners.length; i < l; i++) {
-            var listener = listeners[i];
-            if (listener[0] === type && listener[1] === callback && listener[2] === target && listener[3] === useCapture) return;
-          }
-          this._animator.on(type, callback, target, useCapture);
-          listeners.push([ type, callback, target, useCapture ]);
-          return callback;
+          var ret = cc.EventTarget.prototype.on.call(this, type, callback, target, useCapture);
+          var array = this._animator._anims.array;
+          for (var i = 0; i < array.length; ++i) array[i]._setListeners(this);
+          return ret;
         },
         off: function(type, callback, target, useCapture) {
           this._init();
-          var listeners = this._listeners;
+          cc.EventTarget.prototype.off.call(this, type, callback, target, useCapture);
           var nameToState = this._nameToState;
-          for (var i = listeners.length - 1; i >= 0; i--) {
-            var listener = listeners[i];
-            if (listener[0] === type && listener[1] === callback && listener[2] === target && listener[3] === useCapture) {
-              for (var name in nameToState) {
-                var state = nameToState[name];
-                state.off(type, callback, target, useCapture);
-              }
-              listeners.splice(i, 1);
-            }
+          for (var name in nameToState) {
+            var state = nameToState[name];
+            state._setListeners(null);
           }
         },
         _init: function() {
@@ -8354,9 +8212,9 @@
     }), {
       "../../animation/animation-animator": 10,
       "../../animation/animation-clip": 11,
-      "./CCComponent": 53
+      "./CCComponent": 52
     } ],
-    49: [ (function(require, module, exports) {
+    48: [ (function(require, module, exports) {
       var AudioSource = cc.Class({
         name: "cc.AudioSource",
         extends: require("./CCComponent"),
@@ -8536,9 +8394,9 @@
       });
       cc.AudioSource = module.exports = AudioSource;
     }), {
-      "./CCComponent": 53
+      "./CCComponent": 52
     } ],
-    50: [ (function(require, module, exports) {
+    49: [ (function(require, module, exports) {
       var BlockEvents = [ "touchstart", "touchmove", "touchend", "mousedown", "mousemove", "mouseup", "mouseenter", "mouseleave", "mousewheel" ];
       function stopPropagation(event) {
         event.stopPropagation();
@@ -8560,9 +8418,9 @@
       });
       cc.BlockInputEvents = module.exports = BlockInputEvents;
     }), {
-      "./CCComponent": 53
+      "./CCComponent": 52
     } ],
-    51: [ (function(require, module, exports) {
+    50: [ (function(require, module, exports) {
       var Transition = cc.Enum({
         NONE: 0,
         COLOR: 1,
@@ -8854,9 +8712,9 @@
       });
       cc.Button = module.exports = Button;
     }), {
-      "./CCComponent": 53
+      "./CCComponent": 52
     } ],
-    52: [ (function(require, module, exports) {
+    51: [ (function(require, module, exports) {
       var designResolutionWrapper = {
         getContentSize: function() {
           return cc.visibleRect;
@@ -8968,9 +8826,9 @@
       });
       cc.Canvas = module.exports = Canvas;
     }), {
-      "./CCComponent": 53
+      "./CCComponent": 52
     } ],
-    53: [ (function(require, module, exports) {
+    52: [ (function(require, module, exports) {
       var CCObject = require("../platform/CCObject");
       var JS = require("../platform/js");
       var idGenerater = new (require("../platform/id-generater"))("Comp");
@@ -9127,11 +8985,11 @@
       Component.prototype.__scriptUuid = "";
       cc.Component = module.exports = Component;
     }), {
-      "../platform/CCObject": 140,
-      "../platform/id-generater": 147,
-      "../platform/js": 151
+      "../platform/CCObject": 135,
+      "../platform/id-generater": 143,
+      "../platform/js": 147
     } ],
-    54: [ (function(require, module, exports) {
+    53: [ (function(require, module, exports) {
       cc.Component.EventHandler = cc.Class({
         name: "cc.ClickEvent",
         properties: {
@@ -9179,7 +9037,7 @@
         }
       });
     }), {} ],
-    55: [ (function(require, module, exports) {
+    54: [ (function(require, module, exports) {
       require("../editbox/CCSGEditBox");
       var KeyboardReturnType = _ccsg.EditBox.KeyboardReturnType;
       var InputMode = _ccsg.EditBox.InputMode;
@@ -9416,9 +9274,9 @@
       };
       cc.EditBox = module.exports = EditBox;
     }), {
-      "../editbox/CCSGEditBox": 216
+      "../editbox/CCSGEditBox": 211
     } ],
-    56: [ (function(require, module, exports) {
+    55: [ (function(require, module, exports) {
       require("../label/CCSGLabel");
       require("../label/CCSGLabelCanvasRenderCmd");
       require("../label/CCSGLabelWebGLRenderCmd");
@@ -9670,11 +9528,11 @@
       });
       cc.Label = module.exports = Label;
     }), {
-      "../label/CCSGLabel": 216,
-      "../label/CCSGLabelCanvasRenderCmd": 216,
-      "../label/CCSGLabelWebGLRenderCmd": 216
+      "../label/CCSGLabel": 211,
+      "../label/CCSGLabelCanvasRenderCmd": 211,
+      "../label/CCSGLabelWebGLRenderCmd": 211
     } ],
-    57: [ (function(require, module, exports) {
+    56: [ (function(require, module, exports) {
       var LabelOutline = cc.Class({
         name: "cc.LabelOutline",
         extends: require("./CCComponent"),
@@ -9727,9 +9585,9 @@
       });
       cc.LabelOutline = module.exports = LabelOutline;
     }), {
-      "./CCComponent": 53
+      "./CCComponent": 52
     } ],
-    58: [ (function(require, module, exports) {
+    57: [ (function(require, module, exports) {
       var Type = cc.Enum({
         NONE: 0,
         HORIZONTAL: 1,
@@ -10245,12 +10103,13 @@
       });
       cc.Layout = module.exports = Layout;
     }), {
-      "./CCComponent": 53
+      "./CCComponent": 52
     } ],
-    59: [ (function(require, module, exports) {
+    58: [ (function(require, module, exports) {
       require("../../clipping-nodes/CCClippingNode");
       require("../../clipping-nodes/CCClippingNodeCanvasRenderCmd");
       require("../../clipping-nodes/CCClippingNodeWebGLRenderCmd");
+      require("../../shape-nodes/CCDrawNode");
       var Base = cc._RendererInSG;
       var MaskType = cc.Enum({
         RECT: 0,
@@ -10431,11 +10290,12 @@
       };
       cc.Mask = module.exports = Mask;
     }), {
-      "../../clipping-nodes/CCClippingNode": 216,
-      "../../clipping-nodes/CCClippingNodeCanvasRenderCmd": 216,
-      "../../clipping-nodes/CCClippingNodeWebGLRenderCmd": 216
+      "../../clipping-nodes/CCClippingNode": 211,
+      "../../clipping-nodes/CCClippingNodeCanvasRenderCmd": 211,
+      "../../clipping-nodes/CCClippingNodeWebGLRenderCmd": 211,
+      "../../shape-nodes/CCDrawNode": 211
     } ],
-    60: [ (function(require, module, exports) {
+    59: [ (function(require, module, exports) {
       var SizeMode = cc.Enum({
         Unified: 0,
         Free: 1
@@ -10617,8 +10477,6 @@
         },
         _updatePageView: function() {
           var pageCount = this._pages.length;
-          var layout = this.content.getComponent(cc.Layout);
-          layout && layout.enabled && layout.updateLayout();
           if (this._curPageIdx >= pageCount) {
             this._curPageIdx = 0 === pageCount ? 0 : pageCount - 1;
             this._lastPageIdx = this._curPageIdx;
@@ -10627,6 +10485,8 @@
             this._pages[i].setSiblingIndex(i);
             this.direction === Direction.Horizontal ? this._scrollCenterOffsetX[i] = Math.abs(this.content.x + this._pages[i].x) : this._scrollCenterOffsetY[i] = Math.abs(this.content.y + this._pages[i].y);
           }
+          var layout = this.content.getComponent(cc.Layout);
+          layout && layout.enabled && layout.updateLayout();
           this.indicator && this.indicator._refresh();
         },
         _updateAllPagesSize: function() {
@@ -10736,7 +10596,7 @@
       });
       cc.PageView = module.exports = PageView;
     }), {} ],
-    61: [ (function(require, module, exports) {
+    60: [ (function(require, module, exports) {
       var Direction = cc.Enum({
         HORIZONTAL: 0,
         VERTICAL: 1
@@ -10830,9 +10690,9 @@
       });
       cc.PageViewIndicator = module.exports = PageViewIndicator;
     }), {
-      "./CCComponent": 53
+      "./CCComponent": 52
     } ],
-    62: [ (function(require, module, exports) {
+    61: [ (function(require, module, exports) {
       var Mode = cc.Enum({
         HORIZONTAL: 0,
         VERTICAL: 1,
@@ -10963,9 +10823,9 @@
       });
       cc.ProgressBar = module.exports = ProgressBar;
     }), {
-      "./CCComponent": 53
+      "./CCComponent": 52
     } ],
-    63: [ (function(require, module, exports) {
+    62: [ (function(require, module, exports) {
       var RendererInSG = cc.Class({
         extends: require("./CCSGComponent"),
         name: "cc._RendererInSG",
@@ -11023,9 +10883,9 @@
       });
       cc._RendererInSG = module.exports = RendererInSG;
     }), {
-      "./CCSGComponent": 66
+      "./CCSGComponent": 65
     } ],
-    64: [ (function(require, module, exports) {
+    63: [ (function(require, module, exports) {
       var RendererUnderSG = cc.Class({
         extends: require("./CCSGComponent"),
         name: "cc._RendererUnderSG",
@@ -11065,9 +10925,9 @@
       });
       cc._RendererUnderSG = module.exports = RendererUnderSG;
     }), {
-      "./CCSGComponent": 66
+      "./CCSGComponent": 65
     } ],
-    65: [ (function(require, module, exports) {
+    64: [ (function(require, module, exports) {
       require("../label/CCHtmlTextParser");
       require("../label/CCTextUtils");
       var HorizontalAlign = cc.TextAlignment;
@@ -11543,10 +11403,10 @@
       });
       cc.RichText = module.exports = RichText;
     }), {
-      "../label/CCHtmlTextParser": 96,
-      "../label/CCTextUtils": 97
+      "../label/CCHtmlTextParser": 90,
+      "../label/CCTextUtils": 91
     } ],
-    66: [ (function(require, module, exports) {
+    65: [ (function(require, module, exports) {
       var SceneGraphHelper = require("../utils/scene-graph-helper");
       var SGComponent = cc.Class({
         extends: require("./CCComponent"),
@@ -11567,10 +11427,10 @@
       });
       cc._SGComponent = module.exports = SGComponent;
     }), {
-      "../utils/scene-graph-helper": 165,
-      "./CCComponent": 53
+      "../utils/scene-graph-helper": 160,
+      "./CCComponent": 52
     } ],
-    67: [ (function(require, module, exports) {
+    66: [ (function(require, module, exports) {
       var GETTINGSHORTERFACTOR = 20;
       var Direction = cc.Enum({
         HORIZONTAL: 0,
@@ -11760,9 +11620,9 @@
       });
       cc.Scrollbar = module.exports = Scrollbar;
     }), {
-      "./CCComponent": 53
+      "./CCComponent": 52
     } ],
-    68: [ (function(require, module, exports) {
+    67: [ (function(require, module, exports) {
       var NUMBER_OF_GATHERED_TOUCHES_FOR_MOVE_SPEED = 5;
       var OUT_OF_BOUNDARY_BREAKING_FACTOR = .05;
       var EPSILON = 1e-4;
@@ -11785,9 +11645,10 @@
         BOUNCE_BOTTOM: 6,
         BOUNCE_LEFT: 7,
         BOUNCE_RIGHT: 8,
-        AUTOSCROLL_ENDED: 9,
+        SCROLL_ENDED: 9,
         TOUCH_UP: 10,
-        AUTOSCROLL_ENDED_WITH_THRESHOLD: 11
+        AUTOSCROLL_ENDED_WITH_THRESHOLD: 11,
+        SCROLL_BEGAN: 12
       });
       var eventMap = {
         "scroll-to-top": EventType.SCROLL_TO_TOP,
@@ -11799,9 +11660,10 @@
         "bounce-left": EventType.BOUNCE_LEFT,
         "bounce-right": EventType.BOUNCE_RIGHT,
         "bounce-top": EventType.BOUNCE_TOP,
-        "scroll-ended": EventType.AUTOSCROLL_ENDED,
+        "scroll-ended": EventType.SCROLL_ENDED,
         "touch-up": EventType.TOUCH_UP,
-        "scroll-ended-with-threshold": EventType.AUTOSCROLL_ENDED_WITH_THRESHOLD
+        "scroll-ended-with-threshold": EventType.AUTOSCROLL_ENDED_WITH_THRESHOLD,
+        "scroll-began": EventType.SCROLL_BEGAN
       };
       var ScrollView = cc.Class({
         name: "cc.ScrollView",
@@ -11832,6 +11694,7 @@
           this._isScrollEndedWithThresholdEventFired = false;
           this._scrollEventEmitMask = 0;
           this._isBouncing = false;
+          this._scrolling = false;
         },
         properties: {
           content: {
@@ -12027,6 +11890,12 @@
         },
         getContentPosition: function() {
           return this.content.getPosition();
+        },
+        isScrolling: function() {
+          return this._scrolling;
+        },
+        isAutoScrolling: function() {
+          return this._autoScrolling;
         },
         _registerEvent: function() {
           this.node.on(cc.Node.EventType.TOUCH_START, this._onTouchBegan, this, true);
@@ -12231,7 +12100,13 @@
             icLeftPos + realMove.x >= this._leftBoundary && (scrollEventType = "scroll-to-left");
           }
           this._moveContent(realMove, false);
-          0 === realMove.x && 0 === realMove.y || this._dispatchEvent("scrolling");
+          if (0 !== realMove.x || 0 !== realMove.y) {
+            if (!this._scrolling) {
+              this._scrolling = true;
+              this._dispatchEvent("scroll-began");
+            }
+            this._dispatchEvent("scrolling");
+          }
           -1 !== scrollEventType && this._dispatchEvent(scrollEventType);
         },
         _handlePressLogic: function() {
@@ -12289,6 +12164,10 @@
           var delta = touch.getDelta();
           this._gatherTouchMove(delta);
           this._processInertiaScroll();
+          if (this._scrolling) {
+            this._scrolling = false;
+            this._autoScrolling || this._dispatchEvent("scroll-ended");
+          }
         },
         _isOutOfBoundary: function() {
           var outOfBoundary = this._getHowMuchOutOfBoundary();
@@ -12518,9 +12397,9 @@
       });
       cc.ScrollView = module.exports = ScrollView;
     }), {
-      "./CCViewGroup": 76
+      "./CCViewGroup": 75
     } ],
-    69: [ (function(require, module, exports) {
+    68: [ (function(require, module, exports) {
       var Direction = cc.Enum({
         Horizontal: 0,
         Vertical: 1
@@ -12641,9 +12520,9 @@
       });
       cc.Slider = module.exports = Slider;
     }), {
-      "./CCComponent": 53
+      "./CCComponent": 52
     } ],
-    70: [ (function(require, module, exports) {
+    69: [ (function(require, module, exports) {
       var Base = require("./CCRendererUnderSG");
       var SpriteType = cc.Scale9Sprite.RenderingType;
       var FillType = cc.Scale9Sprite.FillType;
@@ -12844,13 +12723,13 @@
           sgNode.setInsetLeft(spriteFrame.insetLeft);
         },
         _applySpriteSize: function() {
-          if (SizeMode.CUSTOM !== this._sizeMode && this._spriteFrame) if (SizeMode.RAW === this._sizeMode) {
+          if (this._spriteFrame) if (SizeMode.RAW === this._sizeMode) {
             var size = this._spriteFrame.getOriginalSize();
             this.node.setContentSize(size);
           } else if (SizeMode.TRIMMED === this._sizeMode) {
             var rect = this._spriteFrame.getRect();
             this.node.setContentSize(rect.width, rect.height);
-          } else this.node.setContentSize(this.node.getContentSize(true)); else this.node.setContentSize(this.node.getContentSize(true));
+          }
         },
         _onTextureLoaded: function(event) {
           var self = this;
@@ -12901,10 +12780,10 @@
       misc.propertyDefine(Sprite, SameNameGetSets, DiffNameGetSets);
       cc.Sprite = module.exports = Sprite;
     }), {
-      "../utils/misc": 162,
-      "./CCRendererUnderSG": 64
+      "../utils/misc": 157,
+      "./CCRendererUnderSG": 63
     } ],
-    71: [ (function(require, module, exports) {
+    70: [ (function(require, module, exports) {
       var SpriteDistortion = cc.Class({
         name: "cc.SpriteDistortion",
         extends: require("./CCComponent"),
@@ -12952,9 +12831,9 @@
       });
       cc.SpriteDistortion = module.exports = SpriteDistortion;
     }), {
-      "./CCComponent": 53
+      "./CCComponent": 52
     } ],
-    72: [ (function(require, module, exports) {
+    71: [ (function(require, module, exports) {
       var ComponentType = cc.Enum({
         NONE: 0,
         CHECKBOX: 1,
@@ -12991,7 +12870,7 @@
       });
       cc.StudioComponent = module.exports = StudioComponent;
     }), {} ],
-    73: [ (function(require, module, exports) {
+    72: [ (function(require, module, exports) {
       var Toggle = cc.Class({
         name: "cc.Toggle",
         extends: require("./CCButton"),
@@ -13077,9 +12956,9 @@
       });
       cc.Toggle = module.exports = Toggle;
     }), {
-      "./CCButton": 51
+      "./CCButton": 50
     } ],
-    74: [ (function(require, module, exports) {
+    73: [ (function(require, module, exports) {
       var ToggleGroup = cc.Class({
         name: "cc.ToggleGroup",
         extends: cc.Component,
@@ -13094,7 +12973,6 @@
           },
           toggleItems: {
             get: function() {
-              cc.warnID(8500);
               return this._toggleItems;
             }
           }
@@ -13133,7 +13011,7 @@
       });
       cc.ToggleGroup = module.exports = ToggleGroup;
     }), {} ],
-    75: [ (function(require, module, exports) {
+    74: [ (function(require, module, exports) {
       require("../videoplayer/CCSGVideoPlayer");
       var EventType = _ccsg.VideoPlayer.EventType;
       var ResourceType = cc.Enum({
@@ -13304,18 +13182,18 @@
       });
       cc.VideoPlayer = module.exports = VideoPlayer;
     }), {
-      "../videoplayer/CCSGVideoPlayer": 216
+      "../videoplayer/CCSGVideoPlayer": 211
     } ],
-    76: [ (function(require, module, exports) {
+    75: [ (function(require, module, exports) {
       var ViewGroup = cc.Class({
         name: "cc.ViewGroup",
         extends: require("./CCComponent")
       });
       cc.ViewGroup = module.exports = ViewGroup;
     }), {
-      "./CCComponent": 53
+      "./CCComponent": 52
     } ],
-    77: [ (function(require, module, exports) {
+    76: [ (function(require, module, exports) {
       require("../webview/CCSGWebView");
       var EventType = _ccsg.WebView.EventType;
       function emptyCallback() {}
@@ -13394,13 +13272,16 @@
         },
         setOnJSCallback: function(callback) {
           this._sgNode && this._sgNode.setOnJSCallback(callback);
+        },
+        evaluateJS: function(str) {
+          this._sgNode && this._sgNode.evaluateJS(str);
         }
       });
       cc.WebView = module.exports = WebView;
     }), {
-      "../webview/CCSGWebView": 216
+      "../webview/CCSGWebView": 211
     } ],
-    78: [ (function(require, module, exports) {
+    77: [ (function(require, module, exports) {
       var WidgetManager = require("../base-ui/CCWidgetManager");
       var AlignFlags = WidgetManager._AlignFlags;
       var TOP = AlignFlags.TOP;
@@ -13666,10 +13547,10 @@
       });
       cc.Widget = module.exports = Widget;
     }), {
-      "../base-ui/CCWidgetManager": 37,
-      "./CCComponent": 53
+      "../base-ui/CCWidgetManager": 36,
+      "./CCComponent": 52
     } ],
-    79: [ (function(require, module, exports) {
+    78: [ (function(require, module, exports) {
       require("./CCComponent");
       require("./CCRendererInSG");
       require("./CCRendererUnderSG");
@@ -13677,39 +13558,39 @@
       require("./missing-script");
       module.exports = [ require("./CCSprite"), require("./CCWidget"), require("./CCCanvas"), require("./CCAudioSource"), require("./CCAnimation"), require("./CCButton"), require("./CCLabel"), require("./CCProgressBar"), require("./CCMask"), require("./CCScrollBar"), require("./CCScrollView"), require("./CCPageViewIndicator"), require("./CCPageView"), require("./CCSlider"), require("./CCLayout"), require("./CCEditBox"), require("./CCVideoPlayer"), require("./CCWebView"), require("./CCSpriteDistortion"), require("./CCLabelOutline"), require("./CCRichText"), require("./CCToggleGroup"), require("./CCToggle"), require("./CCBlockInputEvents") ];
     }), {
-      "./CCAnimation": 48,
-      "./CCAudioSource": 49,
-      "./CCBlockInputEvents": 50,
-      "./CCButton": 51,
-      "./CCCanvas": 52,
-      "./CCComponent": 53,
-      "./CCComponentEventHandler": 54,
-      "./CCEditBox": 55,
-      "./CCLabel": 56,
-      "./CCLabelOutline": 57,
-      "./CCLayout": 58,
-      "./CCMask": 59,
-      "./CCPageView": 60,
-      "./CCPageViewIndicator": 61,
-      "./CCProgressBar": 62,
-      "./CCRendererInSG": 63,
-      "./CCRendererUnderSG": 64,
-      "./CCRichText": 65,
-      "./CCScrollBar": 67,
-      "./CCScrollView": 68,
-      "./CCSlider": 69,
-      "./CCSprite": 70,
-      "./CCSpriteDistortion": 71,
-      "./CCToggle": 73,
-      "./CCToggleGroup": 74,
-      "./CCVideoPlayer": 75,
-      "./CCWebView": 77,
-      "./CCWidget": 78,
-      "./missing-script": 80
+      "./CCAnimation": 47,
+      "./CCAudioSource": 48,
+      "./CCBlockInputEvents": 49,
+      "./CCButton": 50,
+      "./CCCanvas": 51,
+      "./CCComponent": 52,
+      "./CCComponentEventHandler": 53,
+      "./CCEditBox": 54,
+      "./CCLabel": 55,
+      "./CCLabelOutline": 56,
+      "./CCLayout": 57,
+      "./CCMask": 58,
+      "./CCPageView": 59,
+      "./CCPageViewIndicator": 60,
+      "./CCProgressBar": 61,
+      "./CCRendererInSG": 62,
+      "./CCRendererUnderSG": 63,
+      "./CCRichText": 64,
+      "./CCScrollBar": 66,
+      "./CCScrollView": 67,
+      "./CCSlider": 68,
+      "./CCSprite": 69,
+      "./CCSpriteDistortion": 70,
+      "./CCToggle": 72,
+      "./CCToggleGroup": 73,
+      "./CCVideoPlayer": 74,
+      "./CCWebView": 76,
+      "./CCWidget": 77,
+      "./missing-script": 79
     } ],
-    80: [ (function(require, module, exports) {
+    79: [ (function(require, module, exports) {
       var JS = cc.js;
-      var isBuiltinClassId = require("../utils/misc").isBuiltinClassId;
+      var BUILTIN_CLASSID_RE = require("../utils/misc").BUILTIN_CLASSID_RE;
       var MissingClass = cc.Class({
         name: "cc.MissingClass",
         properties: {
@@ -13749,7 +13630,7 @@
             return null;
           },
           getMissingWrapper: function(id, data) {
-            return data.node && (/^[0-9a-zA-Z+/]{23}$/.test(id) || isBuiltinClassId(id)) ? MissingScript : MissingClass;
+            return data.node && (/^[0-9a-zA-Z+/]{23}$/.test(id) || BUILTIN_CLASSID_RE.test(id)) ? MissingScript : MissingClass;
           }
         },
         onLoad: function() {
@@ -13758,9 +13639,9 @@
       });
       cc._MissingScript = module.exports = MissingScript;
     }), {
-      "../utils/misc": 162
+      "../utils/misc": 157
     } ],
-    81: [ (function(require, module, exports) {
+    80: [ (function(require, module, exports) {
       var JS = cc.js;
       require("../event/event");
       var EventMouse = function(eventType, bubbles) {
@@ -13925,9 +13806,9 @@
       cc.Event.EventKeyboard = EventKeyboard;
       module.exports = cc.Event;
     }), {
-      "../event/event": 85
+      "../event/event": 84
     } ],
-    82: [ (function(require, module, exports) {
+    81: [ (function(require, module, exports) {
       var EventTarget = require("../event/event-target");
       var EventType = cc.Enum({
         KEY_DOWN: "keydown",
@@ -13994,53 +13875,50 @@
       cc.SystemEvent = module.exports = SystemEvent;
       cc.systemEvent = new cc.SystemEvent();
     }), {
-      "../event/event-target": 84
+      "../event/event-target": 83
     } ],
-    83: [ (function(require, module, exports) {
+    82: [ (function(require, module, exports) {
       var JS = cc.js;
       var CallbacksHandler = require("../platform/callbacks-invoker").CallbacksHandler;
-      var REMOVE_PLACEHOLDER = CallbacksHandler.REMOVE_PLACEHOLDER;
       function EventListeners() {
         CallbacksHandler.call(this);
       }
       JS.extend(EventListeners, CallbacksHandler);
       EventListeners.prototype.invoke = function(event, captureListeners) {
-        var key = event.type, list = this._callbackTable[key], i, endIndex, callingFunc, target, hasTarget;
-        this._invoking[key] = true;
-        if (list) if (1 === list.length) {
-          callingFunc = list[0];
-          callingFunc !== REMOVE_PLACEHOLDER && callingFunc.call(event.currentTarget, event, captureListeners);
-        } else {
-          endIndex = list.length - 1;
-          for (i = 0; i <= endIndex; ) {
-            callingFunc = list[i];
-            var increment = 1;
-            if (callingFunc !== REMOVE_PLACEHOLDER) {
-              target = list[i + 1];
-              hasTarget = target && "object" === (__typeofVal = typeof target, "object" === __typeofVal ? __realTypeOfObj(target) : __typeofVal);
-              if (hasTarget) {
-                callingFunc.call(target, event, captureListeners);
-                increment = 2;
-              } else callingFunc.call(event.currentTarget, event, captureListeners);
-              if (event._propagationImmediateStopped || i + increment > endIndex) break;
+        var key = event.type;
+        var list = this._callbackTable[key];
+        if (list) {
+          var rootInvoker = !list.isInvoking;
+          list.isInvoking = true;
+          var callbacks = list.callbacks;
+          var targets = list.targets;
+          for (var i = 0, len = callbacks.length; i < len; ++i) {
+            var callback = callbacks[i];
+            if (callback) {
+              var target = targets[i] || event.currentTarget;
+              callback.call(target, event, captureListeners);
+              if (event._propagationImmediateStopped) break;
             }
-            i += increment;
+          }
+          if (rootInvoker) {
+            list.isInvoking = false;
+            list.containCanceled && list.purgeCanceled();
           }
         }
-        this._invoking[key] = false;
-        this._clearToRemove(key);
       };
       module.exports = EventListeners;
     }), {
-      "../platform/callbacks-invoker": 145
+      "../platform/callbacks-invoker": 140
     } ],
-    84: [ (function(require, module, exports) {
+    83: [ (function(require, module, exports) {
       var EventListeners = require("./event-listeners");
       require("./event");
       var JS = cc.js;
       var fastRemove = JS.array.fastRemove;
       var cachedArray = new Array(16);
       cachedArray.length = 0;
+      var CAPTURING_FLAG = 2;
+      var BUBBLING_FLAG = 4;
       var _doDispatchEvent = function(owner, event) {
         var target, i;
         event.target = owner;
@@ -14085,12 +13963,37 @@
       function EventTarget() {
         this._capturingListeners = null;
         this._bubblingListeners = null;
+        this._hasListenerCache = null;
       }
       var proto = EventTarget.prototype;
+      proto._addEventFlag = function(type, listeners, useCapture) {
+        var cache = this._hasListenerCache;
+        cache || (cache = this._hasListenerCache = cc.js.createMap());
+        void 0 === cache[type] && (cache[type] = 0);
+        var flag = useCapture ? CAPTURING_FLAG : BUBBLING_FLAG;
+        cache[type] |= flag;
+      };
+      proto._purgeEventFlag = function(type, listeners, useCapture) {
+        var cache = this._hasListenerCache;
+        if (!cache || listeners.has(type)) return;
+        var flag = useCapture ? CAPTURING_FLAG : BUBBLING_FLAG;
+        cache[type] &= ~flag;
+        0 === cache[type] && delete cache[type];
+      };
+      proto._resetFlagForTarget = function(target, listeners, useCapture) {
+        var cache = this._hasListenerCache;
+        if (!cache) return;
+        var flag = useCapture ? CAPTURING_FLAG : BUBBLING_FLAG;
+        for (var key in cache) if (!listeners.has(key)) {
+          cache[key] &= ~flag;
+          0 === cache[key] && delete cache[key];
+        }
+      };
       proto.hasEventListener = function(type, checkCapture) {
-        if (checkCapture && this._capturingListeners && this._capturingListeners.has(type)) return true;
-        if (!checkCapture && this._bubblingListeners && this._bubblingListeners.has(type)) return true;
-        return false;
+        var cache = this._hasListenerCache;
+        if (!cache) return false;
+        var flag = checkCapture ? CAPTURING_FLAG : BUBBLING_FLAG;
+        return (cache[type] & flag) > 0;
       };
       proto.on = function(type, callback, target, useCapture) {
         if ("boolean" === (__typeofVal = typeof target, "object" === __typeofVal ? __realTypeOfObj(target) : __typeofVal)) {
@@ -14106,6 +14009,7 @@
         if (!listeners.has(type, callback, target)) {
           listeners.add(type, callback, target);
           target && target.__eventTargets && target.__eventTargets.push(this);
+          this._addEventFlag(type, listeners, useCapture);
         }
         return callback;
       };
@@ -14119,38 +14023,57 @@
           if (listeners) {
             listeners.remove(type, callback, target);
             target && target.__eventTargets && fastRemove(target.__eventTargets, this);
+            this._purgeEventFlag(type, listeners, useCapture);
           }
         } else {
           this._capturingListeners && this._capturingListeners.removeAll(type);
           this._bubblingListeners && this._bubblingListeners.removeAll(type);
+          this._hasListenerCache && delete this._hasListenerCache[type];
         }
       };
       proto.targetOff = function(target) {
-        this._capturingListeners && this._capturingListeners.removeAll(target);
-        this._bubblingListeners && this._bubblingListeners.removeAll(target);
+        if (this._capturingListeners) {
+          this._capturingListeners.removeAll(target);
+          this._resetFlagForTarget(target, this._capturingListeners, true);
+        }
+        if (this._bubblingListeners) {
+          this._bubblingListeners.removeAll(target);
+          this._resetFlagForTarget(target, this._bubblingListeners, false);
+        }
       };
       proto.once = function(type, callback, target, useCapture) {
-        var self = this;
-        var cb = function(event) {
-          self.off(type, cb, target, useCapture);
-          callback.call(this, event);
-        };
-        this.on(type, cb, target, useCapture);
+        var eventType_hasOnceListener = "__ONCE_FLAG:" + type;
+        var listeners = useCapture ? this._capturingListeners : this._bubblingListeners;
+        var hasOnceListener = listeners && listeners.has(eventType_hasOnceListener, callback, target);
+        if (!hasOnceListener) {
+          var self = this;
+          var onceWrapper = function(event) {
+            self.off(type, onceWrapper, target, useCapture);
+            listeners.remove(eventType_hasOnceListener, callback, target);
+            callback.call(this, event);
+          };
+          this.on(type, onceWrapper, target, useCapture);
+          listeners || (listeners = useCapture ? this._capturingListeners : this._bubblingListeners);
+          listeners.add(eventType_hasOnceListener, callback, target);
+        }
       };
       proto.dispatchEvent = function(event) {
         _doDispatchEvent(this, event);
         cachedArray.length = 0;
       };
       proto.emit = function(message, detail) {
-        var caplisteners = this._capturingListeners && this._capturingListeners._callbackTable[message];
-        var bublisteners = this._bubblingListeners && this._bubblingListeners._callbackTable[message];
-        if ((!caplisteners || 0 === caplisteners.length) && (!bublisteners || 0 === bublisteners.length)) return;
+        var cache = this._hasListenerCache;
+        if (!cache) return;
+        var flag = cache[message];
+        if (!flag) return;
         var event = cc.Event.EventCustom.get(message);
         event.detail = detail;
         event.eventPhase = 2;
         event.target = event.currentTarget = this;
-        caplisteners && this._capturingListeners.invoke(event);
-        bublisteners && !event._propagationImmediateStopped && this._bubblingListeners.invoke(event);
+        var capturingListeners = this._capturingListeners;
+        capturingListeners && flag & CAPTURING_FLAG && capturingListeners.invoke(event);
+        var bubblingListeners = this._bubblingListeners;
+        bubblingListeners && flag & BUBBLING_FLAG && !event._propagationImmediateStopped && bubblingListeners.invoke(event);
         cc.Event.EventCustom.put(event);
       };
       proto._isTargetActive = function(type) {
@@ -14164,10 +14087,10 @@
       EventTarget.prototype._EventTargetTargetOff = EventTarget.prototype.targetOff;
       cc.EventTarget = module.exports = EventTarget;
     }), {
-      "./event": 85,
-      "./event-listeners": 83
+      "./event": 84,
+      "./event-listeners": 82
     } ],
-    85: [ (function(require, module, exports) {
+    84: [ (function(require, module, exports) {
       var JS = require("../platform/js");
       cc.Event = function(type, bubbles) {
         this.type = type;
@@ -14243,1369 +14166,18 @@
       cc.Event.EventCustom = EventCustom;
       module.exports = cc.Event;
     }), {
-      "../platform/js": 151
+      "../platform/js": 147
     } ],
-    86: [ (function(require, module, exports) {
+    85: [ (function(require, module, exports) {
       require("./event");
       require("./event-listeners");
       require("./event-target");
     }), {
-      "./event": 85,
-      "./event-listeners": 83,
-      "./event-target": 84
+      "./event": 84,
+      "./event-listeners": 82,
+      "./event-target": 83
     } ],
-    87: [ (function(require, module, exports) {
-      "use strict";
-      module.exports = earcut;
-      function earcut(data, holeIndices, dim) {
-        dim = dim || 2;
-        var hasHoles = holeIndices && holeIndices.length, outerLen = hasHoles ? holeIndices[0] * dim : data.length, outerNode = linkedList(data, 0, outerLen, dim, true), triangles = [];
-        if (!outerNode) return triangles;
-        var minX, minY, maxX, maxY, x, y, size;
-        hasHoles && (outerNode = eliminateHoles(data, holeIndices, outerNode, dim));
-        if (data.length > 80 * dim) {
-          minX = maxX = data[0];
-          minY = maxY = data[1];
-          for (var i = dim; i < outerLen; i += dim) {
-            x = data[i];
-            y = data[i + 1];
-            x < minX && (minX = x);
-            y < minY && (minY = y);
-            x > maxX && (maxX = x);
-            y > maxY && (maxY = y);
-          }
-          size = Math.max(maxX - minX, maxY - minY);
-        }
-        earcutLinked(outerNode, triangles, dim, minX, minY, size);
-        return triangles;
-      }
-      function linkedList(data, start, end, dim, clockwise) {
-        var i, last;
-        if (clockwise === signedArea(data, start, end, dim) > 0) for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last); else for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
-        if (last && equals(last, last.next)) {
-          removeNode(last);
-          last = last.next;
-        }
-        return last;
-      }
-      function filterPoints(start, end) {
-        if (!start) return start;
-        end || (end = start);
-        var p = start, again;
-        do {
-          again = false;
-          if (p.steiner || !equals(p, p.next) && 0 !== area(p.prev, p, p.next)) p = p.next; else {
-            removeNode(p);
-            p = end = p.prev;
-            if (p === p.next) return null;
-            again = true;
-          }
-        } while (again || p !== end);
-        return end;
-      }
-      function earcutLinked(ear, triangles, dim, minX, minY, size, pass) {
-        if (!ear) return;
-        !pass && size && indexCurve(ear, minX, minY, size);
-        var stop = ear, prev, next;
-        while (ear.prev !== ear.next) {
-          prev = ear.prev;
-          next = ear.next;
-          if (size ? isEarHashed(ear, minX, minY, size) : isEar(ear)) {
-            triangles.push(prev.i / dim);
-            triangles.push(ear.i / dim);
-            triangles.push(next.i / dim);
-            removeNode(ear);
-            ear = next.next;
-            stop = next.next;
-            continue;
-          }
-          ear = next;
-          if (ear === stop) {
-            if (pass) if (1 === pass) {
-              ear = cureLocalIntersections(ear, triangles, dim);
-              earcutLinked(ear, triangles, dim, minX, minY, size, 2);
-            } else 2 === pass && splitEarcut(ear, triangles, dim, minX, minY, size); else earcutLinked(filterPoints(ear), triangles, dim, minX, minY, size, 1);
-            break;
-          }
-        }
-      }
-      function isEar(ear) {
-        var a = ear.prev, b = ear, c = ear.next;
-        if (area(a, b, c) >= 0) return false;
-        var p = ear.next.next;
-        while (p !== ear.prev) {
-          if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
-          p = p.next;
-        }
-        return true;
-      }
-      function isEarHashed(ear, minX, minY, size) {
-        var a = ear.prev, b = ear, c = ear.next;
-        if (area(a, b, c) >= 0) return false;
-        var minTX = a.x < b.x ? a.x < c.x ? a.x : c.x : b.x < c.x ? b.x : c.x, minTY = a.y < b.y ? a.y < c.y ? a.y : c.y : b.y < c.y ? b.y : c.y, maxTX = a.x > b.x ? a.x > c.x ? a.x : c.x : b.x > c.x ? b.x : c.x, maxTY = a.y > b.y ? a.y > c.y ? a.y : c.y : b.y > c.y ? b.y : c.y;
-        var minZ = zOrder(minTX, minTY, minX, minY, size), maxZ = zOrder(maxTX, maxTY, minX, minY, size);
-        var p = ear.nextZ;
-        while (p && p.z <= maxZ) {
-          if (p !== ear.prev && p !== ear.next && pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
-          p = p.nextZ;
-        }
-        p = ear.prevZ;
-        while (p && p.z >= minZ) {
-          if (p !== ear.prev && p !== ear.next && pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
-          p = p.prevZ;
-        }
-        return true;
-      }
-      function cureLocalIntersections(start, triangles, dim) {
-        var p = start;
-        do {
-          var a = p.prev, b = p.next.next;
-          if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
-            triangles.push(a.i / dim);
-            triangles.push(p.i / dim);
-            triangles.push(b.i / dim);
-            removeNode(p);
-            removeNode(p.next);
-            p = start = b;
-          }
-          p = p.next;
-        } while (p !== start);
-        return p;
-      }
-      function splitEarcut(start, triangles, dim, minX, minY, size) {
-        var a = start;
-        do {
-          var b = a.next.next;
-          while (b !== a.prev) {
-            if (a.i !== b.i && isValidDiagonal(a, b)) {
-              var c = splitPolygon(a, b);
-              a = filterPoints(a, a.next);
-              c = filterPoints(c, c.next);
-              earcutLinked(a, triangles, dim, minX, minY, size);
-              earcutLinked(c, triangles, dim, minX, minY, size);
-              return;
-            }
-            b = b.next;
-          }
-          a = a.next;
-        } while (a !== start);
-      }
-      function eliminateHoles(data, holeIndices, outerNode, dim) {
-        var queue = [], i, len, start, end, list;
-        for (i = 0, len = holeIndices.length; i < len; i++) {
-          start = holeIndices[i] * dim;
-          end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-          list = linkedList(data, start, end, dim, false);
-          list === list.next && (list.steiner = true);
-          queue.push(getLeftmost(list));
-        }
-        queue.sort(compareX);
-        for (i = 0; i < queue.length; i++) {
-          eliminateHole(queue[i], outerNode);
-          outerNode = filterPoints(outerNode, outerNode.next);
-        }
-        return outerNode;
-      }
-      function compareX(a, b) {
-        return a.x - b.x;
-      }
-      function eliminateHole(hole, outerNode) {
-        outerNode = findHoleBridge(hole, outerNode);
-        if (outerNode) {
-          var b = splitPolygon(outerNode, hole);
-          filterPoints(b, b.next);
-        }
-      }
-      function findHoleBridge(hole, outerNode) {
-        var p = outerNode, hx = hole.x, hy = hole.y, qx = -Infinity, m;
-        do {
-          if (hy <= p.y && hy >= p.next.y) {
-            var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
-            if (x <= hx && x > qx) {
-              qx = x;
-              if (x === hx) {
-                if (hy === p.y) return p;
-                if (hy === p.next.y) return p.next;
-              }
-              m = p.x < p.next.x ? p : p.next;
-            }
-          }
-          p = p.next;
-        } while (p !== outerNode);
-        if (!m) return null;
-        if (hx === qx) return m.prev;
-        var stop = m, mx = m.x, my = m.y, tanMin = Infinity, tan;
-        p = m.next;
-        while (p !== stop) {
-          if (hx >= p.x && p.x >= mx && pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
-            tan = Math.abs(hy - p.y) / (hx - p.x);
-            if ((tan < tanMin || tan === tanMin && p.x > m.x) && locallyInside(p, hole)) {
-              m = p;
-              tanMin = tan;
-            }
-          }
-          p = p.next;
-        }
-        return m;
-      }
-      function indexCurve(start, minX, minY, size) {
-        var p = start;
-        do {
-          null === p.z && (p.z = zOrder(p.x, p.y, minX, minY, size));
-          p.prevZ = p.prev;
-          p.nextZ = p.next;
-          p = p.next;
-        } while (p !== start);
-        p.prevZ.nextZ = null;
-        p.prevZ = null;
-        sortLinked(p);
-      }
-      function sortLinked(list) {
-        var i, p, q, e, tail, numMerges, pSize, qSize, inSize = 1;
-        do {
-          p = list;
-          list = null;
-          tail = null;
-          numMerges = 0;
-          while (p) {
-            numMerges++;
-            q = p;
-            pSize = 0;
-            for (i = 0; i < inSize; i++) {
-              pSize++;
-              q = q.nextZ;
-              if (!q) break;
-            }
-            qSize = inSize;
-            while (pSize > 0 || qSize > 0 && q) {
-              if (0 === pSize) {
-                e = q;
-                q = q.nextZ;
-                qSize--;
-              } else if (0 !== qSize && q) if (p.z <= q.z) {
-                e = p;
-                p = p.nextZ;
-                pSize--;
-              } else {
-                e = q;
-                q = q.nextZ;
-                qSize--;
-              } else {
-                e = p;
-                p = p.nextZ;
-                pSize--;
-              }
-              tail ? tail.nextZ = e : list = e;
-              e.prevZ = tail;
-              tail = e;
-            }
-            p = q;
-          }
-          tail.nextZ = null;
-          inSize *= 2;
-        } while (numMerges > 1);
-        return list;
-      }
-      function zOrder(x, y, minX, minY, size) {
-        x = 32767 * (x - minX) / size;
-        y = 32767 * (y - minY) / size;
-        x = 16711935 & (x | x << 8);
-        x = 252645135 & (x | x << 4);
-        x = 858993459 & (x | x << 2);
-        x = 1431655765 & (x | x << 1);
-        y = 16711935 & (y | y << 8);
-        y = 252645135 & (y | y << 4);
-        y = 858993459 & (y | y << 2);
-        y = 1431655765 & (y | y << 1);
-        return x | y << 1;
-      }
-      function getLeftmost(start) {
-        var p = start, leftmost = start;
-        do {
-          p.x < leftmost.x && (leftmost = p);
-          p = p.next;
-        } while (p !== start);
-        return leftmost;
-      }
-      function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
-        return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 && (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 && (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
-      }
-      function isValidDiagonal(a, b) {
-        return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b);
-      }
-      function area(p, q, r) {
-        return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-      }
-      function equals(p1, p2) {
-        return p1.x === p2.x && p1.y === p2.y;
-      }
-      function intersects(p1, q1, p2, q2) {
-        if (equals(p1, q1) && equals(p2, q2) || equals(p1, q2) && equals(p2, q1)) return true;
-        return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 && area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
-      }
-      function intersectsPolygon(a, b) {
-        var p = a;
-        do {
-          if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i && intersects(p, p.next, a, b)) return true;
-          p = p.next;
-        } while (p !== a);
-        return false;
-      }
-      function locallyInside(a, b) {
-        return area(a.prev, a, a.next) < 0 ? area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 : area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
-      }
-      function middleInside(a, b) {
-        var p = a, inside = false, px = (a.x + b.x) / 2, py = (a.y + b.y) / 2;
-        do {
-          p.y > py !== p.next.y > py && px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x && (inside = !inside);
-          p = p.next;
-        } while (p !== a);
-        return inside;
-      }
-      function splitPolygon(a, b) {
-        var a2 = new Node(a.i, a.x, a.y), b2 = new Node(b.i, b.x, b.y), an = a.next, bp = b.prev;
-        a.next = b;
-        b.prev = a;
-        a2.next = an;
-        an.prev = a2;
-        b2.next = a2;
-        a2.prev = b2;
-        bp.next = b2;
-        b2.prev = bp;
-        return b2;
-      }
-      function insertNode(i, x, y, last) {
-        var p = new Node(i, x, y);
-        if (last) {
-          p.next = last.next;
-          p.prev = last;
-          last.next.prev = p;
-          last.next = p;
-        } else {
-          p.prev = p;
-          p.next = p;
-        }
-        return p;
-      }
-      function removeNode(p) {
-        p.next.prev = p.prev;
-        p.prev.next = p.next;
-        p.prevZ && (p.prevZ.nextZ = p.nextZ);
-        p.nextZ && (p.nextZ.prevZ = p.prevZ);
-      }
-      function Node(i, x, y) {
-        this.i = i;
-        this.x = x;
-        this.y = y;
-        this.prev = null;
-        this.next = null;
-        this.z = null;
-        this.prevZ = null;
-        this.nextZ = null;
-        this.steiner = false;
-      }
-      earcut.deviation = function(data, holeIndices, dim, triangles) {
-        var hasHoles = holeIndices && holeIndices.length;
-        var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
-        var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
-        if (hasHoles) for (var i = 0, len = holeIndices.length; i < len; i++) {
-          var start = holeIndices[i] * dim;
-          var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-          polygonArea -= Math.abs(signedArea(data, start, end, dim));
-        }
-        var trianglesArea = 0;
-        for (i = 0; i < triangles.length; i += 3) {
-          var a = triangles[i] * dim;
-          var b = triangles[i + 1] * dim;
-          var c = triangles[i + 2] * dim;
-          trianglesArea += Math.abs((data[a] - data[c]) * (data[b + 1] - data[a + 1]) - (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
-        }
-        return 0 === polygonArea && 0 === trianglesArea ? 0 : Math.abs((trianglesArea - polygonArea) / polygonArea);
-      };
-      function signedArea(data, start, end, dim) {
-        var sum = 0;
-        for (var i = start, j = end - dim; i < end; i += dim) {
-          sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
-          j = i;
-        }
-        return sum;
-      }
-      earcut.flatten = function(data) {
-        var dim = data[0][0].length, result = {
-          vertices: [],
-          holes: [],
-          dimensions: dim
-        }, holeIndex = 0;
-        for (var i = 0; i < data.length; i++) {
-          for (var j = 0; j < data[i].length; j++) for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
-          if (i > 0) {
-            holeIndex += data[i - 1].length;
-            result.holes.push(holeIndex);
-          }
-        }
-        return result;
-      };
-    }), {} ],
-    88: [ (function(require, module, exports) {
-      var Js = cc.js;
-      var LineCap = require("./types").LineCap;
-      var LineJoin = require("./types").LineJoin;
-      var Helper = require("./helper");
-      var CanvasRenderCmd = function(renderable) {
-        this._rootCtor(renderable);
-        this._needDraw = true;
-        this.cmds = [];
-        this.style = {
-          strokeStyle: "black",
-          fillStyle: "white",
-          lineCap: "butt",
-          lineJoin: "miter",
-          miterLimit: 10
-        };
-      };
-      var _p = CanvasRenderCmd.prototype = Object.create(_ccsg.Node.CanvasRenderCmd.prototype);
-      _p.constructor = CanvasRenderCmd;
-      _p._updateCurrentRegions = function() {
-        var temp = this._currentRegion;
-        this._currentRegion = this._oldRegion;
-        this._oldRegion = temp;
-        this._currentRegion.setTo(0, 0, cc.visibleRect.width, cc.visibleRect.height);
-      };
-      _p.rendering = function(ctx, scaleX, scaleY) {
-        var wrapper = ctx || cc._renderContext, context = wrapper.getContext();
-        wrapper.setTransform(this._worldTransform, scaleX, scaleY);
-        context.save();
-        context.scale(1, -1);
-        var style = this.style;
-        context.strokeStyle = style.strokeStyle;
-        context.fillStyle = style.fillStyle;
-        context.lineWidth = style.lineWidth;
-        context.lineJoin = style.lineJoin;
-        context.miterLimit = style.miterLimit;
-        var endPath = true;
-        var cmds = this.cmds;
-        for (var i = 0, l = cmds.length; i < l; i++) {
-          var cmd = cmds[i];
-          var ctxCmd = cmd[0], args = cmd[1];
-          if ("moveTo" === ctxCmd && endPath) {
-            context.beginPath();
-            endPath = false;
-          } else "fill" !== ctxCmd && "stroke" !== ctxCmd && "fillRect" !== ctxCmd || (endPath = true);
-          "function" === (__typeofVal = typeof context[ctxCmd], "object" === __typeofVal ? __realTypeOfObj(context[ctxCmd]) : __typeofVal) ? context[ctxCmd].apply(context, args) : context[ctxCmd] = args;
-        }
-        context.restore();
-      };
-      _p.setStrokeColor = function(v) {
-        var strokeStyle = "rgba(" + (0 | v.r) + "," + (0 | v.g) + "," + (0 | v.b) + "," + v.a / 255 + ")";
-        this.cmds.push([ "strokeStyle", strokeStyle ]);
-        this.style.strokeStyle = strokeStyle;
-      };
-      _p.setFillColor = function(v) {
-        var fillStyle = "rgba(" + (0 | v.r) + "," + (0 | v.g) + "," + (0 | v.b) + "," + v.a / 255 + ")";
-        this.cmds.push([ "fillStyle", fillStyle ]);
-        this.style.fillStyle = fillStyle;
-      };
-      _p.setLineWidth = function(v) {
-        this.cmds.push([ "lineWidth", v ]);
-        this.style.lineWidth = v;
-      };
-      _p.setLineCap = function(v) {
-        var lineCap = "butt";
-        v === LineCap.BUTT ? lineCap = "butt" : v === LineCap.ROUND ? lineCap = "round" : v === LineCap.SQUARE && (lineCap = "square");
-        this.cmds.push([ "lineCap", lineCap ]);
-        this.style.lineCap = lineCap;
-      };
-      _p.setLineJoin = function(v) {
-        var lineJoin = "bevel";
-        v === LineJoin.BEVEL ? lineJoin = "bevel" : v === LineJoin.ROUND ? lineJoin = "round" : v === LineJoin.MITER && (lineJoin = "miter");
-        this.cmds.push([ "lineJoin", lineJoin ]);
-        this.style.lineJoin = lineJoin;
-      };
-      _p.setMiterLimit = function(v) {
-        this.cmds.push([ "miterLimit", v ]);
-        this.style.miterLimit = v;
-      };
-      _p.beginPath = function() {};
-      _p.moveTo = function(x, y) {
-        this.cmds.push([ "moveTo", [ x, y ] ]);
-      };
-      _p.lineTo = function(x, y) {
-        this.cmds.push([ "lineTo", [ x, y ] ]);
-      };
-      _p.bezierCurveTo = function(c1x, c1y, c2x, c2y, x, y) {
-        this.cmds.push([ "bezierCurveTo", [ c1x, c1y, c2x, c2y, x, y ] ]);
-      };
-      _p.quadraticCurveTo = function(cx, cy, x, y) {
-        this.cmds.push([ "quadraticCurveTo", [ cx, cy, x, y ] ]);
-      };
-      _p.arc = function(cx, cy, r, startAngle, endAngle, counterclockwise) {
-        Helper.arc(this, cx, cy, r, startAngle, endAngle, counterclockwise);
-      };
-      _p.ellipse = function(cx, cy, rx, ry) {
-        Helper.ellipse(this, cx, cy, rx, ry);
-      };
-      _p.circle = function(cx, cy, r) {
-        Helper.ellipse(this, cx, cy, r, r);
-      };
-      _p.rect = function(x, y, w, h) {
-        this.moveTo(x, y);
-        this.lineTo(x + w, y);
-        this.lineTo(x + w, y + h);
-        this.lineTo(x, y + h);
-        this.close();
-      };
-      _p.roundRect = function(x, y, w, h, r) {
-        Helper.roundRect(this, x, y, w, h, r);
-      };
-      _p.fillRect = function(x, y, w, h) {
-        this.cmds.push([ "fillRect", [ x, y, w, h ] ]);
-        this.setDirtyFlag(_ccsg.Node._dirtyFlags.contentDirty);
-      };
-      _p.close = function() {
-        this.cmds.push([ "closePath", [] ]);
-      };
-      _p.stroke = function() {
-        this.cmds.push([ "stroke", [] ]);
-        this.setDirtyFlag(_ccsg.Node._dirtyFlags.contentDirty);
-      };
-      _p.fill = function() {
-        this.cmds.push([ "fill", [] ]);
-        this.setDirtyFlag(_ccsg.Node._dirtyFlags.contentDirty);
-      };
-      _p.clear = function() {
-        this.cmds.length = 0;
-        this.setDirtyFlag(_ccsg.Node._dirtyFlags.contentDirty);
-      };
-      module.exports = CanvasRenderCmd;
-    }), {
-      "./helper": 92,
-      "./types": 94
-    } ],
-    89: [ (function(require, module, exports) {
-      var CanvasRenderCmd = require("./graphics-canvas-cmd");
-      var WebGLRenderCmd = require("./graphics-webgl-cmd");
-      var LineCap = require("./types").LineCap;
-      var LineJoin = require("./types").LineJoin;
-      var Js = cc.js;
-      var GraphicsNode = _ccsg.Node.extend({
-        ctor: function() {
-          this._super();
-          this.strokeColor = cc.Color.BLACK;
-          this.fillColor = cc.Color.WHITE;
-        },
-        clear: function(clean) {
-          this._renderCmd.clear(clean);
-        },
-        _createRenderCmd: function() {
-          return cc._renderType === cc.game.RENDER_TYPE_CANVAS ? new CanvasRenderCmd(this) : new WebGLRenderCmd(this);
-        }
-      });
-      var _p = GraphicsNode.prototype;
-      _p._strokeColor = null;
-      _p._fillColor = null;
-      _p._lineWidth = 1;
-      _p._lineCap = LineCap.BUTT;
-      _p._lineJoin = LineJoin.MITER;
-      _p._miterLimit = 10;
-      _p.setStrokeColor = function(v) {
-        this._strokeColor = v;
-        this._renderCmd.setStrokeColor(v);
-      };
-      _p.getStrokeColor = function() {
-        return this._strokeColor;
-      };
-      _p.setFillColor = function(v) {
-        this._fillColor = v;
-        this._renderCmd.setFillColor(v);
-      };
-      _p.getFillColor = function() {
-        return this._fillColor;
-      };
-      _p.setLineWidth = function(v) {
-        this._lineWidth = v;
-        this._renderCmd.setLineWidth(v);
-      };
-      _p.getLineWidth = function() {
-        return this._lineWidth;
-      };
-      _p.setLineCap = function(v) {
-        this._lineCap = v;
-        this._renderCmd.setLineCap(v);
-      };
-      _p.getLineCap = function() {
-        return this._lineCap;
-      };
-      _p.setLineJoin = function(v) {
-        this._lineJoin = v;
-        this._renderCmd.setLineJoin(v);
-      };
-      _p.getLineJoin = function() {
-        return this._lineJoin;
-      };
-      _p.setMiterLimit = function(v) {
-        this._miterLimit = v;
-        this._renderCmd.setMiterLimit(v);
-      };
-      _p.getMiterLimit = function() {
-        return this._miterLimit;
-      };
-      _p.beginPath = function() {
-        this._renderCmd.beginPath();
-      };
-      _p.moveTo = function(x, y) {
-        this._renderCmd.moveTo(x, y);
-      };
-      _p.lineTo = function(x, y) {
-        this._renderCmd.lineTo(x, y);
-      };
-      _p.bezierCurveTo = function(c1x, c1y, c2x, c2y, x, y) {
-        this._renderCmd.bezierCurveTo(c1x, c1y, c2x, c2y, x, y);
-      };
-      _p.quadraticCurveTo = function(cx, cy, x, y) {
-        this._renderCmd.quadraticCurveTo(cx, cy, x, y);
-      };
-      _p.arc = function(cx, cy, r, a0, a1, counterclockwise) {
-        this._renderCmd.arc(cx, cy, r, a0, a1, counterclockwise);
-      };
-      _p.ellipse = function(cx, cy, rx, ry) {
-        this._renderCmd.ellipse(cx, cy, rx, ry);
-      };
-      _p.circle = function(cx, cy, r) {
-        this._renderCmd.circle(cx, cy, r);
-      };
-      _p.rect = function(x, y, w, h) {
-        this._renderCmd.rect(x, y, w, h);
-      };
-      _p.roundRect = function(x, y, w, h, r) {
-        this._renderCmd.roundRect(x, y, w, h, r);
-      };
-      _p.fillRect = function(x, y, w, h) {
-        this._renderCmd.fillRect(x, y, w, h);
-      };
-      _p.close = function() {
-        this._renderCmd.close();
-      };
-      _p.stroke = function() {
-        this._renderCmd.stroke();
-      };
-      _p.fill = function() {
-        this._renderCmd.fill();
-      };
-      module.exports = GraphicsNode;
-    }), {
-      "./graphics-canvas-cmd": 88,
-      "./graphics-webgl-cmd": 90,
-      "./types": 94
-    } ],
-    90: [ (function(require, module, exports) {
-      var LineCap = require("./types").LineCap;
-      var LineJoin = require("./types").LineJoin;
-      var Earcut = require("./earcut");
-      var Helper = require("./helper");
-      var Vec2 = cc.Vec2;
-      var Js = cc.js;
-      var INIT_VERTS_SIZE = 32;
-      var VERTS_FLOAT_LENGTH = 3;
-      var VERTS_BYTE_LENGTH = 12;
-      var MAX_BUFFER_SIZE = 65535;
-      var PI = Math.PI;
-      var min = Math.min;
-      var max = Math.max;
-      var ceil = Math.ceil;
-      var acos = Math.acos;
-      var cos = Math.cos;
-      var sin = Math.sin;
-      var atan2 = Math.atan2;
-      var abs = Math.abs;
-      function clamp(v, min, max) {
-        if (v < min) return min;
-        if (v > max) return max;
-        return v;
-      }
-      var PointFlags = cc.Enum({
-        PT_CORNER: 1,
-        PT_LEFT: 2,
-        PT_BEVEL: 4,
-        PT_INNERBEVEL: 8
-      });
-      function Point(x, y) {
-        Vec2.call(this, x, y);
-        this.reset();
-      }
-      Js.extend(Point, Vec2);
-      Point.prototype.reset = function() {
-        this.dx = 0;
-        this.dy = 0;
-        this.dmx = 0;
-        this.dmy = 0;
-        this.flags = 0;
-        this.len = 0;
-      };
-      function Path() {
-        this.reset();
-      }
-      Path.prototype.reset = function() {
-        this.closed = false;
-        this.nbevel = 0;
-        this.complex = true;
-        this.points ? this.points.length = 0 : this.points = [];
-      };
-      function GraphicsBuffer() {
-        this.vertsOffset = 0;
-        this.vertsVBO = gl.createBuffer();
-        this.vertsBuffer = null;
-        this.uint32VertsBuffer = null;
-        this.vertsDirty = false;
-        this.indicesOffset = 0;
-        this.indicesVBO = gl.createBuffer();
-        this.indicesBuffer = null;
-        this.indicesDirty = false;
-      }
-      GraphicsBuffer.prototype.clear = function() {
-        this.vertsOffset = 0;
-        this.indicesOffset = 0;
-      };
-      GraphicsBuffer.prototype.alloc = function(cverts, cindices) {
-        var dnverts = this.vertsOffset + cverts;
-        if (dnverts > MAX_BUFFER_SIZE) return false;
-        var verts = this.vertsBuffer;
-        var nverts = verts ? verts.length / VERTS_FLOAT_LENGTH : 0;
-        if (dnverts > nverts) {
-          0 === nverts && (nverts = INIT_VERTS_SIZE);
-          while (dnverts > nverts) nverts *= 2;
-          var newBuffer = new Float32Array(nverts * VERTS_FLOAT_LENGTH);
-          var newUint32Buffer = new Uint32Array(newBuffer.buffer);
-          if (verts) {
-            var uint32VertsBuffer = this.uint32VertsBuffer;
-            for (var i = 0, l = verts.length; i < l; i += VERTS_FLOAT_LENGTH) {
-              newBuffer[i] = verts[i];
-              newBuffer[i + 1] = verts[i + 1];
-              newUint32Buffer[i + 2] = uint32VertsBuffer[i + 2];
-            }
-          }
-          this.vertsBuffer = newBuffer;
-          this.uint32VertsBuffer = newUint32Buffer;
-        }
-        var indices = this.indicesBuffer;
-        var dnindices = this.indicesOffset + cindices;
-        var nindices = indices ? indices.length : 0;
-        if (dnindices > nindices) {
-          0 === nindices && (nindices = 3 * INIT_VERTS_SIZE);
-          while (dnindices > nindices) nindices *= 2;
-          var newIndices = new Uint16Array(nindices);
-          if (indices) for (var i = 0, l = indices.length; i < l; i++) newIndices[i] = indices[i];
-          this.indicesBuffer = newIndices;
-        }
-        return true;
-      };
-      function WebGLRenderCmd(renderable) {
-        this._rootCtor(renderable);
-        this._needDraw = true;
-        var gl = cc._renderContext;
-        this._buffers = [];
-        this._buffer = null;
-        this._allocBuffer();
-        this._matrix = new cc.math.Matrix4();
-        this._matrix.identity();
-        this._paths = [];
-        this._points = [];
-        this._curColorValue = 0;
-        this._blendFunc = new cc.BlendFunc(cc.macro.BLEND_SRC, cc.macro.BLEND_DST);
-        var shader = new cc.GLProgram();
-        shader.initWithVertexShaderByteArray(cc.PresetShaders.POSITION_COLOR_VERT, cc.PresetShaders.POSITION_COLOR_FRAG);
-        shader.retain();
-        shader.addAttribute(cc.macro.ATTRIBUTE_NAME_POSITION, cc.macro.VERTEX_ATTRIB_POSITION);
-        shader.addAttribute(cc.macro.ATTRIBUTE_NAME_COLOR, cc.macro.VERTEX_ATTRIB_COLOR);
-        shader.link();
-        shader.updateUniforms();
-        this._shaderProgram = shader;
-        this._allocVerts(INIT_VERTS_SIZE);
-      }
-      WebGLRenderCmd.prototype = Object.create(_ccsg.Node.WebGLRenderCmd.prototype);
-      WebGLRenderCmd.prototype.constructor = WebGLRenderCmd;
-      var _p = WebGLRenderCmd.prototype;
-      _p._tessTol = .25;
-      _p._distTol = .01;
-      _p.lineWidth = 1;
-      _p.lineCap = LineCap.BUTT;
-      _p.lineJoin = LineJoin.MITER;
-      _p.miterLimit = 10;
-      _p.beginPath = function() {
-        this._pathOffset = this._pathLength;
-      };
-      _p.moveTo = function(x, y) {
-        if (this._updatePathOffset) {
-          this._pathOffset = this._pathLength;
-          this._updatePathOffset = false;
-        }
-        this._addPath();
-        this._addPoint(x, y, PointFlags.PT_CORNER);
-        this._commandx = x;
-        this._commandy = y;
-      };
-      _p.lineTo = function(x, y) {
-        this._addPoint(x, y, PointFlags.PT_CORNER);
-        this._commandx = x;
-        this._commandy = y;
-      };
-      _p.bezierCurveTo = function(c1x, c1y, c2x, c2y, x, y) {
-        var path = this._curPath;
-        var last = path.points[path.points.length - 1];
-        if (last.x === c1x && last.y === c1y && c2x === x && c2y === y) {
-          this.lineTo(x, y);
-          return;
-        }
-        this._tesselateBezier(last.x, last.y, c1x, c1y, c2x, c2y, x, y, 0, PointFlags.PT_CORNER);
-        this._commandx = x;
-        this._commandy = y;
-      };
-      _p.quadraticCurveTo = function(cx, cy, x, y) {
-        var x0 = this._commandx;
-        var y0 = this._commandy;
-        this.bezierCurveTo(x0 + 2 / 3 * (cx - x0), y0 + 2 / 3 * (cy - y0), x + 2 / 3 * (cx - x), y + 2 / 3 * (cy - y), x, y);
-      };
-      _p.arc = function(cx, cy, r, startAngle, endAngle, counterclockwise) {
-        Helper.arc(this, cx, cy, r, startAngle, endAngle, counterclockwise);
-      };
-      _p.ellipse = function(cx, cy, rx, ry) {
-        Helper.ellipse(this, cx, cy, rx, ry);
-        this._curPath.complex = false;
-      };
-      _p.circle = function(cx, cy, r) {
-        Helper.ellipse(this, cx, cy, r, r);
-        this._curPath.complex = false;
-      };
-      _p.rect = function(x, y, w, h) {
-        this.moveTo(x, y);
-        this.lineTo(x, y + h);
-        this.lineTo(x + w, y + h);
-        this.lineTo(x + w, y);
-        this.close();
-        this._curPath.complex = false;
-      };
-      _p.roundRect = function(x, y, w, h, r) {
-        Helper.roundRect(this, x, y, w, h, r);
-        this._curPath.complex = false;
-      };
-      _p.fillRect = function(x, y, w, h) {
-        this.rect(x, y, w, h);
-        this.fill();
-      };
-      _p.close = function() {
-        this._curPath.closed = true;
-      };
-      _p.stroke = function() {
-        this._flattenPaths();
-        var color = this._strokeColor;
-        this._curColorValue = (color.a << 24 >>> 0) + (color.b << 16) + (color.g << 8) + color.r;
-        this._expandStroke();
-        this._updatePathOffset = true;
-      };
-      _p.fill = function() {
-        var color = this._fillColor;
-        this._curColorValue = (color.a << 24 >>> 0) + (color.b << 16) + (color.g << 8) + color.r;
-        this._expandFill();
-        this._updatePathOffset = true;
-        this._filling = false;
-      };
-      _p._strokeColor = null;
-      _p._fillColor = null;
-      _p.setStrokeColor = function(c) {
-        this._strokeColor = c;
-      };
-      _p.getStrokeColor = function() {
-        return this._strokeColor;
-      };
-      _p.setFillColor = function(c) {
-        this._fillColor = c;
-      };
-      _p.getFillColor = function() {
-        return this._fillColor;
-      };
-      _p.setLineWidth = function(v) {
-        this.lineWidth = v;
-      };
-      _p.setLineJoin = function(v) {
-        this.lineJoin = v;
-      };
-      _p.setLineCap = function(v) {
-        this.lineCap = v;
-      };
-      _p.setMiterLimit = function(v) {
-        this.miterLimit = v;
-      };
-      Js.getset(_p, "strokeColor", _p.getStrokeColor, _p.setStrokeColor);
-      Js.getset(_p, "fillColor", _p.getFillColor, _p.setFillColor);
-      _p._render = function() {
-        var buffers = this._buffers;
-        if (0 === buffers.length) return;
-        var gl = cc._renderContext;
-        for (var i = 0, l = buffers.length; i < l; i++) {
-          var buffer = buffers[i];
-          gl.bindBuffer(gl.ARRAY_BUFFER, buffer.vertsVBO);
-          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesVBO);
-          if (buffer.vertsDirty) {
-            gl.bufferData(gl.ARRAY_BUFFER, buffer.vertsBuffer, gl.STREAM_DRAW);
-            buffer.vertsDirty = false;
-          }
-          if (buffer.indicesDirty && buffer.indicesBuffer) {
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesBuffer, gl.STREAM_DRAW);
-            buffer.indicesDirty = false;
-          }
-          gl.enableVertexAttribArray(cc.macro.VERTEX_ATTRIB_POSITION);
-          gl.enableVertexAttribArray(cc.macro.VERTEX_ATTRIB_COLOR);
-          gl.vertexAttribPointer(cc.macro.VERTEX_ATTRIB_POSITION, 2, gl.FLOAT, false, VERTS_BYTE_LENGTH, 0);
-          gl.vertexAttribPointer(cc.macro.VERTEX_ATTRIB_COLOR, 4, gl.UNSIGNED_BYTE, true, VERTS_BYTE_LENGTH, 8);
-          gl.drawElements(gl.TRIANGLES, buffer.indicesOffset, gl.UNSIGNED_SHORT, 0);
-          cc.g_NumberOfDraws++;
-        }
-      };
-      _p.rendering = function() {
-        cc.gl.blendFunc(this._blendFunc.src, this._blendFunc.dst);
-        var wt = this._worldTransform, mat = this._matrix.mat;
-        mat[0] = wt.a;
-        mat[4] = wt.c;
-        mat[12] = wt.tx;
-        mat[1] = wt.b;
-        mat[5] = wt.d;
-        mat[13] = wt.ty;
-        var shader = this._shaderProgram;
-        shader.use();
-        shader._setUniformForMVPMatrixWithMat4(this._matrix);
-        this._render();
-      };
-      _p.clear = function(clean) {
-        this._pathLength = 0;
-        this._pathOffset = 0;
-        this._pointsOffset = 0;
-        this._curPath = null;
-        if (clean) {
-          this._paths.length = 0;
-          this._points.length = 0;
-          this._buffer = null;
-          this._buffers = [];
-        } else {
-          var buffers = this._buffers;
-          for (var i = 0; i < buffers.length; i++) buffers[i].clear();
-          this._buffer = buffers[0];
-        }
-      };
-      _p._updatePathOffset = false;
-      _p._paths = null;
-      _p._pathLength = 0;
-      _p._pathOffset = 0;
-      _p._points = null;
-      _p._pointsOffset = 0;
-      _p._commandx = 0;
-      _p._commandy = 0;
-      _p._addPath = function() {
-        var offset = this._pathLength;
-        var path = this._paths[offset];
-        if (path) path.reset(); else {
-          path = new Path();
-          this._paths.push(path);
-        }
-        this._pathLength++;
-        this._curPath = path;
-        return path;
-      };
-      _p._addPoint = function(x, y, flags) {
-        var path = this._curPath;
-        if (!path) return;
-        var pt;
-        var points = this._points;
-        var pathPoints = path.points;
-        var offset = this._pointsOffset++;
-        pt = points[offset];
-        if (pt) {
-          pt.x = x;
-          pt.y = y;
-        } else {
-          pt = new Point(x, y);
-          points.push(pt);
-        }
-        pt.flags = flags;
-        pathPoints.push(pt);
-      };
-      _p._flattenPaths = function() {
-        var paths = this._paths;
-        for (var i = this._pathOffset, l = this._pathLength; i < l; i++) {
-          var path = paths[i];
-          var pts = path.points;
-          var p0 = pts[pts.length - 1];
-          var p1 = pts[0];
-          if (p0.equals(p1)) {
-            path.closed = true;
-            pts.pop();
-            p0 = pts[pts.length - 1];
-          }
-          for (var j = 0, size = pts.length; j < size; j++) {
-            var dPos = p1.sub(p0);
-            p0.len = dPos.mag();
-            (dPos.x || dPos.y) && dPos.normalizeSelf();
-            p0.dx = dPos.x;
-            p0.dy = dPos.y;
-            p0 = p1;
-            p1 = pts[j + 1];
-          }
-        }
-      };
-      _p._allocBuffer = function() {
-        if (this._buffer) {
-          var index = this._buffers.indexOf(this._buffer);
-          if (index < this._buffers.length - 1) {
-            this._buffer = this._buffers[index + 1];
-            return;
-          }
-        }
-        var buffer = new GraphicsBuffer();
-        this._buffers.push(buffer);
-        this._buffer = buffer;
-      };
-      _p._allocVerts = function(cverts) {
-        this._buffer || this._allocBuffer();
-        var nIndices = 3 * (cverts - 2 * (this._pathLength - this._pathOffset));
-        if (!this._buffer.alloc(cverts, nIndices)) {
-          this._allocBuffer();
-          this._buffer.alloc(cverts, nIndices);
-        }
-        this._buffer.vertsDirty = true;
-      };
-      _p._expandStroke = function() {
-        var w = .5 * this.lineWidth, lineCap = this.lineCap, lineJoin = this.lineJoin, miterLimit = this.miterLimit;
-        var ncap = this._curveDivs(w, PI, this._tessTol);
-        var paths = this._paths;
-        this._calculateJoins(w, lineJoin, miterLimit);
-        var cverts = 0;
-        for (var i = this._pathOffset, l = this._pathLength; i < l; i++) {
-          var path = paths[i];
-          var pointsLength = path.points.length;
-          lineJoin === LineJoin.ROUND ? cverts += 2 * (pointsLength + path.nbevel * (ncap + 2) + 1) : cverts += 2 * (pointsLength + 5 * path.nbevel + 1);
-          path.closed || (lineCap === LineCap.ROUND ? cverts += 2 * (2 * ncap + 2) : cverts += 12);
-        }
-        this._allocVerts(cverts);
-        var buffer = this._buffer;
-        for (var i = this._pathOffset, l = this._pathLength; i < l; i++) {
-          var path = paths[i];
-          var pts = path.points;
-          var pointsLength = path.points.length;
-          var p0, p1;
-          var s, e, loop;
-          loop = path.closed;
-          var offset = buffer.vertsOffset;
-          if (loop) {
-            p0 = pts[pointsLength - 1];
-            p1 = pts[0];
-            s = 0;
-            e = pointsLength;
-          } else {
-            p0 = pts[0];
-            p1 = pts[1];
-            s = 1;
-            e = pointsLength - 1;
-          }
-          if (!loop) {
-            var dPos = p1.sub(p0);
-            dPos.normalizeSelf();
-            var dx = dPos.x;
-            var dy = dPos.y;
-            lineCap === LineCap.BUTT ? this._buttCap(p0, dx, dy, w, 0) : lineCap === LineCap.SQUARE ? this._buttCap(p0, dx, dy, w, w) : lineCap === LineCap.ROUND && this._roundCapStart(p0, dx, dy, w, ncap);
-          }
-          for (var j = s; j < e; ++j) {
-            if (lineJoin === LineJoin.ROUND) this._roundJoin(p0, p1, w, w, ncap); else if (0 !== (p1.flags & (PointFlags.PT_BEVEL | PointFlags.PT_INNERBEVEL))) this._bevelJoin(p0, p1, w, w); else {
-              this._vset(p1.x + p1.dmx * w, p1.y + p1.dmy * w);
-              this._vset(p1.x - p1.dmx * w, p1.y - p1.dmy * w);
-            }
-            p0 = p1;
-            p1 = pts[j + 1];
-          }
-          if (loop) {
-            var vertsBuffer = buffer.vertsBuffer;
-            this._vset(vertsBuffer[offset * VERTS_FLOAT_LENGTH], vertsBuffer[offset * VERTS_FLOAT_LENGTH + 1]);
-            this._vset(vertsBuffer[(offset + 1) * VERTS_FLOAT_LENGTH], vertsBuffer[(offset + 1) * VERTS_FLOAT_LENGTH + 1]);
-          } else {
-            var dPos = p1.sub(p0);
-            dPos.normalizeSelf();
-            var dx = dPos.x;
-            var dy = dPos.y;
-            lineCap === LineCap.BUTT ? this._buttCap(p1, dx, dy, w, 0) : lineCap === LineCap.BUTT || lineCap === LineCap.SQUARE ? this._buttCap(p1, dx, dy, w, w) : lineCap === LineCap.ROUND && this._roundCapEnd(p1, dx, dy, w, ncap);
-          }
-          var indicesOffset = buffer.indicesOffset;
-          var indicesBuffer = buffer.indicesBuffer;
-          for (var start = offset + 2, end = buffer.vertsOffset; start < end; start++) {
-            indicesBuffer[indicesOffset++] = start - 2;
-            indicesBuffer[indicesOffset++] = start - 1;
-            indicesBuffer[indicesOffset++] = start;
-          }
-          buffer.indicesOffset = indicesOffset;
-          buffer.indicesDirty = true;
-        }
-      };
-      _p._expandFill = function() {
-        var paths = this._paths;
-        var cverts = 0;
-        for (var i = this._pathOffset, l = this._pathLength; i < l; i++) {
-          var path = paths[i];
-          var pointsLength = path.points.length;
-          cverts += pointsLength;
-        }
-        this._allocVerts(cverts);
-        var buffer = this._buffer;
-        for (var i = this._pathOffset, l = this._pathLength; i < l; i++) {
-          var path = paths[i];
-          var pts = path.points;
-          var pointsLength = pts.length;
-          if (0 === pointsLength) continue;
-          var offset = buffer.vertsOffset;
-          for (var j = 0; j < pointsLength; ++j) this._vset(pts[j].x, pts[j].y, .5, 1);
-          var indicesOffset = path.indicesOffset = buffer.indicesOffset;
-          var indicesBuffer = buffer.indicesBuffer;
-          var nIndices = 0;
-          if (path.complex) {
-            var data = [];
-            var start = offset * VERTS_FLOAT_LENGTH, end = buffer.vertsOffset * VERTS_FLOAT_LENGTH;
-            for (var j = start; j < end; j += VERTS_FLOAT_LENGTH) {
-              data.push(buffer.vertsBuffer[j]);
-              data.push(buffer.vertsBuffer[j + 1]);
-            }
-            var newIndices = Earcut(data, null, 2);
-            if (!newIndices || 0 === newIndices.length) continue;
-            nIndices = newIndices.length;
-            for (var j = 0, l3 = nIndices; j < l3; j++) indicesBuffer[indicesOffset + j] = newIndices[j] + offset;
-          } else {
-            var first = offset;
-            for (var start = offset + 2, end = buffer.vertsOffset; start < end; start++) {
-              indicesBuffer[indicesOffset++] = first;
-              indicesBuffer[indicesOffset++] = start - 1;
-              indicesBuffer[indicesOffset++] = start;
-            }
-            nIndices = indicesOffset - buffer.indicesOffset;
-          }
-          buffer.indicesOffset += nIndices;
-          buffer.indicesDirty = true;
-        }
-      };
-      _p._curveDivs = function(r, arc, tol) {
-        var da = 2 * acos(r / (r + tol));
-        return max(2, ceil(arc / da));
-      };
-      _p._calculateJoins = function(w, lineJoin, miterLimit) {
-        var iw = 0;
-        w > 0 && (iw = 1 / w);
-        var paths = this._paths;
-        for (var i = this._pathOffset, l = this._pathLength; i < l; i++) {
-          var path = paths[i];
-          var pts = path.points;
-          var ptsLength = pts.length;
-          var p0 = pts[ptsLength - 1];
-          var p1 = pts[0];
-          var nleft = 0;
-          path.nbevel = 0;
-          for (var j = 0; j < ptsLength; j++) {
-            var dmr2, cross, limit;
-            var dlx0 = p0.dy;
-            var dly0 = -p0.dx;
-            var dlx1 = p1.dy;
-            var dly1 = -p1.dx;
-            p1.dmx = .5 * (dlx0 + dlx1);
-            p1.dmy = .5 * (dly0 + dly1);
-            dmr2 = p1.dmx * p1.dmx + p1.dmy * p1.dmy;
-            if (dmr2 > 1e-6) {
-              var scale = 1 / dmr2;
-              scale > 600 && (scale = 600);
-              p1.dmx *= scale;
-              p1.dmy *= scale;
-            }
-            cross = p1.dx * p0.dy - p0.dx * p1.dy;
-            if (cross > 0) {
-              nleft++;
-              p1.flags |= PointFlags.PT_LEFT;
-            }
-            limit = max(11, min(p0.len, p1.len) * iw);
-            dmr2 * limit * limit < 1 && (p1.flags |= PointFlags.PT_INNERBEVEL);
-            p1.flags & PointFlags.PT_CORNER && (dmr2 * miterLimit * miterLimit < 1 || lineJoin === LineJoin.BEVEL || lineJoin === LineJoin.ROUND) && (p1.flags |= PointFlags.PT_BEVEL);
-            0 !== (p1.flags & (PointFlags.PT_BEVEL | PointFlags.PT_INNERBEVEL)) && path.nbevel++;
-            p0 = p1;
-            p1 = pts[j + 1];
-          }
-        }
-      };
-      _p._vset = function(x, y) {
-        var buffer = this._buffer;
-        var offset = buffer.vertsOffset * VERTS_FLOAT_LENGTH;
-        var vertsBuffer = buffer.vertsBuffer;
-        vertsBuffer[offset] = x;
-        vertsBuffer[offset + 1] = y;
-        buffer.uint32VertsBuffer[offset + 2] = this._curColorValue;
-        buffer.vertsOffset++;
-      };
-      _p._chooseBevel = function(bevel, p0, p1, w) {
-        var x = p1.x;
-        var y = p1.y;
-        var x0, y0, x1, y1;
-        if (0 !== bevel) {
-          x0 = x + p0.dy * w;
-          y0 = y - p0.dx * w;
-          x1 = x + p1.dy * w;
-          y1 = y - p1.dx * w;
-        } else {
-          x0 = x1 = x + p1.dmx * w;
-          y0 = y1 = y + p1.dmy * w;
-        }
-        return [ x0, y0, x1, y1 ];
-      };
-      _p._buttCap = function(p, dx, dy, w, d) {
-        var px = p.x - dx * d;
-        var py = p.y - dy * d;
-        var dlx = dy;
-        var dly = -dx;
-        this._vset(px + dlx * w, py + dly * w);
-        this._vset(px - dlx * w, py - dly * w);
-      };
-      _p._roundCapStart = function(p, dx, dy, w, ncap) {
-        var px = p.x;
-        var py = p.y;
-        var dlx = dy;
-        var dly = -dx;
-        for (var i = 0; i < ncap; i++) {
-          var a = i / (ncap - 1) * PI;
-          var ax = cos(a) * w, ay = sin(a) * w;
-          this._vset(px - dlx * ax - dx * ay, py - dly * ax - dy * ay);
-          this._vset(px, py);
-        }
-        this._vset(px + dlx * w, py + dly * w);
-        this._vset(px - dlx * w, py - dly * w);
-      };
-      _p._roundCapEnd = function(p, dx, dy, w, ncap) {
-        var px = p.x;
-        var py = p.y;
-        var dlx = dy;
-        var dly = -dx;
-        this._vset(px + dlx * w, py + dly * w);
-        this._vset(px - dlx * w, py - dly * w);
-        for (var i = 0; i < ncap; i++) {
-          var a = i / (ncap - 1) * PI;
-          var ax = cos(a) * w, ay = sin(a) * w;
-          this._vset(px, py);
-          this._vset(px - dlx * ax + dx * ay, py - dly * ax + dy * ay);
-        }
-      };
-      _p._roundJoin = function(p0, p1, lw, rw, ncap) {
-        var dlx0 = p0.dy;
-        var dly0 = -p0.dx;
-        var dlx1 = p1.dy;
-        var dly1 = -p1.dx;
-        var p1x = p1.x;
-        var p1y = p1.y;
-        if (0 !== (p1.flags & PointFlags.PT_LEFT)) {
-          var out = this._chooseBevel(p1.flags & PointFlags.PT_INNERBEVEL, p0, p1, lw);
-          var lx0 = out[0];
-          var ly0 = out[1];
-          var lx1 = out[2];
-          var ly1 = out[3];
-          var a0 = atan2(-dly0, -dlx0);
-          var a1 = atan2(-dly1, -dlx1);
-          a1 > a0 && (a1 -= 2 * PI);
-          this._vset(lx0, ly0);
-          this._vset(p1x - dlx0 * rw, p1.y - dly0 * rw);
-          var n = clamp(ceil((a0 - a1) / PI) * ncap, 2, ncap);
-          for (var i = 0; i < n; i++) {
-            var u = i / (n - 1);
-            var a = a0 + u * (a1 - a0);
-            var rx = p1x + cos(a) * rw;
-            var ry = p1y + sin(a) * rw;
-            this._vset(p1x, p1y);
-            this._vset(rx, ry);
-          }
-          this._vset(lx1, ly1);
-          this._vset(p1x - dlx1 * rw, p1y - dly1 * rw);
-        } else {
-          var out = this._chooseBevel(p1.flags & PointFlags.PT_INNERBEVEL, p0, p1, -rw);
-          var rx0 = out[0];
-          var ry0 = out[1];
-          var rx1 = out[2];
-          var ry1 = out[3];
-          var a0 = atan2(dly0, dlx0);
-          var a1 = atan2(dly1, dlx1);
-          a1 < a0 && (a1 += 2 * PI);
-          this._vset(p1x + dlx0 * rw, p1y + dly0 * rw);
-          this._vset(rx0, ry0);
-          var n = clamp(ceil((a1 - a0) / PI) * ncap, 2, ncap);
-          for (var i = 0; i < n; i++) {
-            var u = i / (n - 1);
-            var a = a0 + u * (a1 - a0);
-            var lx = p1x + cos(a) * lw;
-            var ly = p1y + sin(a) * lw;
-            this._vset(lx, ly);
-            this._vset(p1x, p1y);
-          }
-          this._vset(p1x + dlx1 * rw, p1y + dly1 * rw);
-          this._vset(rx1, ry1);
-        }
-      };
-      _p._bevelJoin = function(p0, p1, lw, rw) {
-        var rx0, ry0, rx1, ry1;
-        var lx0, ly0, lx1, ly1;
-        var dlx0 = p0.dy;
-        var dly0 = -p0.dx;
-        var dlx1 = p1.dy;
-        var dly1 = -p1.dx;
-        if (p1.flags & PointFlags.PT_LEFT) {
-          var out = this._chooseBevel(p1.flags & PointFlags.PT_INNERBEVEL, p0, p1, lw);
-          lx0 = out[0];
-          ly0 = out[1];
-          lx1 = out[2];
-          ly1 = out[3];
-          this._vset(lx0, ly0);
-          this._vset(p1.x - dlx0 * rw, p1.y - dly0 * rw);
-          this._vset(lx1, ly1);
-          this._vset(p1.x - dlx1 * rw, p1.y - dly1 * rw);
-        } else {
-          var out = this._chooseBevel(p1.flags & PointFlags.PT_INNERBEVEL, p0, p1, -rw);
-          rx0 = out[0];
-          ry0 = out[1];
-          rx1 = out[2];
-          ry1 = out[3];
-          this._vset(p1.x + dlx0 * lw, p1.y + dly0 * lw);
-          this._vset(rx0, ry0);
-          this._vset(p1.x + dlx1 * lw, p1.y + dly1 * lw);
-          this._vset(rx1, ry1);
-        }
-      };
-      _p._tesselateBezier = function(x1, y1, x2, y2, x3, y3, x4, y4, level, type) {
-        var x12, y12, x23, y23, x34, y34, x123, y123, x234, y234, x1234, y1234;
-        var dx, dy, d2, d3;
-        if (level > 10) return;
-        x12 = .5 * (x1 + x2);
-        y12 = .5 * (y1 + y2);
-        x23 = .5 * (x2 + x3);
-        y23 = .5 * (y2 + y3);
-        x34 = .5 * (x3 + x4);
-        y34 = .5 * (y3 + y4);
-        x123 = .5 * (x12 + x23);
-        y123 = .5 * (y12 + y23);
-        dx = x4 - x1;
-        dy = y4 - y1;
-        d2 = abs((x2 - x4) * dy - (y2 - y4) * dx);
-        d3 = abs((x3 - x4) * dy - (y3 - y4) * dx);
-        if ((d2 + d3) * (d2 + d3) < this._tessTol * (dx * dx + dy * dy)) {
-          this._addPoint(x4, y4, 0 === type ? type | PointFlags.PT_BEVEL : type);
-          return;
-        }
-        x234 = .5 * (x23 + x34);
-        y234 = .5 * (y23 + y34);
-        x1234 = .5 * (x123 + x234);
-        y1234 = .5 * (y123 + y234);
-        this._tesselateBezier(x1, y1, x12, y12, x123, y123, x1234, y1234, level + 1, 0);
-        this._tesselateBezier(x1234, y1234, x234, y234, x34, y34, x4, y4, level + 1, type);
-      };
-      module.exports = WebGLRenderCmd;
-    }), {
-      "./earcut": 87,
-      "./helper": 92,
-      "./types": 94
-    } ],
-    91: [ (function(require, module, exports) {
+    86: [ (function(require, module, exports) {
       var LineCap = require("./types").LineCap;
       var LineJoin = require("./types").LineJoin;
       var Graphics = cc.Class({
@@ -15741,90 +14313,23 @@
       });
       cc.Graphics = module.exports = Graphics;
     }), {
-      "./types": 94
+      "./types": 88
     } ],
-    92: [ (function(require, module, exports) {
-      var PI = Math.PI;
-      var min = Math.min;
-      var max = Math.max;
-      var cos = Math.cos;
-      var sin = Math.sin;
-      var abs = Math.abs;
-      var sign = Math.sign;
-      var KAPPA90 = .5522847493;
-      function arc(ctx, cx, cy, r, startAngle, endAngle, counterclockwise) {
-        counterclockwise = counterclockwise || false;
-        var a = 0, da = 0, hda = 0, kappa = 0;
-        var dx = 0, dy = 0, x = 0, y = 0, tanx = 0, tany = 0;
-        var px = 0, py = 0, ptanx = 0, ptany = 0;
-        var i, ndivs;
-        da = endAngle - startAngle;
-        if (counterclockwise) if (abs(da) >= 2 * PI) da = 2 * PI; else while (da < 0) da += 2 * PI; else if (abs(da) >= 2 * PI) da = 2 * -PI; else while (da > 0) da -= 2 * PI;
-        ndivs = 0 | max(1, min(abs(da) / (.5 * PI) + .5, 5));
-        hda = da / ndivs / 2;
-        kappa = abs(4 / 3 * (1 - cos(hda)) / sin(hda));
-        counterclockwise || (kappa = -kappa);
-        for (i = 0; i <= ndivs; i++) {
-          a = startAngle + da * (i / ndivs);
-          dx = cos(a);
-          dy = sin(a);
-          x = cx + dx * r;
-          y = cy + dy * r;
-          tanx = -dy * r * kappa;
-          tany = dx * r * kappa;
-          0 === i ? ctx.moveTo(x, y) : ctx.bezierCurveTo(px + ptanx, py + ptany, x - tanx, y - tany, x, y);
-          px = x;
-          py = y;
-          ptanx = tanx;
-          ptany = tany;
-        }
-      }
-      function ellipse(ctx, cx, cy, rx, ry) {
-        ctx.moveTo(cx - rx, cy);
-        ctx.bezierCurveTo(cx - rx, cy + ry * KAPPA90, cx - rx * KAPPA90, cy + ry, cx, cy + ry);
-        ctx.bezierCurveTo(cx + rx * KAPPA90, cy + ry, cx + rx, cy + ry * KAPPA90, cx + rx, cy);
-        ctx.bezierCurveTo(cx + rx, cy - ry * KAPPA90, cx + rx * KAPPA90, cy - ry, cx, cy - ry);
-        ctx.bezierCurveTo(cx - rx * KAPPA90, cy - ry, cx - rx, cy - ry * KAPPA90, cx - rx, cy);
-        ctx.close();
-      }
-      function roundRect(ctx, x, y, w, h, r) {
-        if (r < .1) {
-          ctx.rect(x, y, w, h);
-          return;
-        }
-        var rx = min(r, .5 * abs(w)) * sign(w), ry = min(r, .5 * abs(h)) * sign(h);
-        ctx.moveTo(x, y + ry);
-        ctx.lineTo(x, y + h - ry);
-        ctx.bezierCurveTo(x, y + h - ry * (1 - KAPPA90), x + rx * (1 - KAPPA90), y + h, x + rx, y + h);
-        ctx.lineTo(x + w - rx, y + h);
-        ctx.bezierCurveTo(x + w - rx * (1 - KAPPA90), y + h, x + w, y + h - ry * (1 - KAPPA90), x + w, y + h - ry);
-        ctx.lineTo(x + w, y + ry);
-        ctx.bezierCurveTo(x + w, y + ry * (1 - KAPPA90), x + w - rx * (1 - KAPPA90), y, x + w - rx, y);
-        ctx.lineTo(x + rx, y);
-        ctx.bezierCurveTo(x + rx * (1 - KAPPA90), y, x, y + ry * (1 - KAPPA90), x, y + ry);
-        ctx.close();
-      }
-      module.exports = {
-        arc: arc,
-        ellipse: ellipse,
-        roundRect: roundRect
-      };
-    }), {} ],
-    93: [ (function(require, module, exports) {
+    87: [ (function(require, module, exports) {
       "use strict";
       var GraphicsNode;
-      GraphicsNode = cc.sys.isNative ? _ccsg.GraphicsNode = cc.GraphicsNode : _ccsg.GraphicsNode = require("./graphics-node");
+      GraphicsNode = _ccsg.GraphicsNode = cc.GraphicsNode;
       if (GraphicsNode) {
         var misc = require("../utils/misc");
         misc.propertyDefine(GraphicsNode, [ "lineWidth", "lineCap", "lineJoin", "miterLimit", "strokeColor", "fillColor" ], {});
       }
       require("./graphics");
     }), {
-      "../utils/misc": 162,
-      "./graphics": 91,
-      "./graphics-node": 89
+      "../utils/misc": 157,
+      "./graphics": 86,
+      "./graphics-node": 211
     } ],
-    94: [ (function(require, module, exports) {
+    88: [ (function(require, module, exports) {
       "use strict";
       var LineCap = cc.Enum({
         BUTT: 0,
@@ -15841,7 +14346,7 @@
         LineJoin: LineJoin
       };
     }), {} ],
-    95: [ (function(require, module, exports) {
+    89: [ (function(require, module, exports) {
       require("./platform");
       require("./assets");
       require("./CCNode");
@@ -15853,18 +14358,18 @@
       require("./camera/CCCamera");
       require("./base-ui/CCWidgetManager");
     }), {
-      "./CCNode": 23,
-      "./CCScene": 24,
-      "./assets": 36,
-      "./base-ui/CCWidgetManager": 37,
-      "./camera/CCCamera": 38,
-      "./collider": 46,
-      "./components": 79,
-      "./graphics": 93,
-      "./physics": 124,
-      "./platform": 148
+      "./CCNode": 22,
+      "./CCScene": 23,
+      "./assets": 35,
+      "./base-ui/CCWidgetManager": 36,
+      "./camera/CCCamera": 37,
+      "./collider": 45,
+      "./components": 78,
+      "./graphics": 87,
+      "./physics": 119,
+      "./platform": 144
     } ],
-    96: [ (function(require, module, exports) {
+    90: [ (function(require, module, exports) {
       var eventRegx = /^(click)(\s)*=/;
       var imageAttrReg = /(\s)*src(\s)*=|(\s)*height(\s)*=|(\s)*width(\s)*=|(\s)*click(\s)*=/;
       cc.HtmlTextParser = function() {
@@ -16094,7 +14599,7 @@
       };
       cc.htmlTextParser = new cc.HtmlTextParser();
     }), {} ],
-    97: [ (function(require, module, exports) {
+    91: [ (function(require, module, exports) {
       var CustomFontDescriptor = function() {
         this._status = "unloaded";
         this._observers = [];
@@ -16290,7 +14795,7 @@
       cc.TextUtils = module.exports = TextUtils;
       cc.CustomFontLoader = module.exports = CustomFontLoader;
     }), {} ],
-    98: [ (function(require, module, exports) {
+    92: [ (function(require, module, exports) {
       var JS = require("../platform/js");
       var Pipeline = require("./pipeline");
       var LoadingItems = require("./loading-items");
@@ -16300,6 +14805,7 @@
       var AssetTable = require("./asset-table");
       var callInNextTick = require("../platform/utils").callInNextTick;
       var AutoReleaseUtils = require("./auto-release-utils");
+      var ReleasedAssetChecker = require("./released-asset-checker");
       var resources = new AssetTable();
       function getXMLHttpRequest() {
         return window.XMLHttpRequest ? new window.XMLHttpRequest() : new ActiveXObject("MSXML2.XMLHTTP");
@@ -16339,9 +14845,16 @@
         this.loader = loader;
         this.onProgress = null;
         this._autoReleaseSetting = {};
+        this._releasedAssetChecker_DEBUG = new ReleasedAssetChecker();
       }
       JS.extend(CCLoader, Pipeline);
       var proto = CCLoader.prototype;
+      proto.init = function(director) {
+        var self = this;
+        director.on(cc.Director.EVENT_BEFORE_VISIT, (function() {
+          self._releasedAssetChecker_DEBUG.checkCouldRelease(self._cache);
+        }));
+      };
       proto.getXMLHttpRequest = getXMLHttpRequest;
       proto.addDownloadHandlers = function(extMap) {
         this.downloader.addHandlers(extMap);
@@ -16381,7 +14894,7 @@
               } else completeCallback.call(self, errors, items);
               completeCallback = null;
             }
-            var id;
+            var _id;
             items.destroy();
           }));
         }));
@@ -16577,6 +15090,7 @@
               var urls = asset.rawUrls;
               for (var _i = 0; _i < urls.length; _i++) this.release(urls[_i]);
             } else asset instanceof cc.Texture2D && cc.textureCache.removeTextureForKey(item.rawUrl || item.url);
+            removed && this._releasedAssetChecker_DEBUG.setReleased(item, id);
           }
         }
       };
@@ -16627,17 +15141,18 @@
       cc.loader = new CCLoader();
       module.exports = cc.loader;
     }), {
-      "../platform/js": 151,
-      "../platform/utils": 156,
-      "./asset-loader": 99,
-      "./asset-table": 100,
-      "./auto-release-utils": 101,
-      "./downloader": 102,
-      "./loader": 105,
-      "./loading-items": 106,
-      "./pipeline": 109
+      "../platform/js": 147,
+      "../platform/utils": 151,
+      "./asset-loader": 93,
+      "./asset-table": 94,
+      "./auto-release-utils": 95,
+      "./downloader": 96,
+      "./loader": 99,
+      "./loading-items": 100,
+      "./pipeline": 103,
+      "./released-asset-checker": 104
     } ],
-    99: [ (function(require, module, exports) {
+    93: [ (function(require, module, exports) {
       var Path = require("../utils/CCPath");
       var Pipeline = require("./pipeline");
       var LoadingItems = require("./loading-items");
@@ -16686,11 +15201,12 @@
       };
       Pipeline.AssetLoader = module.exports = AssetLoader;
     }), {
-      "../utils/CCPath": 157,
-      "./loading-items": 106,
-      "./pipeline": 109
+      "../utils/CCPath": 152,
+      "./loading-items": 100,
+      "./pipeline": 103
     } ],
-    100: [ (function(require, module, exports) {
+    94: [ (function(require, module, exports) {
+      var pushToMap = require("../utils/misc").pushToMap;
       function Entry(uuid, type) {
         this.uuid = uuid;
         this.type = type;
@@ -16739,22 +15255,40 @@
         }
         return uuids;
       };
-      proto.getAllPaths = function() {
-        return Object.keys(this._pathToUuid);
-      };
       proto.add = function(path, uuid, type, isMainAsset) {
         path = path.substring(0, path.length - cc.path.extname(path).length);
         var newEntry = new Entry(uuid, type);
-        var pathToUuid = this._pathToUuid;
-        var exists = pathToUuid[path];
-        exists ? Array.isArray(exists) ? isMainAsset ? exists.unshift(newEntry) : exists.push(newEntry) : pathToUuid[path] = isMainAsset ? [ newEntry, exists ] : [ exists, newEntry ] : pathToUuid[path] = newEntry;
+        pushToMap(this._pathToUuid, path, newEntry, isMainAsset);
+      };
+      proto._getInfo_DEBUG = function(uuid, out_info) {
+        var path2uuid = this._pathToUuid;
+        var paths = Object.keys(path2uuid);
+        for (var p = 0; p < paths.length; ++p) {
+          var path = paths[p];
+          var item = path2uuid[path];
+          if (Array.isArray(item)) for (var i = 0; i < item.length; i++) {
+            var entry = item[i];
+            if (entry.uuid === uuid) {
+              out_info.path = path;
+              out_info.type = entry.type;
+              return true;
+            }
+          } else if (item.uuid === uuid) {
+            out_info.path = path;
+            out_info.type = item.type;
+            return true;
+          }
+        }
+        return false;
       };
       proto.reset = function() {
         this._pathToUuid = {};
       };
       module.exports = AssetTable;
-    }), {} ],
-    101: [ (function(require, module, exports) {
+    }), {
+      "../utils/misc": 157
+    } ],
+    95: [ (function(require, module, exports) {
       var JS = require("../platform/js");
       function parseDepends(key, parsed) {
         var item = cc.loader.getItem(key);
@@ -16819,9 +15353,9 @@
         }
       };
     }), {
-      "../platform/js": 151
+      "../platform/js": 147
     } ],
-    102: [ (function(require, module, exports) {
+    96: [ (function(require, module, exports) {
       var JS = require("../platform/js");
       var Path = require("../utils/CCPath");
       var misc = require("../utils/misc");
@@ -17013,16 +15547,16 @@
       };
       Pipeline.Downloader = module.exports = Downloader;
     }), {
-      "../platform/js": 151,
-      "../utils/CCPath": 157,
-      "../utils/misc": 162,
-      "./audio-downloader": 216,
-      "./pack-downloader": 108,
-      "./pipeline": 109,
-      "./text-downloader": 110,
-      "./utils": 111
+      "../platform/js": 147,
+      "../utils/CCPath": 152,
+      "../utils/misc": 157,
+      "./audio-downloader": 211,
+      "./pack-downloader": 102,
+      "./pipeline": 103,
+      "./text-downloader": 105,
+      "./utils": 106
     } ],
-    103: [ (function(require, module, exports) {
+    97: [ (function(require, module, exports) {
       require("./downloader");
       require("./loader");
       require("./json-unpacker");
@@ -17030,14 +15564,14 @@
       require("./pipeline");
       require("./CCLoader");
     }), {
-      "./CCLoader": 98,
-      "./downloader": 102,
-      "./json-unpacker": 104,
-      "./loader": 105,
-      "./loading-items": 106,
-      "./pipeline": 109
+      "./CCLoader": 92,
+      "./downloader": 96,
+      "./json-unpacker": 98,
+      "./loader": 99,
+      "./loading-items": 100,
+      "./pipeline": 103
     } ],
-    104: [ (function(require, module, exports) {
+    98: [ (function(require, module, exports) {
       function JsonUnpacker() {
         this.jsons = {};
         this.state = -1;
@@ -17056,7 +15590,7 @@
       };
       module.exports = JsonUnpacker;
     }), {} ],
-    105: [ (function(require, module, exports) {
+    99: [ (function(require, module, exports) {
       var JS = require("../platform/js");
       var Pipeline = require("./pipeline");
       var Texture2D = require("../textures/CCTexture2D");
@@ -17126,13 +15660,13 @@
       };
       Pipeline.Loader = module.exports = Loader;
     }), {
-      "../platform/js": 151,
-      "../textures/CCTexture2D": 216,
-      "../utils/misc": 162,
-      "./pipeline": 109,
-      "./uuid-loader": 112
+      "../platform/js": 147,
+      "../textures/CCTexture2D": 211,
+      "../utils/misc": 157,
+      "./pipeline": 103,
+      "./uuid-loader": 107
     } ],
-    106: [ (function(require, module, exports) {
+    100: [ (function(require, module, exports) {
       var CallbacksInvoker = require("../platform/callbacks-invoker");
       var Path = require("../utils/CCPath");
       var JS = require("../platform/js");
@@ -17391,7 +15925,8 @@
           var dep = _queueDeps[this._id];
           this.onProgress(dep ? dep.completed.length : this.completedCount, dep ? dep.deps.length : this.totalCount, item);
         }
-        this.invokeAndRemove(id, item);
+        this.invoke(id, item);
+        this.removeAll(id);
         !this._appending && this.completedCount >= this.totalCount && this.allComplete();
       };
       proto.destroy = function() {
@@ -17416,11 +15951,11 @@
       };
       cc.LoadingItems = module.exports = LoadingItems;
     }), {
-      "../platform/callbacks-invoker": 145,
-      "../platform/js": 151,
-      "../utils/CCPath": 157
+      "../platform/callbacks-invoker": 140,
+      "../platform/js": 147,
+      "../utils/CCPath": 152
     } ],
-    107: [ (function(require, module, exports) {
+    101: [ (function(require, module, exports) {
       var Pipeline = require("./pipeline");
       var ID = "MD5Pipe";
       var ExtnameRegex = /(\.[^.\n\\/]*)$/;
@@ -17458,10 +15993,11 @@
       };
       Pipeline.MD5Pipe = module.exports = MD5Pipe;
     }), {
-      "./pipeline": 109
+      "./pipeline": 103
     } ],
-    108: [ (function(require, module, exports) {
+    102: [ (function(require, module, exports) {
       var JsonUnpacker = require("./json-unpacker");
+      var pushToMap = require("../utils/misc").pushToMap;
       var uuidToPack = {};
       var packIndices = {};
       var globalUnpackers = {};
@@ -17481,15 +16017,8 @@
             var uuids = packs[packUuid];
             for (var i = 0; i < uuids.length; i++) {
               var uuid = uuids[i];
-              var allIncludedPacks = uuidToPack[uuid];
-              if (allIncludedPacks) {
-                Array.isArray(allIncludedPacks) ? allIncludedPacks.push(packUuid) : uuidToPack[uuid] = allIncludedPacks = [ allIncludedPacks, packUuid ];
-                if (1 === uuids.length) {
-                  var swapToLast = allIncludedPacks[0];
-                  allIncludedPacks[0] = allIncludedPacks[allIncludedPacks.length - 1];
-                  allIncludedPacks[allIncludedPacks.length - 1] = swapToLast;
-                }
-              } else uuidToPack[uuid] = packUuid;
+              var pushFront = 1 === uuids.length;
+              pushToMap(uuidToPack, uuid, packUuid, pushFront);
             }
           }
         },
@@ -17553,9 +16082,10 @@
         }
       };
     }), {
-      "./json-unpacker": 104
+      "../utils/misc": 157,
+      "./json-unpacker": 98
     } ],
-    109: [ (function(require, module, exports) {
+    103: [ (function(require, module, exports) {
       var JS = require("../platform/js");
       var LoadingItems = require("./loading-items");
       var ItemState = LoadingItems.ItemState;
@@ -17692,10 +16222,65 @@
       };
       cc.Pipeline = module.exports = Pipeline;
     }), {
-      "../platform/js": 151,
-      "./loading-items": 106
+      "../platform/js": 147,
+      "./loading-items": 100
     } ],
-    110: [ (function(require, module, exports) {
+    104: [ (function(require, module, exports) {
+      var JS;
+      var tmpInfo;
+      (function() {
+        JS = require("../platform/js");
+        function ReleasedAssetChecker() {
+          this._releasedKeys = JS.createMap(true);
+          this._dirty = false;
+        }
+        ReleasedAssetChecker.prototype.setReleased = function(item, releasedKey) {
+          this._releasedKeys[releasedKey] = true;
+          this._dirty = true;
+        };
+        tmpInfo = null;
+        function getItemDesc(item) {
+          if (item.uuid) {
+            tmpInfo || (tmpInfo = {
+              path: "",
+              type: null
+            });
+            if (cc.loader._resources._getInfo_DEBUG(item.uuid, tmpInfo)) {
+              tmpInfo.path = "resources/" + tmpInfo.path;
+              return '"' + tmpInfo.path + '" (type: ' + JS.getClassName(tmpInfo.type) + ", uuid: " + item.uuid + ")";
+            }
+            return '"' + item.rawUrl + '" (' + item.uuid + ")";
+          }
+          return '"' + item.rawUrl + '"';
+        }
+        function doCheckCouldRelease(releasedKey, refOwnerItem, caches) {
+          var loadedAgain = caches[releasedKey];
+          loadedAgain || cc.log('"' + releasedKey + '" was released but maybe still referenced by ' + getItemDesc(refOwnerItem));
+        }
+        ReleasedAssetChecker.prototype.checkCouldRelease = function(caches) {
+          if (!this._dirty) return;
+          this._dirty = false;
+          var released = this._releasedKeys;
+          for (var id in caches) {
+            var item = caches[id];
+            item.alias && (item = item.alias);
+            var depends = item.dependKeys;
+            if (depends) for (var i = 0; i < depends.length; ++i) {
+              var depend = depends[i];
+              if (released[depend]) {
+                doCheckCouldRelease(depend, item, caches);
+                delete released[depend];
+              }
+            }
+          }
+          JS.clear(released);
+        };
+        module.exports = ReleasedAssetChecker;
+      })();
+    }), {
+      "../platform/js": 147
+    } ],
+    105: [ (function(require, module, exports) {
       var urlAppendTimestamp;
       module.exports = function(item, callback) {
         var url = item.url;
@@ -17703,9 +16288,9 @@
         return "string" === (__typeofVal = typeof result, "object" === __typeofVal ? __realTypeOfObj(result) : __typeofVal) && result ? result : new Error("Download text failed: " + url);
       };
     }), {
-      "./utils": 111
+      "./utils": 106
     } ],
-    111: [ (function(require, module, exports) {
+    106: [ (function(require, module, exports) {
       var _noCacheRex = /\?/;
       module.exports = {
         urlAppendTimestamp: function(url) {
@@ -17714,7 +16299,7 @@
         }
       };
     }), {} ],
-    112: [ (function(require, module, exports) {
+    107: [ (function(require, module, exports) {
       var JS = require("../platform/js");
       require("../platform/deserialize");
       var LoadingItems = require("./loading-items");
@@ -17860,11 +16445,11 @@
       module.exports = loadUuid;
       loadUuid.isSceneObj = isSceneObj;
     }), {
-      "../platform/deserialize": 146,
-      "../platform/js": 151,
-      "./loading-items": 106
+      "../platform/deserialize": 142,
+      "../platform/js": 147,
+      "./loading-items": 100
     } ],
-    113: [ (function(require, module, exports) {
+    108: [ (function(require, module, exports) {
       var CompScheduler = require("./component-scheduler");
       var Flags = require("./platform/CCObject").Flags;
       var JS = require("./platform/js");
@@ -17880,6 +16465,14 @@
       var callResetInTryCatch = false;
       var callOnFocusInTryCatch = false;
       var callOnLostFocusInTryCatch = false;
+      var supportJit = cc.supportJit;
+      var callPreload = supportJit ? "c.__preload();" : function(c) {
+        c.__preload();
+      };
+      var callOnLoad = supportJit ? "c.onLoad();c._objFlags|=" + IsOnLoadCalled : function(c) {
+        c.onLoad();
+        c._objFlags |= IsOnLoadCalled;
+      };
       var UnsortedInvoker = cc.Class({
         extends: CompScheduler.LifeCycleInvoker,
         add: function(comp) {
@@ -17896,8 +16489,8 @@
           this._zero.array.length = 0;
         }
       });
-      var invokePreload = CompScheduler.createInvokeImpl("c.__preload();");
-      var invokeOnLoad = CompScheduler.createInvokeImpl("c.onLoad();c._objFlags|=" + IsOnLoadCalled);
+      var invokePreload = CompScheduler.createInvokeImpl(callPreload);
+      var invokeOnLoad = CompScheduler.createInvokeImpl(callOnLoad);
       var activateTasksPool = new JS.Pool(MAX_POOL_SIZE);
       activateTasksPool.get = function getActivateTask() {
         var task = this._get() || {
@@ -18028,12 +16621,12 @@
       });
       module.exports = NodeActivator;
     }), {
-      "./component-scheduler": 47,
-      "./platform/CCObject": 140,
-      "./platform/js": 151,
-      "./utils/misc": 162
+      "./component-scheduler": 46,
+      "./platform/CCObject": 135,
+      "./platform/js": 147,
+      "./utils/misc": 157
     } ],
-    114: [ (function(require, module, exports) {
+    109: [ (function(require, module, exports) {
       var PTM_RATIO = require("./CCPhysicsTypes").PTM_RATIO;
       var ContactType = require("./CCPhysicsTypes").ContactType;
       var pools = [];
@@ -18244,9 +16837,9 @@
       PhysicsContact.ContactType = ContactType;
       cc.PhysicsContact = module.exports = PhysicsContact;
     }), {
-      "./CCPhysicsTypes": 116
+      "./CCPhysicsTypes": 111
     } ],
-    115: [ (function(require, module, exports) {
+    110: [ (function(require, module, exports) {
       var ContactType = require("./CCPhysicsTypes").ContactType;
       var BodyType = require("./CCPhysicsTypes").BodyType;
       var RayCastType = require("./CCPhysicsTypes").RayCastType;
@@ -18531,9 +17124,9 @@
       }));
       cc.PhysicsManager = module.exports = PhysicsManager;
     }), {
-      "./CCPhysicsTypes": 116
+      "./CCPhysicsTypes": 111
     } ],
-    116: [ (function(require, module, exports) {
+    111: [ (function(require, module, exports) {
       var ContactType = {
         BEGIN_CONTACT: "begin-contact",
         END_CONTACT: "end-contact",
@@ -18563,7 +17156,7 @@
         PHYSICS_ANGLE_TO_ANGLE: -180 / Math.PI
       };
     }), {} ],
-    117: [ (function(require, module, exports) {
+    112: [ (function(require, module, exports) {
       function At(i, vertices) {
         var s = vertices.length;
         return vertices[i < 0 ? s - -i % s : i % s];
@@ -18747,7 +17340,7 @@
         IsCounterClockWise: IsCounterClockWise
       };
     }), {} ],
-    118: [ (function(require, module, exports) {
+    113: [ (function(require, module, exports) {
       var PTM_RATIO = require("./CCPhysicsTypes").PTM_RATIO;
       var ANGLE_TO_PHYSICS_ANGLE = require("./CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
       var PHYSICS_ANGLE_TO_ANGLE = require("./CCPhysicsTypes").PHYSICS_ANGLE_TO_ANGLE;
@@ -19129,10 +17722,10 @@
       });
       cc.RigidBody = module.exports = RigidBody;
     }), {
-      "./CCPhysicsTypes": 116,
-      "./utils": 134
+      "./CCPhysicsTypes": 111,
+      "./utils": 129
     } ],
-    119: [ (function(require, module, exports) {
+    114: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var PhysicsBoxCollider = cc.Class({
         name: "cc.PhysicsBoxCollider",
@@ -19156,9 +17749,9 @@
       });
       cc.PhysicsBoxCollider = module.exports = PhysicsBoxCollider;
     }), {
-      "../CCPhysicsTypes": 116
+      "../CCPhysicsTypes": 111
     } ],
-    120: [ (function(require, module, exports) {
+    115: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var PhysicsChainCollider = cc.Class({
         name: "cc.PhysicsChainCollider",
@@ -19198,9 +17791,9 @@
       });
       cc.PhysicsChainCollider = module.exports = PhysicsChainCollider;
     }), {
-      "../CCPhysicsTypes": 116
+      "../CCPhysicsTypes": 111
     } ],
-    121: [ (function(require, module, exports) {
+    116: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var PhysicsCircleCollider = cc.Class({
         name: "cc.PhysicsCircleCollider",
@@ -19223,9 +17816,9 @@
       });
       cc.PhysicsCircleCollider = module.exports = PhysicsCircleCollider;
     }), {
-      "../CCPhysicsTypes": 116
+      "../CCPhysicsTypes": 111
     } ],
-    122: [ (function(require, module, exports) {
+    117: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var getWorldScale = require("../utils").getWorldScale;
       var PhysicsCollider = cc.Class({
@@ -19351,7 +17944,7 @@
           for (var i = fixtures.length - 1; i >= 0; i--) {
             var fixture = fixtures[i];
             fixture.collider = null;
-            manager._unregisterContactFixture(fixture);
+            cc.sys.isObjectValid(fixture) && manager._unregisterContactFixture(fixture);
             body && body.DestroyFixture(fixture);
           }
           this.body = null;
@@ -19394,10 +17987,10 @@
       });
       cc.PhysicsCollider = module.exports = PhysicsCollider;
     }), {
-      "../CCPhysicsTypes": 116,
-      "../utils": 134
+      "../CCPhysicsTypes": 111,
+      "../utils": 129
     } ],
-    123: [ (function(require, module, exports) {
+    118: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var PolygonSeparator = require("../CCPolygonSeparator");
       var PhysicsPolygonCollider = cc.Class({
@@ -19444,10 +18037,10 @@
       });
       cc.PhysicsPolygonCollider = module.exports = PhysicsPolygonCollider;
     }), {
-      "../CCPhysicsTypes": 116,
-      "../CCPolygonSeparator": 117
+      "../CCPhysicsTypes": 111,
+      "../CCPolygonSeparator": 112
     } ],
-    124: [ (function(require, module, exports) {
+    119: [ (function(require, module, exports) {
       require("./CCPhysicsManager");
       require("./CCRigidBody");
       require("./CCPhysicsContact");
@@ -19466,31 +18059,31 @@
       require("./joint/CCWheelJoint");
       require("./joint/CCRopeJoint");
     }), {
-      "../../../external/box2d/box2d": 216,
-      "./CCPhysicsContact": 114,
-      "./CCPhysicsManager": 115,
-      "./CCRigidBody": 118,
-      "./collider/CCPhysicsBoxCollider": 119,
-      "./collider/CCPhysicsChainCollider": 120,
-      "./collider/CCPhysicsCircleCollider": 121,
-      "./collider/CCPhysicsCollider": 122,
-      "./collider/CCPhysicsPolygonCollider": 123,
-      "./joint/CCDistanceJoint": 125,
-      "./joint/CCJoint": 126,
-      "./joint/CCMotorJoint": 127,
-      "./joint/CCMouseJoint": 128,
-      "./joint/CCPrismaticJoint": 129,
-      "./joint/CCRevoluteJoint": 130,
-      "./joint/CCRopeJoint": 131,
-      "./joint/CCWeldJoint": 132,
-      "./joint/CCWheelJoint": 133,
-      "./platform/CCPhysicsAABBQueryCallback": 216,
-      "./platform/CCPhysicsContactListner": 216,
-      "./platform/CCPhysicsDebugDraw": 216,
-      "./platform/CCPhysicsRayCastCallback": 216,
-      "./platform/CCPhysicsUtils": 216
+      "../../../external/box2d/box2d": 211,
+      "./CCPhysicsContact": 109,
+      "./CCPhysicsManager": 110,
+      "./CCRigidBody": 113,
+      "./collider/CCPhysicsBoxCollider": 114,
+      "./collider/CCPhysicsChainCollider": 115,
+      "./collider/CCPhysicsCircleCollider": 116,
+      "./collider/CCPhysicsCollider": 117,
+      "./collider/CCPhysicsPolygonCollider": 118,
+      "./joint/CCDistanceJoint": 120,
+      "./joint/CCJoint": 121,
+      "./joint/CCMotorJoint": 122,
+      "./joint/CCMouseJoint": 123,
+      "./joint/CCPrismaticJoint": 124,
+      "./joint/CCRevoluteJoint": 125,
+      "./joint/CCRopeJoint": 126,
+      "./joint/CCWeldJoint": 127,
+      "./joint/CCWheelJoint": 128,
+      "./platform/CCPhysicsAABBQueryCallback": 211,
+      "./platform/CCPhysicsContactListner": 211,
+      "./platform/CCPhysicsDebugDraw": 211,
+      "./platform/CCPhysicsRayCastCallback": 211,
+      "./platform/CCPhysicsUtils": 211
     } ],
-    125: [ (function(require, module, exports) {
+    120: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var DistanceJoint = cc.Class({
         name: "cc.DistanceJoint",
@@ -19543,9 +18136,9 @@
       });
       cc.DistanceJoint = module.exports = DistanceJoint;
     }), {
-      "../CCPhysicsTypes": 116
+      "../CCPhysicsTypes": 111
     } ],
-    126: [ (function(require, module, exports) {
+    121: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var Joint = cc.Class({
         name: "cc.Joint",
@@ -19644,9 +18237,9 @@
       });
       cc.Joint = module.exports = Joint;
     }), {
-      "../CCPhysicsTypes": 116
+      "../CCPhysicsTypes": 111
     } ],
-    127: [ (function(require, module, exports) {
+    122: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
       var MotorJoint = cc.Class({
@@ -19734,9 +18327,9 @@
       });
       cc.MotorJoint = module.exports = MotorJoint;
     }), {
-      "../CCPhysicsTypes": 116
+      "../CCPhysicsTypes": 111
     } ],
-    128: [ (function(require, module, exports) {
+    123: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var tempB2Vec2 = new b2.Vec2();
       var MouseJoint = cc.Class({
@@ -19867,9 +18460,9 @@
       });
       cc.MouseJoint = module.exports = MouseJoint;
     }), {
-      "../CCPhysicsTypes": 116
+      "../CCPhysicsTypes": 111
     } ],
-    129: [ (function(require, module, exports) {
+    124: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
       var PrismaticJoint = cc.Class({
@@ -19941,9 +18534,9 @@
       });
       cc.PrismaticJoint = module.exports = PrismaticJoint;
     }), {
-      "../CCPhysicsTypes": 116
+      "../CCPhysicsTypes": 111
     } ],
-    130: [ (function(require, module, exports) {
+    125: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
       var PHYSICS_ANGLE_TO_ANGLE = require("../CCPhysicsTypes").PHYSICS_ANGLE_TO_ANGLE;
@@ -20029,9 +18622,9 @@
       });
       cc.RevoluteJoint = module.exports = RevoluteJoint;
     }), {
-      "../CCPhysicsTypes": 116
+      "../CCPhysicsTypes": 111
     } ],
-    131: [ (function(require, module, exports) {
+    126: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var RopeJoint = cc.Class({
         name: "cc.RopeJoint",
@@ -20060,9 +18653,9 @@
       });
       cc.RopeJoint = module.exports = RopeJoint;
     }), {
-      "../CCPhysicsTypes": 116
+      "../CCPhysicsTypes": 111
     } ],
-    132: [ (function(require, module, exports) {
+    127: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
       var WeldJoint = cc.Class({
@@ -20109,9 +18702,9 @@
       });
       cc.WeldJoint = module.exports = WeldJoint;
     }), {
-      "../CCPhysicsTypes": 116
+      "../CCPhysicsTypes": 111
     } ],
-    133: [ (function(require, module, exports) {
+    128: [ (function(require, module, exports) {
       var PTM_RATIO = require("../CCPhysicsTypes").PTM_RATIO;
       var ANGLE_TO_PHYSICS_ANGLE = require("../CCPhysicsTypes").ANGLE_TO_PHYSICS_ANGLE;
       var WheelJoint = cc.Class({
@@ -20194,9 +18787,9 @@
       });
       cc.WheelJoint = module.exports = WheelJoint;
     }), {
-      "../CCPhysicsTypes": 116
+      "../CCPhysicsTypes": 111
     } ],
-    134: [ (function(require, module, exports) {
+    129: [ (function(require, module, exports) {
       function getWorldRotation(node) {
         var rot = node.rotationX;
         var parent = node.parent;
@@ -20232,7 +18825,7 @@
         convertToNodeRotation: convertToNodeRotation
       };
     }), {} ],
-    135: [ (function(require, module, exports) {
+    130: [ (function(require, module, exports) {
       var Asset = require("../assets/CCAsset");
       var callInNextTick = require("./utils").callInNextTick;
       var Loader = require("../load-pipeline/CCLoader");
@@ -20386,15 +18979,15 @@
       AssetLibrary._uuidToAsset = {};
       module.exports = cc.AssetLibrary = AssetLibrary;
     }), {
-      "../assets/CCAsset": 25,
-      "../load-pipeline/CCLoader": 98,
-      "../load-pipeline/auto-release-utils": 101,
-      "../load-pipeline/md5-pipe": 107,
-      "../load-pipeline/pack-downloader": 108,
-      "../utils/decode-uuid": 160,
-      "./utils": 156
+      "../assets/CCAsset": 24,
+      "../load-pipeline/CCLoader": 92,
+      "../load-pipeline/auto-release-utils": 95,
+      "../load-pipeline/md5-pipe": 101,
+      "../load-pipeline/pack-downloader": 102,
+      "../utils/decode-uuid": 155,
+      "./utils": 151
     } ],
-    136: [ (function(require, module, exports) {
+    131: [ (function(require, module, exports) {
       var JS = require("./js");
       var Enum = require("./CCEnum");
       var Utils = require("./utils");
@@ -20557,14 +19150,7 @@
         var clsName = JS.getClassName(value);
         var type = value.constructor;
         var res = "new " + clsName + "(";
-        var i;
-        if (type === cc.Mat3 || type === cc.Mat4) {
-          var data = value.data;
-          for (i = 0; i < data.length; i++) {
-            res += data[i];
-            i < data.length - 1 && (res += ",");
-          }
-        } else for (i = 0; i < type.__props__.length; i++) {
+        for (var i = 0; i < type.__props__.length; i++) {
           var prop = type.__props__[i];
           var propVal = value[prop];
           if ("object" === (__typeofVal = typeof propVal, "object" === __typeofVal ? __realTypeOfObj(propVal) : __typeofVal)) {
@@ -20576,17 +19162,25 @@
         }
         return res + ")";
       }
+      function getNewValueType(value) {
+        var clsName = JS.getClassName(value);
+        var type = value.constructor;
+        var res = new type();
+        for (var i = 0; i < type.__props__.length; i++) {
+          var prop = type.__props__[i];
+          var propVal = value[prop];
+          if ("object" === (__typeofVal = typeof propVal, "object" === __typeofVal ? __realTypeOfObj(propVal) : __typeofVal)) {
+            cc.errorID(3641, clsName);
+            return res;
+          }
+          res[prop] = propVal;
+        }
+        return res;
+      }
       function escapeForJS(s) {
         return JSON.stringify(s).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
       }
-      var IDENTIFIER_RE = /^[$A-Za-z_][0-9A-Za-z_$]*$/;
-      function compileProps(actualClass) {
-        var attrs = Attr.getClassAttrs(actualClass);
-        var propList = actualClass.__props__;
-        if (null === propList) {
-          deferredInitializer.init();
-          propList = actualClass.__props__;
-        }
+      function getInitPropsJit(attrs, propList) {
         var F = [];
         var func = "";
         for (var i = 0; i < propList.length; i++) {
@@ -20609,10 +19203,42 @@
         }
         var initProps;
         initProps = 0 === F.length ? Function(func) : Function("F", "return (function(){\n" + func + "})")(F);
+        return initProps;
+      }
+      function getInitProps(attrs, propList) {
+        function func() {
+          var F = [];
+          for (var i = 0; i < propList.length; i++) {
+            var prop = propList[i];
+            var attrKey = prop + DELIMETER + "default";
+            if (attrKey in attrs) {
+              var expression;
+              var def = attrs[attrKey];
+              if ("object" === (__typeofVal = typeof def, "object" === __typeofVal ? __realTypeOfObj(def) : __typeofVal) && def) expression = def instanceof cc.ValueType ? getNewValueType(def) : Array.isArray(def) ? [] : {}; else if ("function" === (__typeofVal = typeof def, 
+              "object" === __typeofVal ? __realTypeOfObj(def) : __typeofVal)) {
+                var index = F.length;
+                F.push(def);
+                expression = F[index]();
+              } else expression = def;
+              this[prop] = expression;
+            }
+          }
+        }
+        return func;
+      }
+      var IDENTIFIER_RE = /^[$A-Za-z_][0-9A-Za-z_$]*$/;
+      function compileProps(actualClass) {
+        var attrs = Attr.getClassAttrs(actualClass);
+        var propList = actualClass.__props__;
+        if (null === propList) {
+          deferredInitializer.init();
+          propList = actualClass.__props__;
+        }
+        var initProps = cc.supportJit ? getInitPropsJit(attrs, propList) : getInitProps(attrs, propList);
         actualClass.prototype.__initProps__ = initProps;
         initProps.call(this);
       }
-      function _createCtor(ctors, baseClass, className, options) {
+      var _createCtor = cc.supportJit ? function(ctors, baseClass, className, options) {
         var superCallBounded = baseClass && boundSuperCalls(baseClass, options, className);
         var ctorName = "CCClass";
         var body = "return function " + ctorName + "(){\n";
@@ -20631,7 +19257,23 @@
         }
         body += "}";
         return Function(body)();
-      }
+      } : function(ctors, baseClass, className, options) {
+        var superCallBounded = baseClass && boundSuperCalls(baseClass, options, className);
+        return function CCClass() {
+          superCallBounded && (this._super = null);
+          this.__initProps__(CCClass);
+          var ctorLen = ctors.length;
+          var cs = CCClass.__ctors__;
+          if (ctorLen > 0) {
+            var useTryCatch = !(className && className.startsWith("cc."));
+            if (useTryCatch) try {
+              if (1 === ctorLen) cs[0].apply(this, arguments); else for (var i = 0; i < ctorLen; i++) cs[i].apply(this, arguments);
+            } catch (e) {
+              cc._throw(e);
+            } else if (1 === ctorLen) cs[0].apply(this, arguments); else for (var i = 0; i < ctorLen; i++) cs[i].apply(this, arguments);
+          }
+        };
+      };
       function _validateCtor_DEV(ctor, baseClass, className, options) {
         var originCtor;
         !(ctor.length > 0) || className && className.startsWith("cc.") || cc.warnID(3617, className);
@@ -20823,6 +19465,7 @@
         attrs.editorOnly && ((attrsProto || getAttrsProto())[attrsProtoKey + "editorOnly"] = true);
         attrs.url && ((attrsProto || getAttrsProto())[attrsProtoKey + "saveUrlAsAsset"] = true);
         false === attrs.serializable && ((attrsProto || getAttrsProto())[attrsProtoKey + "serializable"] = false);
+        parseSimpleAttr("formerlySerializedAs", "string");
         var visible;
         var startsWithUS;
         var range = attrs.range;
@@ -20849,14 +19492,14 @@
         getDefault: getDefault
       };
     }), {
-      "./CCEnum": 138,
-      "./attribute": 144,
-      "./js": 151,
-      "./preprocess-class": 153,
-      "./requiring-frame": 154,
-      "./utils": 156
+      "./CCEnum": 133,
+      "./attribute": 139,
+      "./js": 147,
+      "./preprocess-class": 148,
+      "./requiring-frame": 149,
+      "./utils": 151
     } ],
-    137: [ (function(require, module, exports) {
+    132: [ (function(require, module, exports) {
       require("./CCClass");
       var Preprocess = require("./preprocess-class");
       var JS = require("./js");
@@ -21022,12 +19665,12 @@
         mixins: mixins
       };
     }), {
-      "./CCClass": 136,
-      "./js": 151,
-      "./preprocess-class": 153,
-      "./utils": 156
+      "./CCClass": 131,
+      "./js": 147,
+      "./preprocess-class": 148,
+      "./utils": 151
     } ],
-    138: [ (function(require, module, exports) {
+    133: [ (function(require, module, exports) {
       var JS = require("./js");
       function Enum(obj) {
         if ("__enums__" in obj) return obj;
@@ -21068,9 +19711,9 @@
       var _TestEnum;
       module.exports = cc.Enum = Enum;
     }), {
-      "./js": 151
+      "./js": 147
     } ],
-    139: [ (function(require, module, exports) {
+    134: [ (function(require, module, exports) {
       require("./_CCClass");
       cc.KEY = {
         none: 0,
@@ -21290,14 +19933,13 @@
         SELECTED_TAG: 8802,
         DISABLE_TAG: 8803,
         FIX_ARTIFACTS_BY_STRECHING_TEXEL: 0,
+        FIX_ARTIFACTS_BY_STRECHING_TEXEL_TMX: 1,
         DIRECTOR_STATS_POSITION: cc.p(0, 0),
         DIRECTOR_FPS_INTERVAL: .5,
         COCOSNODE_RENDER_SUBPIXEL: 1,
         SPRITEBATCHNODE_RENDER_SUBPIXEL: 1,
         AUTO_PREMULTIPLIED_ALPHA_FOR_PNG: 0,
         OPTIMIZE_BLEND_FUNC_FOR_PREMULTIPLIED_ALPHA: 0,
-        TEXTURE_ATLAS_USE_TRIANGLE_STRIP: 0,
-        TEXTURE_ATLAS_USE_VAO: 0,
         TEXTURE_NPOT_SUPPORT: 0,
         USE_LA88_LABELS: 1,
         SPRITE_DEBUG_DRAW: 0,
@@ -21312,6 +19954,16 @@
         DOWNLOAD_MAX_CONCURRENT: 64,
         ENABLE_TRANSPARENT_CANVAS: false
       };
+      var ENABLE_CULLING = true;
+      cc.defineGetterSetter(cc.macro, "ENABLE_CULLING", (function() {
+        return ENABLE_CULLING;
+      }), (function(val) {
+        ENABLE_CULLING = val;
+        var scene = cc.director.getScene();
+        if (!scene) return;
+        scene._sgNode.markCullingDirty();
+        cc.director.setCullingEnabled(val);
+      }));
       cc.defineGetterSetter(cc.macro, "BLEND_SRC", (function() {
         return cc._renderType === cc.game.RENDER_TYPE_WEBGL && cc.macro.OPTIMIZE_BLEND_FUNC_FOR_PREMULTIPLIED_ALPHA ? cc.macro.ONE : cc.macro.SRC_ALPHA;
       }));
@@ -21348,9 +20000,9 @@
       };
       module.exports = cc.macro;
     }), {
-      "./_CCClass": 143
+      "./_CCClass": 138
     } ],
-    140: [ (function(require, module, exports) {
+    135: [ (function(require, module, exports) {
       var JS = require("./js");
       var CCClass = require("./CCClass");
       var Destroyed = 1;
@@ -21467,16 +20119,24 @@
           }
         }
         var skipId = obj instanceof cc._BaseNode || obj instanceof cc.Component;
-        var func = "";
-        for (key in propsToReset) {
-          if (skipId && "_id" === key) continue;
-          var statement;
-          statement = CCClass.IDENTIFIER_RE.test(key) ? "o." + key + "=" : "o[" + CCClass.escapeForJS(key) + "]=";
-          var val = propsToReset[key];
-          "" === val && (val = '""');
-          func += statement + val + ";\n";
+        if (cc.supportJit) {
+          var func = "";
+          for (key in propsToReset) {
+            if (skipId && "_id" === key) continue;
+            var statement;
+            statement = CCClass.IDENTIFIER_RE.test(key) ? "o." + key + "=" : "o[" + CCClass.escapeForJS(key) + "]=";
+            var val = propsToReset[key];
+            "" === val && (val = '""');
+            func += statement + val + ";\n";
+          }
+          return Function("o", func);
         }
-        return Function("o", func);
+        return function(o) {
+          for (key in propsToReset) {
+            if (skipId && "_id" === key) continue;
+            o[key] = propsToReset[key];
+          }
+        };
       }
       prototype._destruct = function() {
         var ctor = this.constructor;
@@ -21504,10 +20164,10 @@
       };
       cc.Object = module.exports = CCObject;
     }), {
-      "./CCClass": 136,
-      "./js": 151
+      "./CCClass": 131,
+      "./js": 147
     } ],
-    141: [ (function(require, module, exports) {
+    136: [ (function(require, module, exports) {
       if (cc.sys) return;
       cc.sys = {};
       var sys = cc.sys;
@@ -21693,7 +20353,6 @@
       var _supportWebGL = false;
       if (win.WebGLRenderingContext) {
         cc.create3DContext(document.createElement("CANVAS")) && (_supportWebGL = true);
-        _supportWebGL && sys.os === sys.OS_IOS && 9 === sys.osMainVersion && (win.indexedDB || (_supportWebGL = false));
         if (_supportWebGL && sys.os === sys.OS_ANDROID) {
           var browserVer = parseFloat(sys.browserVersion);
           switch (sys.browserType) {
@@ -21810,7 +20469,7 @@
       };
       module.exports = sys;
     }), {} ],
-    142: [ (function(require, module, exports) {
+    137: [ (function(require, module, exports) {
       cc.visibleRect = {
         topLeft: cc.p(0, 0),
         topRight: cc.p(0, 0),
@@ -21848,7 +20507,7 @@
         }
       };
     }), {} ],
-    143: [ (function(require, module, exports) {
+    138: [ (function(require, module, exports) {
       var ClassManager = cc.ClassManager = {
         instanceId: 0 | 998 * Math.random(),
         getNewInstanceId: function() {
@@ -21866,7 +20525,7 @@
           configurable: true
         };
         var TheClass;
-        if (cc.game && cc.game.config && cc.game.config[cc.game.CONFIG_KEY.exposeClassName]) {
+        if (cc.supportJit && cc.game && cc.game.config && cc.game.config[cc.game.CONFIG_KEY.exposeClassName]) {
           var ctor = "return (function " + (props._className || "Class") + "(arg0,arg1,arg2,arg3,arg4) {\nthis.__instanceId = cc.ClassManager.getNewInstanceId();\nif (this.ctor) {\nswitch (arguments.length) {\ncase 0: this.ctor(); break;\ncase 1: this.ctor(arg0); break;\ncase 2: this.ctor(arg0,arg1); break;\ncase 3: this.ctor(arg0,arg1,arg2); break;\ncase 4: this.ctor(arg0,arg1,arg2,arg3); break;\ncase 5: this.ctor(arg0,arg1,arg2,arg3,arg4); break;\ndefault: this.ctor.apply(this, arguments);\n}\n}\n});";
           TheClass = Function(ctor)();
         } else TheClass = function(arg0, arg1, arg2, arg3, arg4) {
@@ -21953,7 +20612,7 @@
       };
       cc._Class = module.exports = Class;
     }), {} ],
-    144: [ (function(require, module, exports) {
+    139: [ (function(require, module, exports) {
       var JS = require("./js");
       var isPlainEmptyObj = require("./utils").isPlainEmptyObj_DEV;
       var DELIMETER = "$_$";
@@ -22037,183 +20696,158 @@
         ScriptUuid: {}
       };
     }), {
-      "./CCClass": 136,
-      "./js": 151,
-      "./utils": 156
+      "./CCClass": 131,
+      "./js": 147,
+      "./utils": 151
     } ],
-    145: [ (function(require, module, exports) {
+    140: [ (function(require, module, exports) {
       var JS = require("./js");
-      var CallbacksHandler = function() {
-        this._callbackTable = {};
-        this._invoking = {};
-        this._toRemove = {};
-        this._toRemoveAll = null;
-      };
-      var REMOVE_PLACEHOLDER = {};
-      CallbacksHandler.REMOVE_PLACEHOLDER = REMOVE_PLACEHOLDER;
-      CallbacksHandler.prototype._clearToRemove = function(key) {
-        var list = this._callbackTable[key];
-        if (this._toRemove[key] && list) {
-          var firstRemovedIndex = list.indexOf(REMOVE_PLACEHOLDER);
-          var nextIndex = firstRemovedIndex;
-          for (var i = firstRemovedIndex + 1; i < list.length; ++i) {
-            var item = list[i];
-            if (item !== REMOVE_PLACEHOLDER) {
-              list[nextIndex] = item;
-              ++nextIndex;
-            }
-          }
-          list.length = nextIndex;
-          this._toRemove[key] = false;
-        }
-        if (this._toRemoveAll) {
-          this.removeAll(this._toRemoveAll);
-          this._toRemoveAll = null;
+      var fastRemoveAt = JS.array.fastRemoveAt;
+      function CallbackList() {
+        this.callbacks = [];
+        this.targets = [];
+        this.isInvoking = false;
+        this.containCanceled = false;
+      }
+      var proto = CallbackList.prototype;
+      proto.removeBy = function(array, value) {
+        var callbacks = this.callbacks;
+        var targets = this.targets;
+        for (var i = 0; i < array.length; ++i) if (array[i] === value) {
+          fastRemoveAt(callbacks, i);
+          fastRemoveAt(targets, i);
+          --i;
         }
       };
-      CallbacksHandler.prototype.add = function(key, callback, target) {
+      proto.cancel = function(index) {
+        this.callbacks[index] = this.targets[index] = null;
+        this.containCanceled = true;
+      };
+      proto.cancelAll = function() {
+        var callbacks = this.callbacks;
+        var targets = this.targets;
+        for (var i = 0; i < callbacks.length; i++) callbacks[i] = targets[i] = null;
+        this.containCanceled = true;
+      };
+      proto.purgeCanceled = function() {
+        this.removeBy(this.callbacks, null);
+        this.containCanceled = false;
+      };
+      var MAX_SIZE = 16;
+      var callbackListPool = new JS.Pool(function(list) {
+        list.callbacks.length = 0;
+        list.targets.length = 0;
+        list.isInvoking = false;
+        list.containCanceled = false;
+      }, MAX_SIZE);
+      callbackListPool.get = function() {
+        return this._get() || new CallbackList();
+      };
+      function CallbacksHandler() {
+        this._callbackTable = JS.createMap(true);
+      }
+      proto = CallbacksHandler.prototype;
+      proto.add = function(key, callback, target) {
         var list = this._callbackTable[key];
-        if ("undefined" !== (__typeofVal = typeof list, "object" === __typeofVal ? __realTypeOfObj(list) : __typeofVal)) {
-          "object" === (__typeofVal = typeof target, "object" === __typeofVal ? __realTypeOfObj(target) : __typeofVal) ? list.push(callback, target) : list.push(callback);
+        list || (list = this._callbackTable[key] = callbackListPool.get());
+        list.callbacks.push(callback);
+        list.targets.push(target || null);
+      };
+      proto.has = function(key, callback, target) {
+        var list = this._callbackTable[key];
+        if (!list) return false;
+        var callbacks = list.callbacks;
+        if (!callback) {
+          for (var i = 0; i < callbacks.length; i++) if (callbacks[i]) return true;
           return false;
         }
-        list = "object" === (__typeofVal = typeof target, "object" === __typeofVal ? __realTypeOfObj(target) : __typeofVal) ? [ callback, target ] : [ callback ];
-        this._callbackTable[key] = list;
-        return true;
-      };
-      CallbacksHandler.prototype.has = function(key, callback, target) {
-        if (this._toRemoveAll === key) return false;
-        var list = this._callbackTable[key], callbackTarget, index;
-        if (!list) return false;
-        if (!callback) {
-          if (this._toRemove[key]) {
-            for (index = 0; index < list.length; index++) if (list[index] !== REMOVE_PLACEHOLDER) return true;
-            return false;
-          }
-          return list.length > 0;
-        }
-        if ("function" !== (__typeofVal = typeof callback, "object" === __typeofVal ? __realTypeOfObj(callback) : __typeofVal)) return false;
-        index = list.indexOf(callback);
-        while (-1 !== index) {
-          callbackTarget = list[index + 1];
-          "object" !== (__typeofVal = typeof callbackTarget, "object" === __typeofVal ? __realTypeOfObj(callbackTarget) : __typeofVal) && (callbackTarget = void 0);
-          if (callbackTarget === target) return true;
-          index = cc.js.array.indexOf.call(list, callback, index + 1);
-        }
+        target = target || null;
+        var targets = list.targets;
+        for (var _i = 0; _i < callbacks.length; ++_i) if (callbacks[_i] === callback && targets[_i] === target) return true;
         return false;
       };
-      CallbacksHandler.prototype.removeAll = function(key) {
-        if (this._invoking[key]) {
-          this._toRemoveAll = key;
-          return;
-        }
-        if ("object" === (__typeofVal = typeof key, "object" === __typeofVal ? __realTypeOfObj(key) : __typeofVal)) {
-          var target = key, list, index, callback;
-          for (key in this._callbackTable) {
-            list = this._callbackTable[key];
-            index = list.lastIndexOf(target);
-            while (-1 !== index) {
-              callback = list[index - 1];
-              "function" === (__typeofVal = typeof callback, "object" === __typeofVal ? __realTypeOfObj(callback) : __typeofVal) ? list.splice(index - 1, 2) : list.splice(index, 1);
-              index = list.lastIndexOf(target);
-            }
+      proto.removeAll = function(keyOrTarget) {
+        if ("string" === (__typeofVal = typeof keyOrTarget, "object" === __typeofVal ? __realTypeOfObj(keyOrTarget) : __typeofVal)) {
+          var list = this._callbackTable[keyOrTarget];
+          if (list) if (list.isInvoking) list.cancelAll(); else {
+            callbackListPool.put(list);
+            delete this._callbackTable[keyOrTarget];
           }
-        } else {
-          delete this._callbackTable[key];
-          delete this._toRemove[key];
+        } else if (keyOrTarget) for (var key in this._callbackTable) {
+          var _list = this._callbackTable[key];
+          if (_list.isInvoking) {
+            var targets = _list.targets;
+            for (var i = 0; i < targets.length; ++i) targets[i] === keyOrTarget && _list.cancel(i);
+          } else _list.removeBy(_list.targets, keyOrTarget);
         }
       };
-      CallbacksHandler.prototype.remove = function(key, callback, target) {
-        var list = this._callbackTable[key], index, callbackTarget;
+      proto.remove = function(key, callback, target) {
+        var list = this._callbackTable[key];
         if (list) {
-          index = list.indexOf(callback);
-          while (-1 !== index) {
-            callbackTarget = list[index + 1];
-            "object" !== (__typeofVal = typeof callbackTarget, "object" === __typeofVal ? __realTypeOfObj(callbackTarget) : __typeofVal) && (callbackTarget = void 0);
-            if (callbackTarget === target) {
-              list[index] = REMOVE_PLACEHOLDER;
-              callbackTarget && (list[index + 1] = REMOVE_PLACEHOLDER);
-              this._toRemove[key] = true;
-              break;
+          target = target || null;
+          var callbacks = list.callbacks;
+          var targets = list.targets;
+          for (var i = 0; i < callbacks.length; ++i) if (callbacks[i] === callback && targets[i] === target) {
+            if (list.isInvoking) list.cancel(i); else {
+              fastRemoveAt(callbacks, i);
+              fastRemoveAt(targets, i);
             }
-            index = cc.js.array.indexOf.call(list, callback, index + 1);
+            break;
           }
-          return true;
         }
-        return false;
       };
       var CallbacksInvoker = function() {
         CallbacksHandler.call(this);
       };
       JS.extend(CallbacksInvoker, CallbacksHandler);
       CallbacksInvoker.prototype.invoke = function(key, p1, p2, p3, p4, p5) {
-        this._invoking[key] = true;
         var list = this._callbackTable[key];
         if (list) {
-          var i, endIndex = list.length - 1;
-          for (i = 0; i <= endIndex; ) {
-            var callingFunc = list[i];
-            var increment = 1;
-            if (callingFunc !== REMOVE_PLACEHOLDER) {
-              var target = list[i + 1];
-              var hasTarget = target && "object" === (__typeofVal = typeof target, "object" === __typeofVal ? __realTypeOfObj(target) : __typeofVal);
-              if (hasTarget) {
-                callingFunc.call(target, p1, p2, p3, p4, p5);
-                increment = 2;
-              } else callingFunc(p1, p2, p3, p4, p5);
-            }
-            i += increment;
-          }
-        }
-        this._invoking[key] = false;
-        this._clearToRemove(key);
-      };
-      CallbacksInvoker.prototype.invokeAndRemove = function(key, p1, p2, p3, p4, p5) {
-        this._invoking[key] = true;
-        var list = this._callbackTable[key], i, l, increment, callingFunc, target;
-        if (list) for (i = 0, l = list.length; i < l; ) {
-          callingFunc = list[i];
-          increment = 1;
-          if (callingFunc !== REMOVE_PLACEHOLDER) {
-            target = list[i + 1];
-            if (target && "object" === (__typeofVal = typeof target, "object" === __typeofVal ? __realTypeOfObj(target) : __typeofVal)) {
-              callingFunc.call(target, p1, p2, p3, p4, p5);
-              increment = 2;
-            } else callingFunc(p1, p2, p3, p4, p5);
-          }
-          i += increment;
-        }
-        this._invoking[key] = false;
-        this._toRemove[key] = false;
-        this.removeAll(key);
-      };
-      CallbacksInvoker.prototype.bindKey = function(key, remove) {
-        var self = this;
-        return function bindedInvocation(p1, p2, p3, p4, p5) {
-          var list = self._callbackTable[key], i, l, target;
-          if (list) for (i = 0, l = list.length; i < l; ) {
-            target = list[i + 1];
-            if (target && "object" === (__typeofVal = typeof target, "object" === __typeofVal ? __realTypeOfObj(target) : __typeofVal)) {
-              list[i].call(target, p1, p2, p3, p4, p5);
-              i += 2;
-            } else {
-              list[i](p1, p2, p3, p4, p5);
-              ++i;
+          var rootInvoker = !list.isInvoking;
+          list.isInvoking = true;
+          var callbacks = list.callbacks;
+          var targets = list.targets;
+          for (var i = 0, len = callbacks.length; i < len; ++i) {
+            var callback = callbacks[i];
+            if (callback) {
+              var target = targets[i];
+              target ? callback.call(target, p1, p2, p3, p4, p5) : callback(p1, p2, p3, p4, p5);
             }
           }
-          remove && self.removeAll(key);
-        };
+          if (rootInvoker) {
+            list.isInvoking = false;
+            list.containCanceled && list.purgeCanceled();
+          }
+        }
       };
       CallbacksInvoker.CallbacksHandler = CallbacksHandler;
       module.exports = CallbacksInvoker;
     }), {
-      "./js": 151
+      "./js": 147
     } ],
-    146: [ (function(require, module, exports) {
+    141: [ (function(require, module, exports) {
+      function deepFlatten(strList, array) {
+        for (var i = 0; i < array.length; i++) {
+          var item = array[i];
+          Array.isArray(item) ? deepFlatten(strList, item) : strList.push(item);
+        }
+      }
+      function flattenCodeArray(array) {
+        var separator = "";
+        var strList = [];
+        deepFlatten(strList, array);
+        return strList.join(separator);
+      }
+      module.exports = {
+        flattenCodeArray: flattenCodeArray
+      };
+    }), {} ],
+    142: [ (function(require, module, exports) {
       var JS = require("./js");
       var CCObject = require("./CCObject");
       var Attr = require("./attribute");
       var CCClass = require("./CCClass");
+      var Misc = require("../utils/misc");
       var Details = function() {
         this.uuidList = [];
         this.uuidObjList = [];
@@ -22288,8 +20922,8 @@
           var prop;
           var obj = null;
           var klass = null;
-          if (serialized.__type__) {
-            var type = serialized.__type__;
+          var type = serialized.__type__;
+          if (type) {
             klass = this._classFinder(type, serialized, owner, propName);
             if (!klass) {
               var notReported = this._classFinder === JS._getClassById;
@@ -22297,7 +20931,6 @@
               return null;
             }
             obj = new klass();
-            klass === cc.SpriteFrame && obj.retain();
             if (obj._deserialize) {
               obj._deserialize(serialized.content, this);
               return obj;
@@ -22354,6 +20987,11 @@
             instance.a = void 0 === a ? 255 : a;
             return;
           }
+          if (klass === cc.Size) {
+            instance.width = serialized.width || 0;
+            instance.height = serialized.height || 0;
+            return;
+          }
           var fastDefinedProps = klass.__props__;
           fastDefinedProps || (fastDefinedProps = Object.keys(instance));
           for (var i = 0; i < fastDefinedProps.length; i++) {
@@ -22363,43 +21001,71 @@
             "object" === __typeofVal ? __realTypeOfObj(prop) : __typeofVal) ? instance[propName] = prop : prop ? this._deserializeObjField(instance, prop, propName) : instance[propName] = null);
           }
         };
-        function compileDeserialize(self, klass) {
+        var compileObjectType = cc.supportJit ? function(sources, defaultValue, accessorToSet, propNameLiteralToSet, assumeHavePropIfIsValue) {
+          if (defaultValue instanceof cc.ValueType) {
+            assumeHavePropIfIsValue || sources.push("if(prop){");
+            var ctorCode = JS.getClassName(defaultValue);
+            sources.push("s._deserializeTypedObject(o" + accessorToSet + ",prop," + ctorCode + ");");
+            assumeHavePropIfIsValue || sources.push("}else o" + accessorToSet + "=null;");
+          } else {
+            sources.push("if(prop){");
+            sources.push("s._deserializeObjField(o,prop," + propNameLiteralToSet + ");");
+            sources.push("}else o" + accessorToSet + "=null;");
+          }
+        } : function(s, o, t, prop, defaultValue, propName, assumeHavePropIfIsValue) {
+          if (defaultValue instanceof cc.ValueType) {
+            var ctor = defaultValue.constructor;
+            assumeHavePropIfIsValue ? s._deserializeTypedObject(o[propName], prop, ctor) : prop ? s._deserializeTypedObject(o[propName], prop, ctor) : o[propName] = null;
+          } else prop ? s._deserializeObjField(o, prop, propName) : o[propName] = null;
+        };
+        var compileDeserialize = cc.supportJit ? function(self, klass) {
           var RAW_TYPE = Attr.DELIMETER + "rawType";
           var EDITOR_ONLY = Attr.DELIMETER + "editorOnly";
           var SERIALIZABLE = Attr.DELIMETER + "serializable";
           var DEFAULT = Attr.DELIMETER + "default";
+          var SAVE_URL_AS_ASSET = Attr.DELIMETER + "saveUrlAsAsset";
+          var FORMERLY_SERIALIZED_AS = Attr.DELIMETER + "formerlySerializedAs";
           var attrs = Attr.getClassAttrs(klass);
           var props = klass.__props__;
           var sources = [ "var prop;" ];
+          var fastMode = Misc.BUILTIN_CLASSID_RE.test(JS._getClassId(klass));
           for (var p = 0; p < props.length; p++) {
             var propName = props[p];
-            var propNameLiteral;
+            var propNameLiteralToSet;
             var rawType = attrs[propName + RAW_TYPE];
             if (rawType) {
-              propNameLiteral = CCClass.IDENTIFIER_RE.test(propName) ? '"' + propName + '"' : CCClass.escapeForJS(propName);
+              propNameLiteralToSet = CCClass.IDENTIFIER_RE.test(propName) ? '"' + propName + '"' : CCClass.escapeForJS(propName);
               sources.push('if(s.result.rawProp)\ncc.error("not support multi raw object in a file");');
-              sources.push("s.result.rawProp=" + propNameLiteral + ";");
+              sources.push("s.result.rawProp=" + propNameLiteralToSet + ";");
             } else {
               var mayUsedInPersistRoot;
               if (false === attrs[propName + SERIALIZABLE]) continue;
-              var accessor;
+              var accessorToSet;
               if (CCClass.IDENTIFIER_RE.test(propName)) {
-                propNameLiteral = '"' + propName + '"';
-                accessor = "." + propName;
+                propNameLiteralToSet = '"' + propName + '"';
+                accessorToSet = "." + propName;
               } else {
-                propNameLiteral = CCClass.escapeForJS(propName);
-                accessor = "[" + propNameLiteral + "]";
+                propNameLiteralToSet = CCClass.escapeForJS(propName);
+                accessorToSet = "[" + propNameLiteralToSet + "]";
               }
-              sources.push("prop=d" + accessor + ";");
+              var accessorToGet = accessorToSet;
+              if (attrs[propName + FORMERLY_SERIALIZED_AS]) {
+                var propNameToRead = attrs[propName + FORMERLY_SERIALIZED_AS];
+                accessorToGet = CCClass.IDENTIFIER_RE.test(propNameToRead) ? "." + propNameToRead : "[" + CCClass.escapeForJS(propNameToRead) + "]";
+              }
+              sources.push("prop=d" + accessorToGet + ";");
               sources.push('if(typeof (prop)!=="undefined"){');
-              sources.push('if(typeof (prop)!=="object"){o' + accessor + "=prop;");
-              sources.push("}else{if(prop){");
               var defaultValue = CCClass.getDefault(attrs[propName + DEFAULT]);
-              if (defaultValue instanceof cc.ValueType) {
-                var ctorCode = JS.getClassName(defaultValue);
-                sources.push("s._deserializeTypedObject(o" + accessor + ",prop," + ctorCode + ");");
-              } else sources.push("s._deserializeObjField(o,prop," + propNameLiteral + ");");
-              sources.push("}else o" + accessor + "=null;}}");
+              if (fastMode) {
+                var defaultType = (__typeofVal = typeof defaultValue, "object" === __typeofVal ? __realTypeOfObj(defaultValue) : __typeofVal);
+                var isPrimitiveType = "string" === defaultType && !attrs[propName + SAVE_URL_AS_ASSET] || "number" === defaultType || "boolean" === defaultType;
+                isPrimitiveType ? sources.push("o" + accessorToSet + "=prop;") : compileObjectType(sources, defaultValue, accessorToSet, propNameLiteralToSet, true);
+              } else {
+                sources.push('if(typeof (prop)!=="object"){o' + accessorToSet + "=prop;}else{");
+                compileObjectType(sources, defaultValue, accessorToSet, propNameLiteralToSet, false);
+                sources.push("}");
+              }
+              sources.push("}");
             }
           }
           if ("_$erialized" === props[props.length - 1]) {
@@ -22407,7 +21073,46 @@
             sources.push("s._deserializePrimitiveObject(o._$erialized,d);");
           }
           return Function("s", "o", "d", "k", "t", sources.join(""));
-        }
+        } : function(self, klass) {
+          var RAW_TYPE = Attr.DELIMETER + "rawType";
+          var EDITOR_ONLY = Attr.DELIMETER + "editorOnly";
+          var SERIALIZABLE = Attr.DELIMETER + "serializable";
+          var DEFAULT = Attr.DELIMETER + "default";
+          var SAVE_URL_AS_ASSET = Attr.DELIMETER + "saveUrlAsAsset";
+          var FORMERLY_SERIALIZED_AS = Attr.DELIMETER + "formerlySerializedAs";
+          var attrs = Attr.getClassAttrs(klass);
+          var props = klass.__props__;
+          var fastMode = Misc.BUILTIN_CLASSID_RE.test(JS._getClassId(klass));
+          return function(s, o, d, k, t) {
+            var prop;
+            for (var p = 0; p < props.length; p++) {
+              var propName = props[p];
+              var rawType = attrs[propName + RAW_TYPE];
+              if (rawType) {
+                s.result.rawProp && cc.error("not support multi raw object in a file");
+                s.result.rawProp = propName;
+              } else {
+                var mayUsedInPersistRoot;
+                if (false === attrs[propName + SERIALIZABLE]) continue;
+                var propNameToRead = propName;
+                attrs[propName + FORMERLY_SERIALIZED_AS] && (propNameToRead = attrs[propName + FORMERLY_SERIALIZED_AS]);
+                prop = d[propNameToRead];
+                if ("undefined" !== (__typeofVal = typeof prop, "object" === __typeofVal ? __realTypeOfObj(prop) : __typeofVal)) {
+                  var defaultValue = CCClass.getDefault(attrs[propName + DEFAULT]);
+                  if (fastMode) {
+                    var defaultType = (__typeofVal = typeof defaultValue, "object" === __typeofVal ? __realTypeOfObj(defaultValue) : __typeofVal);
+                    var isPrimitiveType = "string" === defaultType && !attrs[propName + SAVE_URL_AS_ASSET] || "number" === defaultType || "boolean" === defaultType;
+                    isPrimitiveType ? o[propName] = prop : compileObjectType(s, o, t, prop, defaultValue, propName, true);
+                  } else "object" !== (__typeofVal = typeof prop, "object" === __typeofVal ? __realTypeOfObj(prop) : __typeofVal) ? o[propName] = prop : compileObjectType(s, o, t, prop, defaultValue, propName, false);
+                }
+              }
+            }
+            if ("_$erialized" === props[props.length - 1]) {
+              o._$erialized = JSON.parse(JSON.stringify(d));
+              s._deserializePrimitiveObject(o._$erialized, d);
+            }
+          };
+        };
         function unlinkUnusedPrefab(self, serialized, obj) {
           var uuid = serialized["asset"] && serialized["asset"].__uuid__;
           if (uuid) {
@@ -22476,12 +21181,13 @@
         cc.warnID(5302, id);
       };
     }), {
-      "./CCClass": 136,
-      "./CCObject": 140,
-      "./attribute": 144,
-      "./js": 151
+      "../utils/misc": 157,
+      "./CCClass": 131,
+      "./CCObject": 135,
+      "./attribute": 139,
+      "./js": 147
     } ],
-    147: [ (function(require, module, exports) {
+    143: [ (function(require, module, exports) {
       var NonUuidMark = ".";
       function IdGenerater(category) {
         this.id = 0 | 998 * Math.random();
@@ -22493,7 +21199,7 @@
       IdGenerater.global = new IdGenerater("global");
       module.exports = IdGenerater;
     }), {} ],
-    148: [ (function(require, module, exports) {
+    144: [ (function(require, module, exports) {
       require("./js");
       require("./CCClass");
       require("./CCClassDecorator");
@@ -22509,30 +21215,30 @@
       require("./CCMacro");
       require("./CCAssetLibrary");
     }), {
-      "./CCAssetLibrary": 135,
-      "./CCClass": 136,
-      "./CCClassDecorator": 137,
-      "./CCEnum": 138,
-      "./CCMacro": 139,
-      "./CCObject": 140,
-      "./CCSys": 141,
-      "./CCVisibleRect": 142,
-      "./callbacks-invoker": 145,
-      "./deserialize": 146,
-      "./instantiate": 150,
-      "./instantiate-jit": 149,
-      "./js": 151,
-      "./miniFramework": 152,
-      "./requiring-frame": 154,
-      "./url": 155
+      "./CCAssetLibrary": 130,
+      "./CCClass": 131,
+      "./CCClassDecorator": 132,
+      "./CCEnum": 133,
+      "./CCMacro": 134,
+      "./CCObject": 135,
+      "./CCSys": 136,
+      "./CCVisibleRect": 137,
+      "./callbacks-invoker": 140,
+      "./deserialize": 142,
+      "./instantiate": 146,
+      "./instantiate-jit": 145,
+      "./js": 147,
+      "./requiring-frame": 149,
+      "./url": 150
     } ],
-    149: [ (function(require, module, exports) {
+    145: [ (function(require, module, exports) {
       var CCObject = require("./CCObject");
       var Destroyed = CCObject.Flags.Destroyed;
       var PersistentMask = CCObject.Flags.PersistentMask;
       var Attr = require("./attribute");
       var JS = require("./js");
       var CCClass = require("./CCClass");
+      var Compiler = require("./compiler");
       var SERIALIZABLE = Attr.DELIMETER + "serializable";
       var DEFAULT = Attr.DELIMETER + "default";
       var IDENTIFIER_RE = CCClass.IDENTIFIER_RE;
@@ -22613,16 +21319,6 @@
         }
         return false;
       }
-      function flattenCodeArray(array, separator) {
-        var strList = [];
-        (function deepFlatten(array) {
-          for (var i = 0; i < array.length; i++) {
-            var item = array[i];
-            Array.isArray(item) ? deepFlatten(item) : strList.push(item);
-          }
-        })(array);
-        return strList.join(separator);
-      }
       function getPropAccessor(key) {
         return IDENTIFIER_RE.test(key) ? "." + key : "[" + escapeForJS(key) + "]";
       }
@@ -22645,7 +21341,7 @@
         this.enumerateObject(this.codeArray, obj);
         var globalVariablesDeclaration;
         this.globalVariables.length > 0 && (globalVariablesDeclaration = VAR + this.globalVariables.join(",") + ";");
-        var code = flattenCodeArray([ "return (function(R){", globalVariablesDeclaration || [], this.codeArray, "return o;", "})" ], "");
+        var code = Compiler.flattenCodeArray([ "return (function(R){", globalVariablesDeclaration || [], this.codeArray, "return o;", "})" ]);
         this.result = Function("O", "F", code)(this.objs, this.funcs);
         for (var i = 0, len = this.objsToClear_iN$t.length; i < len; ++i) this.objsToClear_iN$t[i]._iN$t = null;
         this.objsToClear_iN$t.length = 0;
@@ -22784,9 +21480,9 @@
             if (!obj.isChildOf(this.parent)) return this.getObjRef(obj);
           } else if (obj instanceof cc.Component && !obj.node.isChildOf(this.parent)) return this.getObjRef(obj);
           createCode = new Declaration(LOCAL_OBJ, "new " + this.getFuncModule(ctor, true) + "()");
-        } else {
-          if (ctor !== Object) return this.getObjRef(obj);
-          createCode = new Declaration(LOCAL_OBJ, "{}");
+        } else if (ctor === Object) createCode = new Declaration(LOCAL_OBJ, "{}"); else {
+          if (ctor) return this.getObjRef(obj);
+          createCode = new Declaration(LOCAL_OBJ, "Object.create(null)");
         }
         var codeArray = [ createCode ];
         obj._iN$t = {
@@ -22807,12 +21503,13 @@
         equalsToDefault: equalsToDefault
       };
     }), {
-      "./CCClass": 136,
-      "./CCObject": 140,
-      "./attribute": 144,
-      "./js": 151
+      "./CCClass": 131,
+      "./CCObject": 135,
+      "./attribute": 139,
+      "./compiler": 141,
+      "./js": 147
     } ],
-    150: [ (function(require, module, exports) {
+    146: [ (function(require, module, exports) {
       var CCObject = require("./CCObject");
       var Destroyed = CCObject.Flags.Destroyed;
       var PersistentMask = CCObject.Flags.PersistentMask;
@@ -22843,10 +21540,10 @@
       function doInstantiate(obj, parent) {
         if (Array.isArray(obj)) return null;
         var clone;
-        if (obj._iN$t) clone = obj._iN$t; else {
+        if (obj._iN$t) clone = obj._iN$t; else if (obj.constructor) {
           var klass = obj.constructor;
           clone = new klass();
-        }
+        } else clone = Object.create(null);
         enumerateObject(obj, clone, parent);
         for (var i = 0, len = objsToClearTmpVar.length; i < len; ++i) objsToClearTmpVar[i]._iN$t = null;
         objsToClearTmpVar.length = 0;
@@ -22901,8 +21598,11 @@
           } else if (parent instanceof cc._BaseNode) if (obj instanceof cc._BaseNode) {
             if (!obj.isChildOf(parent)) return obj;
           } else if (obj instanceof cc.Component && !obj.node.isChildOf(parent)) return obj;
-        } else if (ctor !== Object) return obj;
-        clone = new ctor();
+          clone = new ctor();
+        } else if (ctor === Object) clone = {}; else {
+          if (ctor) return obj;
+          clone = Object.create(null);
+        }
         enumerateObject(obj, clone, parent);
         return clone;
       }
@@ -22910,11 +21610,11 @@
       cc.instantiate = instantiate;
       module.exports = instantiate;
     }), {
-      "./CCObject": 140,
-      "./attribute": 144,
-      "./utils": 156
+      "./CCObject": 135,
+      "./attribute": 139,
+      "./utils": 151
     } ],
-    151: [ (function(require, module, exports) {
+    147: [ (function(require, module, exports) {
       var tempCIDGenerater = new (require("./id-generater"))("TmpCId.");
       function _getPropertyDescriptor(obj, name) {
         while (obj) {
@@ -23159,8 +21859,12 @@
       js.createMap = function(forceDictMode) {
         var map = Object.create(null);
         if (forceDictMode) {
-          map["__"] = void 0;
-          delete map["__"];
+          var INVALID_IDENTIFIER_1 = ".";
+          var INVALID_IDENTIFIER_2 = "/";
+          map[INVALID_IDENTIFIER_1] = true;
+          map[INVALID_IDENTIFIER_2] = true;
+          delete map[INVALID_IDENTIFIER_1];
+          delete map[INVALID_IDENTIFIER_2];
         }
         return map;
       };
@@ -23204,7 +21908,7 @@
       }
       var indexOf = Array.prototype.indexOf;
       function contains(array, value) {
-        return indexOf.call(array, value) >= 0;
+        return array.indexOf(value) >= 0;
       }
       function copy(array) {
         var i, len = array.length, arr_clone = new Array(len);
@@ -23261,144 +21965,10 @@
       cc.js = js;
       module.exports = js;
     }), {
-      "../utils/mutable-forward-iterator": 163,
-      "./id-generater": 147
+      "../utils/mutable-forward-iterator": 158,
+      "./id-generater": 143
     } ],
-    152: [ (function(require, module, exports) {
-      cc.$ = function(x) {
-        var parent = this === cc ? document : this;
-        var el = x instanceof HTMLElement ? x : parent.querySelector(x);
-        if (el) {
-          el.find = el.find || cc.$;
-          el.hasClass = el.hasClass || function(cls) {
-            return this.className.match(new RegExp("(\\s|^)" + cls + "(\\s|$)"));
-          };
-          el.addClass = el.addClass || function(cls) {
-            if (!this.hasClass(cls)) {
-              this.className && (this.className += " ");
-              this.className += cls;
-            }
-            return this;
-          };
-          el.removeClass = el.removeClass || function(cls) {
-            this.hasClass(cls) && (this.className = this.className.replace(cls, ""));
-            return this;
-          };
-          el.remove = el.remove || function() {
-            this.parentNode && this.parentNode.removeChild(this);
-            return this;
-          };
-          el.appendTo = el.appendTo || function(x) {
-            x.appendChild(this);
-            return this;
-          };
-          el.prependTo = el.prependTo || function(x) {
-            x.childNodes[0] ? x.insertBefore(this, x.childNodes[0]) : x.appendChild(this);
-            return this;
-          };
-          el.transforms = el.transforms || function() {
-            this.style[cc.$.trans] = cc.$.translate(this.position) + cc.$.rotate(this.rotation) + cc.$.scale(this.scale) + cc.$.skew(this.skew);
-            return this;
-          };
-          el.position = el.position || {
-            x: 0,
-            y: 0
-          };
-          el.rotation = el.rotation || 0;
-          el.scale = el.scale || {
-            x: 1,
-            y: 1
-          };
-          el.skew = el.skew || {
-            x: 0,
-            y: 0
-          };
-          el.translates = function(x, y) {
-            this.position.x = x;
-            this.position.y = y;
-            this.transforms();
-            return this;
-          };
-          el.rotate = function(x) {
-            this.rotation = x;
-            this.transforms();
-            return this;
-          };
-          el.resize = function(x, y) {
-            this.scale.x = x;
-            this.scale.y = y;
-            this.transforms();
-            return this;
-          };
-          el.setSkew = function(x, y) {
-            this.skew.x = x;
-            this.skew.y = y;
-            this.transforms();
-            return this;
-          };
-        }
-        return el;
-      };
-      switch (cc.sys.browserType) {
-       case cc.sys.BROWSER_TYPE_FIREFOX:
-        cc.$.pfx = "Moz";
-        cc.$.hd = true;
-        break;
-
-       case cc.sys.BROWSER_TYPE_CHROME:
-       case cc.sys.BROWSER_TYPE_SAFARI:
-        cc.$.pfx = "webkit";
-        cc.$.hd = true;
-        break;
-
-       case cc.sys.BROWSER_TYPE_OPERA:
-        cc.$.pfx = "O";
-        cc.$.hd = false;
-        break;
-
-       case cc.sys.BROWSER_TYPE_IE:
-        cc.$.pfx = "ms";
-        cc.$.hd = false;
-        break;
-
-       default:
-        cc.$.pfx = "webkit";
-        cc.$.hd = true;
-      }
-      cc.$.trans = cc.$.pfx + "Transform";
-      cc.$.translate = cc.$.hd ? function(a) {
-        return "translate3d(" + a.x + "px, " + a.y + "px, 0) ";
-      } : function(a) {
-        return "translate(" + a.x + "px, " + a.y + "px) ";
-      };
-      cc.$.rotate = cc.$.hd ? function(a) {
-        return "rotateZ(" + a + "deg) ";
-      } : function(a) {
-        return "rotate(" + a + "deg) ";
-      };
-      cc.$.scale = function(a) {
-        return "scale(" + a.x + ", " + a.y + ") ";
-      };
-      cc.$.skew = function(a) {
-        return "skewX(" + -a.x + "deg) skewY(" + a.y + "deg)";
-      };
-      cc.$new = function(x) {
-        return cc.$(document.createElement(x));
-      };
-      cc.$.findpos = function(obj) {
-        var curleft = 0;
-        var curtop = 0;
-        do {
-          curleft += obj.offsetLeft;
-          curtop += obj.offsetTop;
-        } while (obj = obj.offsetParent);
-        return {
-          x: curleft,
-          y: curtop
-        };
-      };
-    }), {} ],
-    153: [ (function(require, module, exports) {
+    148: [ (function(require, module, exports) {
       var SerializableAttrs = {
         url: {
           canUsedInGet: true
@@ -23506,9 +22076,9 @@
         return true;
       };
     }), {
-      "./CCClass": 136
+      "./CCClass": 131
     } ],
-    154: [ (function(require, module, exports) {
+    149: [ (function(require, module, exports) {
       var requiringFrames = [];
       cc._RF = {
         push: function(module, uuid, script) {
@@ -23537,11 +22107,8 @@
           return requiringFrames[requiringFrames.length - 1];
         }
       };
-      cc._RFpush = cc._RF.push;
-      cc._RFpop = cc._RF.pop;
-      cc._RFpeek = cc._RF.peek;
     }), {} ],
-    155: [ (function(require, module, exports) {
+    150: [ (function(require, module, exports) {
       var _mounts = {};
       cc.url = {
         _rawAssets: "",
@@ -23568,7 +22135,7 @@
       };
       module.exports = cc.url;
     }), {} ],
-    156: [ (function(require, module, exports) {
+    151: [ (function(require, module, exports) {
       module.exports = {
         contains: function(refNode, otherNode) {
           if ("function" == (__typeofVal = typeof refNode.contains, "object" === __typeofVal ? __realTypeOfObj(refNode.contains) : __typeofVal)) return refNode.contains(otherNode);
@@ -23595,7 +22162,7 @@
         }
       };
     }), {} ],
-    157: [ (function(require, module, exports) {
+    152: [ (function(require, module, exports) {
       require("../platform/CCSys");
       var EXTNAME_RE = /(\.[^\.\/\?\\]*)(\?.*)?$/;
       var NORMALIZE_RE = /[^\.\/]+\/\.\.\//;
@@ -23670,9 +22237,9 @@
       };
       module.exports = cc.path;
     }), {
-      "../platform/CCSys": 141
+      "../platform/CCSys": 136
     } ],
-    158: [ (function(require, module, exports) {
+    153: [ (function(require, module, exports) {
       var Flags = require("../platform/CCObject").Flags;
       var Misc = require("./misc");
       var IdGenerater = require("../platform/id-generater");
@@ -24078,11 +22645,11 @@
       Misc.propertyDefine(BaseNode, SameNameGetSets, {});
       cc._BaseNode = module.exports = BaseNode;
     }), {
-      "../platform/CCObject": 140,
-      "../platform/id-generater": 147,
-      "./misc": 162
+      "../platform/CCObject": 135,
+      "../platform/id-generater": 143,
+      "./misc": 157
     } ],
-    159: [ (function(require, module, exports) {
+    154: [ (function(require, module, exports) {
       var EPSILON = 1e-6;
       function binarySearchEpsilon(array, value) {
         for (var l = 0, h = array.length - 1, m = h >>> 1; l <= h; m = l + h >>> 1) {
@@ -24098,7 +22665,7 @@
         binarySearchEpsilon: binarySearchEpsilon
       };
     }), {} ],
-    160: [ (function(require, module, exports) {
+    155: [ (function(require, module, exports) {
       var Base64Values = require("./misc").BASE64_VALUES;
       var HexChars = "0123456789abcdef".split("");
       var _t = [ "", "", "", "" ];
@@ -24120,9 +22687,9 @@
         return UuidTemplate.join("");
       };
     }), {
-      "./misc": 162
+      "./misc": 157
     } ],
-    161: [ (function(require, module, exports) {
+    156: [ (function(require, module, exports) {
       cc.find = module.exports = function(path, referenceNode) {
         if (null == path) {
           cc.errorID(5600);
@@ -24152,7 +22719,7 @@
         return match;
       };
     }), {} ],
-    162: [ (function(require, module, exports) {
+    157: [ (function(require, module, exports) {
       var JS = require("../platform/js");
       var sys = require("../platform/CCSys");
       var misc = exports;
@@ -24199,20 +22766,25 @@
         return this._get() || new Image();
       };
       misc.imagePool._smallImg = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
-      sys.os !== sys.OS_WINDOWS && sys.os !== sys.OS_LINUX || sys.browser === sys.BROWSER_TYPE_CHROME || misc.imagePool.resize(0);
-      misc.isBuiltinClassId = function(id) {
-        return id.startsWith("cc.") || id.startsWith("dragonBones.") || id.startsWith("sp.") || id.startsWith("ccsg.");
-      };
+      sys.os !== sys.OS_WINDOWS && sys.os !== sys.OS_LINUX || sys.browserType === sys.BROWSER_TYPE_CHROME || misc.imagePool.resize(0);
+      misc.BUILTIN_CLASSID_RE = /^(?:cc|dragonBones|sp|ccsg)\..+/;
       var BASE64_KEYS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
       var BASE64_VALUES = new Array(123);
       for (var i = 0; i < 123; ++i) BASE64_VALUES[i] = 64;
       for (var _i = 0; _i < 64; ++_i) BASE64_VALUES[BASE64_KEYS.charCodeAt(_i)] = _i;
       misc.BASE64_VALUES = BASE64_VALUES;
+      misc.pushToMap = function(map, key, value, pushFront) {
+        var exists = map[key];
+        if (exists) if (Array.isArray(exists)) if (pushFront) {
+          exists.push(exists[0]);
+          exists[0] = value;
+        } else exists.push(value); else map[key] = pushFront ? [ value, exists ] : [ exists, value ]; else map[key] = value;
+      };
     }), {
-      "../platform/CCSys": 141,
-      "../platform/js": 151
+      "../platform/CCSys": 136,
+      "../platform/js": 147
     } ],
-    163: [ (function(require, module, exports) {
+    158: [ (function(require, module, exports) {
       function MutableForwardIterator(array) {
         this.i = 0;
         this.array = array;
@@ -24241,7 +22813,7 @@
       };
       module.exports = MutableForwardIterator;
     }), {} ],
-    164: [ (function(require, module, exports) {
+    159: [ (function(require, module, exports) {
       cc._PrefabInfo = cc.Class({
         name: "cc.PrefabInfo",
         properties: {
@@ -24276,7 +22848,12 @@
           var _localZOrder = node._localZOrder;
           var _globalZOrder = node._globalZOrder;
           cc.game._isCloning = true;
-          _prefab.asset._doInstantiate(node);
+          if (cc.supportJit) _prefab.asset._doInstantiate(node); else {
+            var prefabRoot = _prefab.asset.data;
+            prefabRoot._prefab._synced = true;
+            prefabRoot._iN$t = node;
+            cc.instantiate._clone(prefabRoot, prefabRoot);
+          }
           cc.game._isCloning = false;
           node._objFlags = _objFlags;
           node._parent = _parent;
@@ -24293,21 +22870,20 @@
         }
       };
     }), {} ],
-    165: [ (function(require, module, exports) {
+    160: [ (function(require, module, exports) {
       var SceneGraphUtils = {
         removeSgNode: function() {
-          var node = this._sgNode;
-          if (node) {
-            var parent = node._parent;
-            parent && parent.removeChild(node);
-            node.release();
-            this._sgNode._entity && (this._sgNode._entity = null);
+          var sgNode = this._sgNode;
+          if (sgNode) {
+            var parent = sgNode._parent;
+            parent ? parent.removeChild(sgNode) : sgNode.cleanup();
+            sgNode._entity && (sgNode._entity = null);
           }
         }
       };
       module.exports = SceneGraphUtils;
     }), {} ],
-    166: [ (function(require, module, exports) {
+    161: [ (function(require, module, exports) {
       cc.AffineTransform = function(a, b, c, d, tx, ty) {
         this.a = a;
         this.b = b;
@@ -24534,7 +23110,7 @@
         out.ty = determinant * (b * t.tx - a * t.ty);
       };
     }), {} ],
-    167: [ (function(require, module, exports) {
+    162: [ (function(require, module, exports) {
       var ValueType = require("./CCValueType");
       var JS = require("../platform/js");
       var Color = (function() {
@@ -24777,11 +23353,11 @@
       };
       module.exports = cc.Color;
     }), {
-      "../platform/CCClass": 136,
-      "../platform/js": 151,
-      "./CCValueType": 173
+      "../platform/CCClass": 131,
+      "../platform/js": 147,
+      "./CCValueType": 168
     } ],
-    168: [ (function(require, module, exports) {
+    163: [ (function(require, module, exports) {
       var POINT_EPSILON = parseFloat("1.192092896e-07F");
       cc.pNeg = function(point) {
         return cc.p(-point.x, -point.y);
@@ -24947,7 +23523,7 @@
         cc.pMultIn(v, 1 / Math.sqrt(v.x * v.x + v.y * v.y));
       };
     }), {} ],
-    169: [ (function(require, module, exports) {
+    164: [ (function(require, module, exports) {
       var ValueType = require("./CCValueType");
       var JS = require("../platform/js");
       function Rect(x, y, w, h) {
@@ -25110,11 +23686,11 @@
       };
       module.exports = cc.Rect;
     }), {
-      "../platform/CCClass": 136,
-      "../platform/js": 151,
-      "./CCValueType": 173
+      "../platform/CCClass": 131,
+      "../platform/js": 147,
+      "./CCValueType": 168
     } ],
-    170: [ (function(require, module, exports) {
+    165: [ (function(require, module, exports) {
       var ValueType = require("./CCValueType");
       var JS = require("../platform/js");
       function Size(width, height) {
@@ -25159,11 +23735,11 @@
       };
       cc.Size = module.exports = Size;
     }), {
-      "../platform/CCClass": 136,
-      "../platform/js": 151,
-      "./CCValueType": 173
+      "../platform/CCClass": 131,
+      "../platform/js": 147,
+      "./CCValueType": 168
     } ],
-    171: [ (function(require, module, exports) {
+    166: [ (function(require, module, exports) {
       cc.Acceleration = function(x, y, z, timestamp) {
         this.x = x || 0;
         this.y = y || 0;
@@ -25208,32 +23784,6 @@
       cc.BlendFunc.ADDITIVE;
       cc.js.get(cc.BlendFunc, "ADDITIVE", cc.BlendFunc._additive);
       cc.blendFuncDisable = cc.BlendFunc._disable;
-      cc.FontDefinition = function(properties) {
-        var _t = this;
-        _t.fontName = "Arial";
-        _t.fontSize = 12;
-        _t.textAlign = cc.TextAlignment.CENTER;
-        _t.verticalAlign = cc.VerticalTextAlignment.TOP;
-        _t.fillStyle = cc.color(255, 255, 255, 255);
-        _t.boundingWidth = 0;
-        _t.boundingHeight = 0;
-        _t.strokeEnabled = false;
-        _t.strokeStyle = cc.color(255, 255, 255, 255);
-        _t.lineWidth = 1;
-        _t.lineHeight = "normal";
-        _t.fontStyle = "normal";
-        _t.fontWeight = "normal";
-        _t.shadowEnabled = false;
-        _t.shadowOffsetX = 0;
-        _t.shadowOffsetY = 0;
-        _t.shadowBlur = 0;
-        _t.shadowOpacity = 1;
-        if (properties && properties instanceof Object) for (var key in properties) _t[key] = properties[key];
-      };
-      cc.FontDefinition.prototype._getCanvasFontStr = function() {
-        var lineHeight = this.lineHeight.charAt ? this.lineHeight : this.lineHeight + "px";
-        return this.fontStyle + " " + this.fontWeight + " " + this.fontSize + "px/" + lineHeight + " '" + this.fontName + "'";
-      };
       cc.TextAlignment = cc.Enum({
         LEFT: 0,
         CENTER: 1,
@@ -25244,59 +23794,8 @@
         CENTER: 1,
         BOTTOM: 2
       });
-      cc._Dictionary = cc.Class({
-        ctor: function() {
-          this._keyMapTb = {};
-          this._valueMapTb = {};
-          this.__currId = 2 << (0 | 10 * Math.random());
-        },
-        __getKey: function() {
-          this.__currId++;
-          return "key_" + this.__currId;
-        },
-        setObject: function(value, key) {
-          if (null == key) return;
-          var keyId = this.__getKey();
-          this._keyMapTb[keyId] = key;
-          this._valueMapTb[keyId] = value;
-        },
-        objectForKey: function(key) {
-          if (null == key) return null;
-          var locKeyMapTb = this._keyMapTb;
-          for (var keyId in locKeyMapTb) if (locKeyMapTb[keyId] === key) return this._valueMapTb[keyId];
-          return null;
-        },
-        valueForKey: function(key) {
-          return this.objectForKey(key);
-        },
-        removeObjectForKey: function(key) {
-          if (null == key) return;
-          var locKeyMapTb = this._keyMapTb;
-          for (var keyId in locKeyMapTb) if (locKeyMapTb[keyId] === key) {
-            delete this._valueMapTb[keyId];
-            delete locKeyMapTb[keyId];
-            return;
-          }
-        },
-        removeObjectsForKeys: function(keys) {
-          if (null == keys) return;
-          for (var i = 0; i < keys.length; i++) this.removeObjectForKey(keys[i]);
-        },
-        allKeys: function() {
-          var keyArr = [], locKeyMapTb = this._keyMapTb;
-          for (var key in locKeyMapTb) keyArr.push(locKeyMapTb[key]);
-          return keyArr;
-        },
-        removeAllObjects: function() {
-          this._keyMapTb = {};
-          this._valueMapTb = {};
-        },
-        count: function() {
-          return this.allKeys().length;
-        }
-      });
     }), {} ],
-    172: [ (function(require, module, exports) {
+    167: [ (function(require, module, exports) {
       cc.WebGLColor = function(r, g, b, a, arrayBuffer, offset) {
         this._arrayBuffer = arrayBuffer || new ArrayBuffer(cc.WebGLColor.BYTES_PER_ELEMENT);
         this._offset = offset || 0;
@@ -25745,7 +24244,7 @@
       cc.js.getset(_p, "b", _p._getB, _p._setB);
       cc.js.getset(_p, "c", _p._getC, _p._setC);
     }), {} ],
-    173: [ (function(require, module, exports) {
+    168: [ (function(require, module, exports) {
       var JS = require("../platform/js");
       function ValueType() {}
       JS.setClassName("cc.ValueType", ValueType);
@@ -25756,9 +24255,9 @@
       cc.ValueType = ValueType;
       module.exports = ValueType;
     }), {
-      "../platform/js": 151
+      "../platform/js": 147
     } ],
-    174: [ (function(require, module, exports) {
+    169: [ (function(require, module, exports) {
       var ValueType = require("./CCValueType");
       var JS = require("../platform/js");
       var CCClass = require("../platform/CCClass");
@@ -25946,11 +24445,11 @@
       };
       module.exports = cc.Vec2;
     }), {
-      "../platform/CCClass": 136,
-      "../platform/js": 151,
-      "./CCValueType": 173
+      "../platform/CCClass": 131,
+      "../platform/js": 147,
+      "./CCValueType": 168
     } ],
-    175: [ (function(require, module, exports) {
+    170: [ (function(require, module, exports) {
       require("./CCValueType");
       require("./CCVec2");
       require("./CCPointExtension");
@@ -25961,26 +24460,25 @@
       require("./CCAffineTransform");
       require("./CCTypesWebGL");
     }), {
-      "./CCAffineTransform": 166,
-      "./CCColor": 167,
-      "./CCPointExtension": 168,
-      "./CCRect": 169,
-      "./CCSize": 170,
-      "./CCTypes": 171,
-      "./CCTypesWebGL": 172,
-      "./CCValueType": 173,
-      "./CCVec2": 174
+      "./CCAffineTransform": 161,
+      "./CCColor": 162,
+      "./CCPointExtension": 163,
+      "./CCRect": 164,
+      "./CCSize": 165,
+      "./CCTypes": 166,
+      "./CCTypesWebGL": 167,
+      "./CCValueType": 168,
+      "./CCVec2": 169
     } ],
-    176: [ (function(require, module, exports) {
+    171: [ (function(require, module, exports) {
       var js = cc.js;
       var deprecateEnum;
       var markAsRemoved;
       var provideClearError;
       var shouldNotUseNodeProp;
       var ERR;
-      js.obsolete(cc.loader, "cc.loader.loadResAll", "loadResDir");
     }), {} ],
-    177: [ (function(require, module, exports) {
+    172: [ (function(require, module, exports) {
       require("./CCSGMotionStreak");
       require("./CCSGMotionStreakWebGLRenderCmd");
       var MotionStreak = cc.Class({
@@ -26115,24 +24613,21 @@
       });
       cc.MotionStreak = module.exports = MotionStreak;
     }), {
-      "./CCSGMotionStreak": 216,
-      "./CCSGMotionStreakWebGLRenderCmd": 216
+      "./CCSGMotionStreak": 211,
+      "./CCSGMotionStreakWebGLRenderCmd": 211
     } ],
-    178: [ (function(require, module, exports) {
+    173: [ (function(require, module, exports) {
       var ParticleAsset = cc.Class({
         name: "cc.ParticleAsset",
         extends: cc.RawAsset
       });
       cc.ParticleAsset = module.exports = ParticleAsset;
     }), {} ],
-    179: [ (function(require, module, exports) {
+    174: [ (function(require, module, exports) {
       require("./CCParticleAsset");
       require("./CCSGParticleSystem");
       require("./CCSGParticleSystemCanvasRenderCmd");
       require("./CCSGParticleSystemWebGLRenderCmd");
-      require("./CCParticleBatchNode");
-      require("./CCParticleBatchNodeCanvasRenderCmd");
-      require("./CCParticleBatchNodeWebGLRenderCmd");
       var BlendFactor = cc.BlendFunc.BlendFactor;
       var EmitterMode = cc.Enum({
         GRAVITY: 0,
@@ -26451,15 +24946,12 @@
       });
       cc.ParticleSystem = module.exports = ParticleSystem;
     }), {
-      "./CCParticleAsset": 178,
-      "./CCParticleBatchNode": 216,
-      "./CCParticleBatchNodeCanvasRenderCmd": 216,
-      "./CCParticleBatchNodeWebGLRenderCmd": 216,
-      "./CCSGParticleSystem": 216,
-      "./CCSGParticleSystemCanvasRenderCmd": 216,
-      "./CCSGParticleSystemWebGLRenderCmd": 216
+      "./CCParticleAsset": 173,
+      "./CCSGParticleSystem": 211,
+      "./CCSGParticleSystemCanvasRenderCmd": 211,
+      "./CCSGParticleSystemWebGLRenderCmd": 211
     } ],
-    180: [ (function(require, module, exports) {
+    175: [ (function(require, module, exports) {
       require("./CCSGTMXLayer");
       require("./CCTMXLayerCanvasRenderCmd");
       require("./CCTMXLayerWebGLRenderCmd");
@@ -26610,11 +25102,11 @@
       });
       cc.TiledLayer = module.exports = TiledLayer;
     }), {
-      "./CCSGTMXLayer": 216,
-      "./CCTMXLayerCanvasRenderCmd": 216,
-      "./CCTMXLayerWebGLRenderCmd": 216
+      "./CCSGTMXLayer": 211,
+      "./CCTMXLayerCanvasRenderCmd": 211,
+      "./CCTMXLayerWebGLRenderCmd": 211
     } ],
-    181: [ (function(require, module, exports) {
+    176: [ (function(require, module, exports) {
       require("./CCTiledMapAsset");
       require("./CCTiledLayer");
       require("./CCTiledObjectGroup");
@@ -27019,12 +25511,12 @@
         return [];
       }), false);
     }), {
-      "./CCSGTMXTiledMap": 216,
-      "./CCTiledLayer": 180,
-      "./CCTiledMapAsset": 182,
-      "./CCTiledObjectGroup": 183
+      "./CCSGTMXTiledMap": 211,
+      "./CCTiledLayer": 175,
+      "./CCTiledMapAsset": 177,
+      "./CCTiledObjectGroup": 178
     } ],
-    182: [ (function(require, module, exports) {
+    177: [ (function(require, module, exports) {
       var TiledMapAsset = cc.Class({
         name: "cc.TiledMapAsset",
         extends: cc.Asset,
@@ -27052,7 +25544,7 @@
       cc.TiledMapAsset = TiledMapAsset;
       module.exports = TiledMapAsset;
     }), {} ],
-    183: [ (function(require, module, exports) {
+    178: [ (function(require, module, exports) {
       require("./CCSGTMXObjectGroup");
       var TiledObjectGroup = cc.Class({
         name: "cc.TiledObjectGroup",
@@ -27122,9 +25614,9 @@
       });
       cc.TiledObjectGroup = module.exports = TiledObjectGroup;
     }), {
-      "./CCSGTMXObjectGroup": 216
+      "./CCSGTMXObjectGroup": 211
     } ],
-    184: [ (function(require, module, exports) {
+    179: [ (function(require, module, exports) {
       require("./cocos2d/core");
       require("./cocos2d/animation");
       require("./cocos2d/particle/CCParticleSystem");
@@ -27138,22 +25630,22 @@
       require("./cocos2d/deprecated");
     }), {
       "./cocos2d/actions": 9,
-      "./cocos2d/animation": 18,
-      "./cocos2d/core": 95,
-      "./cocos2d/core/components/CCStudioComponent": 72,
-      "./cocos2d/deprecated": 176,
-      "./cocos2d/motion-streak/CCMotionStreak": 177,
-      "./cocos2d/particle/CCParticleAsset": 178,
-      "./cocos2d/particle/CCParticleSystem": 179,
-      "./cocos2d/tilemap/CCTiledMap": 181,
-      "./cocos2d/tilemap/CCTiledMapAsset": 182,
-      "./extensions/ccpool/CCNodePool": 185,
-      "./extensions/ccpool/CCPool": 186,
-      "./extensions/dragonbones": 190,
-      "./extensions/spine": 194,
-      "./external/chipmunk/chipmunk": 195
+      "./cocos2d/animation": 17,
+      "./cocos2d/core": 89,
+      "./cocos2d/core/components/CCStudioComponent": 71,
+      "./cocos2d/deprecated": 171,
+      "./cocos2d/motion-streak/CCMotionStreak": 172,
+      "./cocos2d/particle/CCParticleAsset": 173,
+      "./cocos2d/particle/CCParticleSystem": 174,
+      "./cocos2d/tilemap/CCTiledMap": 176,
+      "./cocos2d/tilemap/CCTiledMapAsset": 177,
+      "./extensions/ccpool/CCNodePool": 180,
+      "./extensions/ccpool/CCPool": 181,
+      "./extensions/dragonbones": 185,
+      "./extensions/spine": 189,
+      "./external/chipmunk/chipmunk": 190
     } ],
-    185: [ (function(require, module, exports) {
+    180: [ (function(require, module, exports) {
       cc.NodePool = function(poolHandlerComp) {
         this.poolHandlerComp = poolHandlerComp;
         this._pool = [];
@@ -27188,7 +25680,7 @@
       };
       module.exports = cc.NodePool;
     }), {} ],
-    186: [ (function(require, module, exports) {
+    181: [ (function(require, module, exports) {
       var _args = [];
       cc.pool = {
         _pool: {},
@@ -27245,7 +25737,7 @@
         }
       };
     }), {} ],
-    187: [ (function(require, module, exports) {
+    182: [ (function(require, module, exports) {
       var DefaultArmaturesEnum = cc.Enum({
         default: -1
       });
@@ -27482,7 +25974,7 @@
         }
       });
     }), {} ],
-    188: [ (function(require, module, exports) {
+    183: [ (function(require, module, exports) {
       var DragonBonesAsset = cc.Class({
         name: "dragonBones.DragonBonesAsset",
         extends: cc.Asset,
@@ -27509,7 +26001,7 @@
       });
       dragonBones.DragonBonesAsset = module.exports = DragonBonesAsset;
     }), {} ],
-    189: [ (function(require, module, exports) {
+    184: [ (function(require, module, exports) {
       var DragonBonesAtlasAsset = cc.Class({
         name: "dragonBones.DragonBonesAtlasAsset",
         extends: cc.Asset,
@@ -27535,7 +26027,7 @@
       });
       dragonBones.DragonBonesAtlasAsset = module.exports = DragonBonesAtlasAsset;
     }), {} ],
-    190: [ (function(require, module, exports) {
+    185: [ (function(require, module, exports) {
       dragonBones = dragonBones;
       dragonBones.DisplayType = {
         Image: 0,
@@ -27580,16 +26072,16 @@
       require("./DragonBonesAtlasAsset");
       require("./ArmatureDisplay");
     }), {
-      "./ArmatureDisplay": 187,
-      "./CCArmatureDisplay": 216,
-      "./CCFactory": 216,
-      "./CCSlot": 216,
-      "./CCTextureData": 216,
-      "./DragonBonesAsset": 188,
-      "./DragonBonesAtlasAsset": 189,
-      "./lib/dragonBones": 216
+      "./ArmatureDisplay": 182,
+      "./CCArmatureDisplay": 211,
+      "./CCFactory": 211,
+      "./CCSlot": 211,
+      "./CCTextureData": 211,
+      "./DragonBonesAsset": 183,
+      "./DragonBonesAtlasAsset": 184,
+      "./lib/dragonBones": 211
     } ],
-    191: [ (function(require, module, exports) {
+    186: [ (function(require, module, exports) {
       sp.SkeletonTexture = cc.Class({
         name: "sp.SkeletonTexture",
         extends: sp.spine.Texture,
@@ -27622,7 +26114,7 @@
         }
       });
     }), {} ],
-    192: [ (function(require, module, exports) {
+    187: [ (function(require, module, exports) {
       var DefaultSkinsEnum = cc.Enum({
         default: -1
       });
@@ -27987,7 +26479,7 @@
         }
       });
     }), {} ],
-    193: [ (function(require, module, exports) {
+    188: [ (function(require, module, exports) {
       var TextureLoader = false;
       var SkeletonData = cc.Class({
         name: "sp.SkeletonData",
@@ -28041,7 +26533,7 @@
       });
       sp.SkeletonData = module.exports = SkeletonData;
     }), {} ],
-    194: [ (function(require, module, exports) {
+    189: [ (function(require, module, exports) {
       sp = sp;
       sp.VERTEX_INDEX = {
         X1: 0,
@@ -28070,16 +26562,16 @@
       require("./SkeletonData");
       require("./Skeleton");
     }), {
-      "./SGSkeleton": 216,
-      "./SGSkeletonAnimation": 216,
-      "./SGSkeletonCanvasRenderCmd": 216,
-      "./SGSkeletonTexture": 191,
-      "./SGSkeletonWebGLRenderCmd": 216,
-      "./Skeleton": 192,
-      "./SkeletonData": 193,
-      "./lib/spine": 216
+      "./SGSkeleton": 211,
+      "./SGSkeletonAnimation": 211,
+      "./SGSkeletonCanvasRenderCmd": 211,
+      "./SGSkeletonTexture": 186,
+      "./SGSkeletonWebGLRenderCmd": 211,
+      "./Skeleton": 187,
+      "./SkeletonData": 188,
+      "./lib/spine": 211
     } ],
-    195: [ (function(require, module, exports) {
+    190: [ (function(require, module, exports) {
       Object.create = Object.create || function(o) {
         function F() {}
         F.prototype = o;
@@ -31081,23 +29573,25 @@
         return Math.abs(this.jAcc);
       };
     }), {} ],
-    196: [ (function(require, module, exports) {
+    191: [ (function(require, module, exports) {
       "use strict";
-      var originLog = console.log;
-      try {
-        console.log = function(...args) {
-          originLog(cc.js.formatStr.apply(null, args));
-        };
-      } catch (e) {}
+      cc.supportJit = "function" === typeof Function("");
       function defineMacro(name, defaultValue) {
-        return "if(typeof " + name + '=="undefined")' + name + "=" + defaultValue + ";";
+        "undefined" == (__typeofVal = typeof window[name], "object" === __typeofVal ? __realTypeOfObj(window[name]) : __typeofVal) && (window[name] = defaultValue);
       }
       function defined(name) {
-        return "typeof " + name + '=="object"';
+        return "object" == (__typeofVal = typeof window[name], "object" === __typeofVal ? __realTypeOfObj(window[name]) : __typeofVal);
       }
-      Function(defineMacro("CC_TEST", defined("tap") + "||" + defined("QUnit")) + defineMacro("CC_EDITOR", defined("Editor") + "&&" + defined("process") + '&&"electron" in process.versions') + defineMacro("CC_PREVIEW", "!CC_EDITOR") + defineMacro("CC_DEV", true) + defineMacro("CC_DEBUG", true) + defineMacro("CC_JSB", defined("jsb")) + defineMacro("CC_BUILD", false))();
+      defineMacro("CC_TEST", defined("tap") || defined("QUnit"));
+      defineMacro("CC_EDITOR", defined("Editor") && defined("process") && "electron" in process.versions);
+      defineMacro("CC_PREVIEW", true);
+      defineMacro("CC_DEV", true);
+      defineMacro("CC_DEBUG", true);
+      defineMacro("CC_JSB", defined("jsb"));
+      defineMacro("CC_BUILD", false);
       cc.ClassManager || (cc.ClassManager = window.ClassManager);
       require("../polyfill/misc");
+      require("../polyfill/string");
       require("../polyfill/typescript");
       require("../cocos2d/core/platform/js");
       require("../cocos2d/core/value-types");
@@ -31133,102 +29627,44 @@
     }), {
       "../CCDebugger": 1,
       "../DebugInfos": 2,
-      "../cocos2d/core/event": 86,
-      "../cocos2d/core/event-manager/CCEvent": 81,
-      "../cocos2d/core/event-manager/CCSystemEvent": 82,
-      "../cocos2d/core/platform/CCMacro": 139,
-      "../cocos2d/core/platform/js": 151,
-      "../cocos2d/core/utils/find": 161,
-      "../cocos2d/core/utils/mutable-forward-iterator": 163,
-      "../cocos2d/core/value-types": 175,
-      "../extends": 184,
-      "../polyfill/misc": 217,
-      "../polyfill/typescript": 218,
-      "./jsb-action": 197,
-      "./jsb-audio": 198,
-      "./jsb-box2d": 199,
-      "./jsb-director": 200,
-      "./jsb-dragonbones": 201,
-      "./jsb-editbox": 202,
-      "./jsb-enums": 203,
-      "./jsb-etc": 204,
-      "./jsb-event": 205,
-      "./jsb-game": 206,
-      "./jsb-label": 207,
-      "./jsb-loader": 208,
-      "./jsb-particle": 209,
-      "./jsb-scale9sprite": 210,
-      "./jsb-spine": 211,
-      "./jsb-tex-sprite-frame": 212,
-      "./jsb-tiledmap": 213,
-      "./jsb-videoplayer": 214,
-      "./jsb-webview": 215
+      "../cocos2d/core/event": 85,
+      "../cocos2d/core/event-manager/CCEvent": 80,
+      "../cocos2d/core/event-manager/CCSystemEvent": 81,
+      "../cocos2d/core/platform/CCMacro": 134,
+      "../cocos2d/core/platform/js": 147,
+      "../cocos2d/core/utils/find": 156,
+      "../cocos2d/core/utils/mutable-forward-iterator": 158,
+      "../cocos2d/core/value-types": 170,
+      "../extends": 179,
+      "../polyfill/misc": 212,
+      "../polyfill/string": 213,
+      "../polyfill/typescript": 214,
+      "./jsb-action": 192,
+      "./jsb-audio": 193,
+      "./jsb-box2d": 194,
+      "./jsb-director": 195,
+      "./jsb-dragonbones": 196,
+      "./jsb-editbox": 197,
+      "./jsb-enums": 198,
+      "./jsb-etc": 199,
+      "./jsb-event": 200,
+      "./jsb-game": 201,
+      "./jsb-label": 202,
+      "./jsb-loader": 203,
+      "./jsb-particle": 204,
+      "./jsb-scale9sprite": 205,
+      "./jsb-spine": 206,
+      "./jsb-tex-sprite-frame": 207,
+      "./jsb-tiledmap": 208,
+      "./jsb-videoplayer": 209,
+      "./jsb-webview": 210
     } ],
-    197: [ (function(require, module, exports) {
+    192: [ (function(require, module, exports) {
       var ENABLE_GC_FOR_NATIVE_OBJECTS = cc.macro.ENABLE_GC_FOR_NATIVE_OBJECTS;
-      var actionArr = [ "ActionEase", "EaseExponentialIn", "EaseExponentialOut", "EaseExponentialInOut", "EaseSineIn", "EaseSineOut", "EaseSineInOut", "EaseBounce", "EaseBounceIn", "EaseBounceOut", "EaseBounceInOut", "EaseBackIn", "EaseBackOut", "EaseBackInOut", "EaseRateAction", "EaseIn", "EaseElastic", "EaseElasticIn", "EaseElasticOut", "EaseElasticInOut", "RemoveSelf", "FlipX", "FlipY", "Place", "CallFunc", "DelayTime", "Speed", "Repeat", "RepeatForever", "TargetedAction", "ActionInterval", "RotateTo", "RotateBy", "MoveBy", "MoveTo", "SkewTo", "SkewBy", "JumpTo", "JumpBy", "ScaleTo", "ScaleBy", "Blink", "FadeTo", "FadeIn", "FadeOut", "TintTo", "TintBy" ];
       cc.Action.prototype._getSgTarget = cc.Action.prototype.getTarget;
       cc.Action.prototype.getTarget = function() {
         var sgNode = this._getSgTarget();
         return sgNode._owner || sgNode;
-      };
-      function setCtorReplacer(proto) {
-        var ctor = proto._ctor;
-        proto._ctor = function(...args) {
-          ctor.apply(this, args);
-          this.retain();
-          this._retained = true;
-        };
-      }
-      function setAliasReplacer(name, type) {
-        var aliasName = name[0].toLowerCase() + name.substr(1);
-        cc[aliasName] = function(...args) {
-          var action = type.create.apply(this, args);
-          action.retain();
-          action._retained = true;
-          return action;
-        };
-      }
-      if (!ENABLE_GC_FOR_NATIVE_OBJECTS) for (var i = 0; i < actionArr.length; ++i) {
-        var name = actionArr[i];
-        var type = cc[name];
-        if (!type) continue;
-        var proto = type.prototype;
-        setCtorReplacer(proto);
-        -1 === name.indexOf("Ease") && setAliasReplacer(name, type);
-      }
-      cc.Sequence.prototype._ctor = function(...args) {
-        var paramArray = args[0] instanceof Array ? args[0] : args;
-        if (1 === paramArray.length) {
-          cc.errorID(1019);
-          return;
-        }
-        var last = paramArray.length - 1;
-        last >= 0 && null == paramArray[last] && cc.logID(1015);
-        last >= 0 && this.init(paramArray);
-        if (!ENABLE_GC_FOR_NATIVE_OBJECTS) {
-          this.retain();
-          this._retained = true;
-        }
-      };
-      cc.sequence = function(...args) {
-        var paramArray = args[0] instanceof Array ? args[0] : args;
-        return new cc.Sequence(paramArray);
-      };
-      cc.Spawn.prototype._ctor = function(...args) {
-        var paramArray = args[0] instanceof Array ? args[0] : args;
-        1 === paramArray.length && cc.errorID(1020);
-        var last = paramArray.length - 1;
-        last >= 0 && null == paramArray[last] && cc.logID(1015);
-        last >= 0 && this.init(paramArray);
-        if (!ENABLE_GC_FOR_NATIVE_OBJECTS) {
-          this.retain();
-          this._retained = true;
-        }
-      };
-      cc.spawn = function(...args) {
-        var paramArray = args[0] instanceof Array ? args[0] : args;
-        return new cc.Spawn(paramArray);
       };
       cc.targetedAction = function(target, action) {
         return new cc.TargetedAction(target, action);
@@ -31393,10 +29829,6 @@
           selector.call(this, sender, data);
         };
         var action = selectorTarget ? cc.CallFunc.create(callback, selectorTarget) : cc.CallFunc.create(callback);
-        if (!ENABLE_GC_FOR_NATIVE_OBJECTS) {
-          action.retain();
-          action._retained = true;
-        }
         return action;
       };
       cc.CallFunc.prototype._ctor = function(selector, selectorTarget, data) {
@@ -31407,38 +29839,7 @@
           };
           void 0 === selectorTarget ? this.initWithFunction(callback) : this.initWithFunction(callback, selectorTarget);
         }
-        if (!ENABLE_GC_FOR_NATIVE_OBJECTS) {
-          this.retain();
-          this._retained = true;
-        }
       };
-      function setChainFuncReplacer(proto, name) {
-        var oldFunc = proto[name];
-        proto[name] = function(...args) {
-          if (this._retained) {
-            this.release();
-            this._retained = false;
-          }
-          var newAction = oldFunc.apply(this, args);
-          newAction.retain();
-          newAction._retained = true;
-          return newAction;
-        };
-      }
-      if (!ENABLE_GC_FOR_NATIVE_OBJECTS) {
-        setChainFuncReplacer(cc.ActionInterval.prototype, "repeat");
-        setChainFuncReplacer(cc.ActionInterval.prototype, "repeatForever");
-        setChainFuncReplacer(cc.ActionInterval.prototype, "easing");
-        var jsbRunAction = cc.Node.prototype.runAction;
-        cc.Node.prototype.runAction = function(action) {
-          jsbRunAction.call(this, action);
-          if (action._retained) {
-            action.release();
-            action._retained = false;
-          }
-          return action;
-        };
-      }
       function getSGTarget(target) {
         target instanceof cc.Component ? target = target.node._sgNode : target instanceof cc.Node ? target = target._sgNode : target instanceof _ccsg.Node || (target = null);
         return target;
@@ -31446,19 +29847,14 @@
       var jsbAddAction = cc.ActionManager.prototype.addAction;
       cc.ActionManager.prototype.addAction = function(action, target, paused) {
         target = getSGTarget(target);
-        if (target) {
-          jsbAddAction.call(this, action, target, paused);
-          if (!ENABLE_GC_FOR_NATIVE_OBJECTS && action._retained) {
-            action.release();
-            action._retained = false;
-          }
-        }
+        target && jsbAddAction.call(this, action, target, paused);
       };
       function actionMgrFuncReplacer(funcName, targetPos) {
         var proto = cc.ActionManager.prototype;
         var oldFunc = proto[funcName];
-        proto[funcName] = function(...args) {
-          for (var i = 0; i < args.length; i++) i === targetPos && (args[i] = getSGTarget(args[i]));
+        proto[funcName] = function() {
+          var args = [];
+          for (var i = 0; i < arguments.length; i++) args[i] = i === targetPos ? getSGTarget(arguments[i]) : arguments[i];
           return args[targetPos] ? oldFunc.apply(this, args) : void 0;
         };
       }
@@ -31473,7 +29869,6 @@
         for (var i = 0; i < targetsToPause.length; i++) targetsToPause[i] && this.pauseTarget(targetsToPause[i]);
       };
       function syncPositionUpdate(dt) {
-        this._jsbUpdate(dt);
         var target = this._getSgTarget();
         if (target._owner) {
           target._owner.x = target.getPositionX();
@@ -31481,7 +29876,6 @@
         }
       }
       function syncRotationUpdate(dt) {
-        this._jsbUpdate(dt);
         var target = this._getSgTarget();
         if (target._owner) {
           target._owner.rotationX = target.getRotationX();
@@ -31489,7 +29883,6 @@
         }
       }
       function syncScaleUpdate(dt) {
-        this._jsbUpdate(dt);
         var target = this._getSgTarget();
         if (target._owner) {
           target._owner.scaleX = target.getScaleX();
@@ -31497,12 +29890,10 @@
         }
       }
       function syncRemoveSelfUpdate(dt) {
-        this._jsbUpdate(dt);
         var target = this._getSgTarget();
         target._owner && target._owner.removeFromParent();
       }
       function syncSkewUpdate(dt) {
-        this._jsbUpdate(dt);
         var target = this._getSgTarget();
         if (target._owner) {
           target._owner.skewX = target.getSkewX();
@@ -31510,12 +29901,10 @@
         }
       }
       function syncOpacityUpdate(dt) {
-        this._jsbUpdate(dt);
         var target = this._getSgTarget();
         target._owner && (target._owner.opacity = target.getOpacity());
       }
       function syncColorUpdate(dt) {
-        this._jsbUpdate(dt);
         var target = this._getSgTarget();
         if (target._owner) {
           var color = target.getColor();
@@ -31542,11 +29931,10 @@
       };
       for (var key in actionUpdate) {
         var action = cc[key];
-        action.prototype._jsbUpdate = action.prototype.update;
         action.prototype.update = actionUpdate[key];
       }
     }), {} ],
-    198: [ (function(require, module, exports) {
+    193: [ (function(require, module, exports) {
       cc.Audio = function(src) {
         this.src = src;
         this.volume = 1;
@@ -31644,9 +30032,9 @@
         };
       })(cc.Audio.prototype, jsb.AudioEngine);
     }), {
-      "../cocos2d/audio/deprecated": 22
+      "../cocos2d/audio/deprecated": 21
     } ],
-    199: [ (function(require, module, exports) {
+    194: [ (function(require, module, exports) {
       (function() {
         window.b2 || (window.b2 = {});
         var Vec2 = b2.Vec2 = function(x_, y_) {
@@ -32037,7 +30425,7 @@
         b2.maxManifoldPoints = 2;
       })();
     }), {} ],
-    200: [ (function(require, module, exports) {
+    195: [ (function(require, module, exports) {
       "use strict";
       var AutoReleaseUtils = require("../cocos2d/core/load-pipeline/auto-release-utils");
       var ComponentScheduler = require("../cocos2d/core/component-scheduler");
@@ -32062,6 +30450,7 @@
             this.getScheduler().scheduleUpdate(this._physicsManager, cc.Scheduler.PRIORITY_SYSTEM, false);
           } else this._physicsManager = null;
           cc._widgetManager.init(this);
+          cc.loader.init(this);
         },
         purgeDirector: function() {
           this._compScheduler.unscheduleAll();
@@ -32272,7 +30661,7 @@
       cc.Director.EVENT_BEFORE_SCENE_LAUNCH = "director_before_scene_launch";
       cc.Director.EVENT_AFTER_SCENE_LAUNCH = "director_after_scene_launch";
       cc.Director._EVENT_NEXT_TICK = "_director_next_tick";
-      cc.Director._beforeUpdateListener = {
+      cc.Director._beforeUpdateListener = cc.EventListener.create({
         event: cc.EventListener.CUSTOM,
         eventName: cc.Director.EVENT_BEFORE_UPDATE,
         callback: function() {
@@ -32282,8 +30671,8 @@
           var dt = cc.director.getDeltaTime();
           cc.director._compScheduler.updatePhase(dt);
         }
-      };
-      cc.Director._afterUpdateListener = {
+      });
+      cc.Director._afterUpdateListener = cc.EventListener.create({
         event: cc.EventListener.CUSTOM,
         eventName: cc.Director.EVENT_AFTER_UPDATE,
         callback: function() {
@@ -32293,32 +30682,32 @@
           cc.Object._deferredDestroy();
           cc.director.emit(cc.Director.EVENT_BEFORE_VISIT, this);
         }
-      };
-      cc.Director._afterVisitListener = {
+      });
+      cc.Director._afterVisitListener = cc.EventListener.create({
         event: cc.EventListener.CUSTOM,
         eventName: cc.Director.EVENT_AFTER_VISIT,
         callback: function() {
           cc.director.emit(cc.Director.EVENT_AFTER_VISIT, this);
         }
-      };
-      cc.Director._afterDrawListener = {
+      });
+      cc.Director._afterDrawListener = cc.EventListener.create({
         event: cc.EventListener.CUSTOM,
         eventName: cc.Director.EVENT_AFTER_DRAW,
         callback: function() {
           cc.director.emit(cc.Director.EVENT_AFTER_DRAW, this);
         }
-      };
-      cc.eventManager.addEventListenerWithFixedPriority(cc.EventListener.create(cc.Director._beforeUpdateListener), 1);
-      cc.eventManager.addEventListenerWithFixedPriority(cc.EventListener.create(cc.Director._afterUpdateListener), 1);
-      cc.eventManager.addEventListenerWithFixedPriority(cc.EventListener.create(cc.Director._afterVisitListener), 1);
-      cc.eventManager.addEventListenerWithFixedPriority(cc.EventListener.create(cc.Director._afterDrawListener), 1);
+      });
+      cc.eventManager.addEventListenerWithFixedPriority(cc.Director._beforeUpdateListener, 1);
+      cc.eventManager.addEventListenerWithFixedPriority(cc.Director._afterUpdateListener, 1);
+      cc.eventManager.addEventListenerWithFixedPriority(cc.Director._afterVisitListener, 1);
+      cc.eventManager.addEventListenerWithFixedPriority(cc.Director._afterDrawListener, 1);
     }), {
-      "../cocos2d/core/component-scheduler": 47,
-      "../cocos2d/core/event/event-listeners": 83,
-      "../cocos2d/core/load-pipeline/auto-release-utils": 101,
-      "../cocos2d/core/node-activator": 113
+      "../cocos2d/core/component-scheduler": 46,
+      "../cocos2d/core/event/event-listeners": 82,
+      "../cocos2d/core/load-pipeline/auto-release-utils": 95,
+      "../cocos2d/core/node-activator": 108
     } ],
-    201: [ (function(require, module, exports) {
+    196: [ (function(require, module, exports) {
       var proto = dragonBones.CCArmatureDisplay.prototype;
       cc.js.mixin(proto, cc.EventTarget.prototype);
       proto.addEvent = function(type, listener, target) {
@@ -32345,17 +30734,13 @@
       };
       var armatureProto = dragonBones.Armature.prototype;
       armatureProto.addEventListener = function(type, listener, target) {
-        var display = this.display;
-        jsb.registerNativeRef(this, display);
-        display.addEvent(type, listener, target);
+        this.display.addEvent(type, listener, target);
       };
       armatureProto.removeEventListener = function(type, listener, target) {
-        var display = this.display;
-        jsb.unregisterNativeRef(this, display);
-        display.removeEvent(type, listener, target);
+        this.display.removeEvent(type, listener, target);
       };
     }), {} ],
-    202: [ (function(require, module, exports) {
+    197: [ (function(require, module, exports) {
       "use strict";
       var _p = cc.EditBox.prototype;
       _p._setMaxLength = _p.setMaxLength;
@@ -32388,26 +30773,6 @@
         return false;
       };
       _p.stayOnTop = function() {};
-    }), {} ],
-    203: [ (function(require, module, exports) {
-      "use strict";
-      cc.sys.os !== cc.sys.OS_OSX && cc.sys.os !== cc.sys.OS_WINDOWS || (cc.VideoPlayer = {});
-      cc.sys.os !== cc.sys.OS_OSX && cc.sys.os !== cc.sys.OS_WINDOWS || (cc.WebView = {});
-      cc.VideoPlayer.EventType = {
-        PLAYING: 0,
-        PAUSED: 1,
-        STOPPED: 2,
-        COMPLETED: 3,
-        META_LOADED: 4,
-        CLICKED: 5,
-        READY_TO_PLAY: 6
-      };
-      cc.WebView.EventType = {
-        LOADING: 0,
-        LOADED: 1,
-        ERROR: 2,
-        JS_EVALUATED: 3
-      };
       cc.EditBox.InputMode = cc.Enum({
         ANY: 0,
         EMAIL_ADDR: 1,
@@ -32432,6 +30797,9 @@
         SEARCH: 3,
         GO: 4
       });
+    }), {} ],
+    198: [ (function(require, module, exports) {
+      "use strict";
       cc.TextAlignment = cc.Enum({
         LEFT: 0,
         CENTER: 1,
@@ -32442,48 +30810,8 @@
         CENTER: 1,
         BOTTOM: 2
       });
-      ccui.RelativeLayoutParameter.Type = cc.Enum({
-        NONE: 0,
-        PARENT_TOP_LEFT: 1,
-        PARENT_TOP_CENTER_HORIZONTAL: 2,
-        PARENT_TOP_RIGHT: 3,
-        PARENT_LEFT_CENTER_VERTICAL: 4,
-        CENTER_IN_PARENT: 5,
-        PARENT_RIGHT_CENTER_VERTICAL: 6,
-        PARENT_LEFT_BOTTOM: 7,
-        PARENT_BOTTOM_CENTER_HORIZONTAL: 8,
-        PARENT_RIGHT_BOTTOM: 9,
-        LOCATION_ABOVE_LEFTALIGN: 10,
-        LOCATION_ABOVE_CENTER: 11,
-        LOCATION_ABOVE_RIGHTALIGN: 12,
-        LOCATION_LEFT_OF_TOPALIGN: 13,
-        LOCATION_LEFT_OF_CENTER: 14,
-        LOCATION_LEFT_OF_BOTTOMALIGN: 15,
-        LOCATION_RIGHT_OF_TOPALIGN: 16,
-        LOCATION_RIGHT_OF_CENTER: 17,
-        LOCATION_RIGHT_OF_BOTTOMALIGN: 18,
-        LOCATION_BELOW_LEFTALIGN: 19,
-        LOCATION_BELOW_CENTER: 20,
-        LOCATION_BELOW_RIGHTALIGN: 21
-      });
-      ccui.Layout.Type = cc.Enum({
-        ABSOLUTE: 0,
-        LINEAR_VERTICAL: 1,
-        LINEAR_HORIZONTAL: 2,
-        RELATIVE: 3
-      });
-      ccui.LoadingBar.Type = cc.Enum({
-        LEFT: 0,
-        RIGHT: 1
-      });
-      ccui.ScrollView.Dir = cc.Enum({
-        NONE: 0,
-        VERTICAL: 1,
-        HORIZONTAL: 2,
-        BOTH: 3
-      });
     }), {} ],
-    204: [ (function(require, module, exports) {
+    199: [ (function(require, module, exports) {
       "use strict";
       cc.sys.now = function() {
         return Date.now();
@@ -32503,36 +30831,6 @@
           return path.replace(/[\/\\]$/, "");
         }
       });
-      var _callbackId = 0;
-      cc.Scheduler.prototype.schedule = function(callback, target, interval, repeat, delay, paused) {
-        if (void 0 === delay || void 0 === paused) {
-          paused = !!repeat;
-          repeat = cc.macro.REPEAT_FOREVER;
-        } else {
-          paused = !!paused;
-          repeat = isFinite(repeat) ? repeat : cc.macro.REPEAT_FOREVER;
-        }
-        delay = delay || 0;
-        var instanceId = target.__instanceId || target.uuid;
-        cc.assertID(void 0 !== instanceId, 1510);
-        callback.__callbackId || (callback.__callbackId = _callbackId++);
-        var key = instanceId + "_" + callback.__callbackId;
-        this._schedule(target, callback, interval, repeat, delay, paused, key);
-      };
-      cc.Scheduler.prototype.scheduleUpdate = cc.Scheduler.prototype.scheduleUpdateForTarget;
-      cc.Scheduler.prototype._unschedule = cc.Scheduler.prototype.unschedule;
-      cc.Scheduler.prototype.unschedule = function(callback, target) {
-        if ("function" === (__typeofVal = typeof target, "object" === __typeofVal ? __realTypeOfObj(target) : __typeofVal)) {
-          var tmp = target;
-          target = callback;
-          callback = tmp;
-        }
-        if (void 0 === callback.__callbackId) return;
-        var instanceId = target.__instanceId || target.uuid;
-        cc.assertID(void 0 !== instanceId, 1510);
-        var key = instanceId + "_" + callback.__callbackId;
-        this._unschedule(key, target);
-      };
       var nodeProto = cc.Node.prototype;
       cc.defineGetterSetter(nodeProto, "_parent", nodeProto.getParent, nodeProto.setParent);
       cc.view.isViewReady = cc.view.isOpenGLReady;
@@ -32550,21 +30848,21 @@
         "string" === (__typeofVal = typeof code, "object" === __typeofVal ? __realTypeOfObj(code) : __typeofVal) ? Function(code)() : "function" === (__typeofVal = typeof code, 
         "object" === __typeofVal ? __realTypeOfObj(code) : __typeofVal) && code.apply(null, this._args);
       };
-      window.setTimeout = function(code, delay, ...args) {
+      window.setTimeout = function(code, delay) {
         var target = new WindowTimeFun(code);
-        args.length > 0 && (target._args = args);
+        arguments.length > 2 && (target._args = Array.prototype.slice.call(arguments, 2));
         var original = target.fun;
         target.fun = function() {
-          original.call(this);
+          original.apply(this, arguments);
           clearTimeout(target._intervalId);
         };
         cc.director.getScheduler().schedule(target.fun, target, delay / 1e3, 0, 0, false);
         _windowTimeFunHash[target._intervalId] = target;
         return target._intervalId;
       };
-      window.setInterval = function(code, delay, ...args) {
+      window.setInterval = function(code, delay) {
         var target = new WindowTimeFun(code);
-        args.length > 0 && (target._args = args);
+        arguments.length > 2 && (target._args = Array.prototype.slice.call(arguments, 2));
         cc.director.getScheduler().schedule(target.fun, target, delay / 1e3, cc.macro.REPEAT_FOREVER, 0, false);
         _windowTimeFunHash[target._intervalId] = target;
         return target._intervalId;
@@ -32615,7 +30913,7 @@
         cc.textureCache.removeAllTextures();
       };
     }), {} ],
-    205: [ (function(require, module, exports) {
+    200: [ (function(require, module, exports) {
       "use strict";
       var Pool = require("../cocos2d/core/platform/js").Pool;
       var Event = require("../cocos2d/core/event/event");
@@ -32714,11 +31012,11 @@
       cc._EventListenerMouse = cc.EventListenerMouse;
       cc._EventListenerMouse.LISTENER_ID = "__cc_mouse";
     }), {
-      "../cocos2d/core/event-manager/CCEvent": 81,
-      "../cocos2d/core/event/event": 85,
-      "../cocos2d/core/platform/js": 151
+      "../cocos2d/core/event-manager/CCEvent": 80,
+      "../cocos2d/core/event/event": 84,
+      "../cocos2d/core/platform/js": 147
     } ],
-    206: [ (function(require, module, exports) {
+    201: [ (function(require, module, exports) {
       "use strict";
       cc.game = {
         DEBUG_MODE_NONE: 0,
@@ -32884,7 +31182,7 @@
       }));
       cc._initDebugSetting(cc.game.DEBUG_MODE_INFO);
     }), {} ],
-    207: [ (function(require, module, exports) {
+    202: [ (function(require, module, exports) {
       "use strict";
       var jsbLabel = cc.Label;
       !jsbLabel.createWithTTF && jsbLabel.prototype.createWithTTF && (jsbLabel.createWithTTF = jsbLabel.prototype.createWithTTF);
@@ -33038,7 +31336,7 @@
             customGlyphs: "",
             distanceFieldEnable: false
           };
-          label = jsbLabel.createWithTTF(ttfConfig, string, this._fontSize);
+          label = jsbLabel.createWithTTF(ttfConfig, string);
           label._ttfConfig = ttfConfig;
         } else if (spriteFrame) {
           label = jsbLabel.createWithBMFont(fontHandle, string, spriteFrame);
@@ -33072,7 +31370,7 @@
         return new _ccsg.Label(string, fontHandle, spriteFrame, fontSize);
       };
     }), {} ],
-    208: [ (function(require, module, exports) {
+    203: [ (function(require, module, exports) {
       "use strict";
       require("../cocos2d/core/load-pipeline");
       function empty(item, callback) {
@@ -33124,7 +31422,6 @@
               tex.url = url;
               callback && callback(null, tex);
             } else callback && callback(new Error("Load image failed: " + url));
-            jsb.unregisterNativeRef(cc.textureCache, addImageCallback);
           };
           cc.textureCache._addImageAsync(url, addImageCallback);
         }
@@ -33142,9 +31439,9 @@
         default: empty
       });
     }), {
-      "../cocos2d/core/load-pipeline": 103
+      "../cocos2d/core/load-pipeline": 97
     } ],
-    209: [ (function(require, module, exports) {
+    204: [ (function(require, module, exports) {
       "use strict";
       cc.ParticleSystem.Mode = cc.Enum({
         GRAVITY: 0,
@@ -33189,7 +31486,7 @@
         }
       }
     }), {} ],
-    210: [ (function(require, module, exports) {
+    205: [ (function(require, module, exports) {
       "use strict";
       var v2Found = false;
       if (cc.Scale9SpriteV2) {
@@ -33364,13 +31661,13 @@
         };
       }
     }), {} ],
-    211: [ (function(require, module, exports) {
+    206: [ (function(require, module, exports) {
       sp._SGSkeleton = sp.Skeleton;
       sp._SGSkeletonAnimation = sp.SkeletonAnimation;
       sp._SGSkeleton.prototype.setPremultipliedAlpha = sp._SGSkeleton.prototype.setOpacityModifyRGB;
       sp._SGSkeleton.prototype.setOpacityModifyRGB = function() {};
     }), {} ],
-    212: [ (function(require, module, exports) {
+    207: [ (function(require, module, exports) {
       "use strict";
       require("../cocos2d/core/platform/CCClass");
       require("../cocos2d/core/assets/CCAsset");
@@ -33405,12 +31702,57 @@
       };
       cc.Class._fastDefine("cc.Texture2D", cc.Texture2D, []);
       cc.js.value(cc.Texture2D, "$super", cc.RawAsset);
+      var GL_NEAREST = 9728;
+      var GL_LINEAR = 9729;
+      var GL_REPEAT = 10497;
+      var GL_CLAMP_TO_EDGE = 33071;
+      var GL_MIRRORED_REPEAT = 33648;
+      cc.Texture2D.PixelFormat = cc.Enum({
+        RGB565: cc.Texture2D.PIXEL_FORMAT_RGB565,
+        RGB5A1: cc.Texture2D.PIXEL_FORMAT_RGB5A1,
+        RGBA4444: cc.Texture2D.PIXEL_FORMAT_RGBA4444,
+        RGB888: cc.Texture2D.PIXEL_FORMAT_RGB888,
+        RGBA8888: cc.Texture2D.PIXEL_FORMAT_RGBA8888,
+        A8: cc.Texture2D.PIXEL_FORMAT_A8,
+        I8: cc.Texture2D.PIXEL_FORMAT_I8,
+        AI8: cc.Texture2D.PIXEL_FORMAT_AI8
+      });
       cc.Texture2D.WrapMode = cc.Enum({
-        REPEAT: 10497,
-        CLAMP_TO_EDGE: 33071,
-        MIRRORED_REPEAT: 33648
+        REPEAT: GL_REPEAT,
+        CLAMP_TO_EDGE: GL_CLAMP_TO_EDGE,
+        MIRRORED_REPEAT: GL_MIRRORED_REPEAT
+      });
+      cc.Texture2D.Filter = cc.Enum({
+        LINEAR: GL_LINEAR,
+        NEAREST: GL_NEAREST
       });
       var prototype = cc.Texture2D.prototype;
+      prototype.loaded = true;
+      prototype.update = function(options) {
+        var updateTexParam = false;
+        var genMipmap = false;
+        if (options) {
+          if (void 0 !== options.minFilter) {
+            this._minFilter = options.minFilter;
+            updateTexParam = true;
+          }
+          if (void 0 !== options.magFilter) {
+            this._magFilter = options.magFilter;
+            updateTexParam = true;
+          }
+          if (void 0 !== options.wrapS) {
+            this._wrapS = options.wrapS;
+            updateTexParam = true;
+          }
+          if (void 0 !== options.wrapT) {
+            this._wrapT = options.wrapT;
+            updateTexParam = true;
+          }
+          void 0 !== options.mipmap && (genMipmap = this._hasMipmap = options.mipmap);
+        }
+        updateTexParam && this.setTexParameters(options);
+        genMipmap && this.generateMipmap();
+      };
       prototype.isLoaded = function() {
         return true;
       };
@@ -33419,6 +31761,7 @@
       prototype.description = prototype.getDescription;
       cc.js.get(prototype, "pixelWidth", prototype.getPixelWidth);
       cc.js.get(prototype, "pixelHeight", prototype.getPixelHeight);
+      cc.js.get(prototype, "_glID", prototype.getName);
       cc.Class._fastDefine("cc.SpriteFrame", cc.SpriteFrame, []);
       cc.js.value(cc.SpriteFrame, "$super", cc.Asset);
       prototype = cc.SpriteFrame.prototype;
@@ -33534,10 +31877,10 @@
         this._name = value;
       }));
     }), {
-      "../cocos2d/core/assets/CCAsset": 25,
-      "../cocos2d/core/platform/CCClass": 136
+      "../cocos2d/core/assets/CCAsset": 24,
+      "../cocos2d/core/platform/CCClass": 131
     } ],
-    213: [ (function(require, module, exports) {
+    208: [ (function(require, module, exports) {
       "use strict";
       if (!cc.runtime) {
         var _p = cc.TMXObject.prototype;
@@ -33552,14 +31895,31 @@
         cc.defineGetterSetter(_p, "sgNode", _p.getNode, null);
       }
     }), {} ],
-    214: [ (function(require, module, exports) {
+    209: [ (function(require, module, exports) {
       cc.VideoPlayer = ccui.VideoPlayer;
+      cc.sys.os !== cc.sys.OS_OSX && cc.sys.os !== cc.sys.OS_WINDOWS || (cc.VideoPlayer = {});
+      cc.VideoPlayer.EventType = {
+        PLAYING: 0,
+        PAUSED: 1,
+        STOPPED: 2,
+        COMPLETED: 3,
+        META_LOADED: 4,
+        CLICKED: 5,
+        READY_TO_PLAY: 6
+      };
     }), {} ],
-    215: [ (function(require, module, exports) {
+    210: [ (function(require, module, exports) {
       cc.WebView = ccui.WebView;
+      cc.sys.os !== cc.sys.OS_OSX && cc.sys.os !== cc.sys.OS_WINDOWS || (cc.WebView = {});
+      cc.WebView.EventType = {
+        LOADING: 0,
+        LOADED: 1,
+        ERROR: 2,
+        JS_EVALUATED: 3
+      };
     }), {} ],
-    216: [ (function(require, module, exports) {}), {} ],
-    217: [ (function(require, module, exports) {
+    211: [ (function(require, module, exports) {}), {} ],
+    212: [ (function(require, module, exports) {
       Math.sign || (Math.sign = function(x) {
         x = +x;
         if (0 === x || isNaN(x)) return x;
@@ -33568,20 +31928,30 @@
       Number.isInteger || (Number.isInteger = function(value) {
         return "number" === (__typeofVal = typeof value, "object" === __typeofVal ? __realTypeOfObj(value) : __typeofVal) && (0 | value) === value;
       });
-      if (!console.time) {
-        var Timer = window.performance || Date;
-        var _timerTable = Object.create(null);
-        console.time = function(label) {
-          _timerTable[label] = Timer.now();
-        };
-        console.timeEnd = function(label) {
-          var startTime = _timerTable[label];
-          var duration = Timer.now() - startTime;
-          console.log(label + ": " + duration + "ms");
-        };
-      }
+      var Timer = window.performance || Date;
+      var _timerTable = Object.create(null);
+      console.time = function(label) {
+        _timerTable[label] = Timer.now();
+      };
+      console.timeEnd = function(label) {
+        var startTime = _timerTable[label];
+        var duration = Timer.now() - startTime;
+        console.log(label + ": " + duration + "ms");
+      };
     }), {} ],
-    218: [ (function(require, module, exports) {
+    213: [ (function(require, module, exports) {
+      String.prototype.startsWith || (String.prototype.startsWith = function(searchString, position) {
+        position = position || 0;
+        return this.lastIndexOf(searchString, position) === position;
+      });
+      String.prototype.endsWith || (String.prototype.endsWith = function(searchString, position) {
+        ("undefined" === (__typeofVal = typeof position, "object" === __typeofVal ? __realTypeOfObj(position) : __typeofVal) || position > this.length) && (position = this.length);
+        position -= searchString.length;
+        var lastIndex = this.indexOf(searchString, position);
+        return -1 !== lastIndex && lastIndex === position;
+      });
+    }), {} ],
+    214: [ (function(require, module, exports) {
       var extendStatics = Object.setPrototypeOf || {
         __proto__: []
       } instanceof Array && function(d, b) {
@@ -33834,11 +32204,9 @@
         return m ? m.call(o) : "function" === (__typeofVal = typeof __values, "object" === __typeofVal ? __realTypeOfObj(__values) : __typeofVal) ? __values(o) : o[Symbol.iterator]();
       };
     }), {} ]
-  }, {}, [ 196 ]);
+  }, {}, [ 191 ]);
   function __realTypeOfObj(obj) {
-    try {
-      if ("" + obj === "[object CallbackConstructor]") return "function";
-    } catch (e) {}
+    if (obj && obj.toString && "[object CallbackConstructor]" === obj.toString()) return "function";
     return "object";
   }
   var __typeofVal = "";

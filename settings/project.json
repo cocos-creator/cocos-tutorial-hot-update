@@ -19,5 +19,10 @@
   },
   "start-scene": "current",
   "use-customize-simulator": false,
-  "use-project-simulator-setting": false
+  "use-project-simulator-setting": false,
+  "cocos-analytics": {
+    "enable": false,
+    "appID": "",
+    "appSecret": ""
+  }
 }

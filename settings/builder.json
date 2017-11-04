@@ -1,5 +1,17 @@
 {
+  "appKey": "",
+  "appSecret": "",
+  "encryptJs": true,
   "excludeScenes": [],
+  "includeAnySDK": false,
+  "includeSDKBox": false,
+  "inlineSpriteFrames": true,
+  "inlineSpriteFrames_native": true,
+  "jailbreakPlatform": false,
+  "md5Cache": false,
+  "mergeStartScene": false,
+  "oauthLoginServer": "",
+  "optimizeHotUpdate": false,
   "orientation": {
     "landscapeLeft": true,
     "landscapeRight": true,
@@ -7,20 +19,10 @@
     "upsideDown": false
   },
   "packageName": "org.cocos2d.tutorialhotupdate",
+  "privateKey": "",
+  "renderMode": "0",
   "startScene": "8a546935-70d4-42d2-a051-8d0e76f28008",
   "title": "tutorialhotupdate",
   "webOrientation": "auto",
-  "includeAnySDK": false,
-  "oauthLoginServer": "",
-  "appKey": "",
-  "appSecret": "",
-  "privateKey": "",
-  "renderMode": "0",
-  "inlineSpriteFrames": true,
-  "mergeStartScene": false,
-  "includeSDKBox": false,
-  "jailbreakPlatform": false,
-  "inlineSpriteFrames_native": true,
-  "optimizeHotUpdate": false,
-  "md5Cache": false
+  "xxteaKey": "e8579297-5167-40"
 }
