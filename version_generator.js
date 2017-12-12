@@ -68,7 +68,7 @@ function readDir (dir, obj) {
         else if (stat.isFile()) {
             // Size in Bytes
             size = stat['size'];
-            md5 = crypto.createHash('md5').update(fs.readFileSync(subpath)).digest('hex');
+            md5 = crypto.createHash('md5').update(fs.readFileSync(subpath, 'binary')).digest('hex');
             compressed = path.extname(subpath).toLowerCase() === '.zip';
 
             relative = path.relative(src, subpath);
