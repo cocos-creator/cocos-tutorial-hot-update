@@ -102,14 +102,14 @@ var destVersion = path.join(dest, 'version.manifest');
 
 mkdirSync(dest);
 
-fs.writeFile(destManifest, JSON.stringify(manifest), (err) => {
+fs.writeFile(destManifest, JSON.stringify(manifest, null, 4), (err) => {
   if (err) throw err;
   console.log('Manifest successfully generated');
 });
 
 delete manifest.assets;
 delete manifest.searchPaths;
-fs.writeFile(destVersion, JSON.stringify(manifest), (err) => {
+fs.writeFile(destVersion, JSON.stringify(manifest, null, 4), (err) => {
   if (err) throw err;
   console.log('Version successfully generated');
 });
