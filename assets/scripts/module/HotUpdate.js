@@ -8,7 +8,7 @@ cc.Class({
         },
         manifestUrl: {
             default: null,
-            url: cc.RawAsset
+            type: cc.Asset
         },
         percent: {
             default: null,
@@ -142,9 +142,8 @@ cc.Class({
         var storagePath = ((jsb.fileUtils ? jsb.fileUtils.getWritablePath() : '/') + 'blackjack-remote-asset');
         cc.log('Storage path for remote asset : ' + storagePath);
 
-        // cc.log('Local manifest URL : ' + this.manifestUrl);
-        this._am = new jsb.AssetsManager(this.manifestUrl, storagePath);
-        this._am.retain();
+        // cc.log('Local manifest URL : ' + this.manifestUrl.nativeUrl);
+        this._am = new jsb.AssetsManager(this.manifestUrl.nativeUrl, storagePath);
 
         this._needUpdate = false;
         if (this._am.getLocalManifest().isLoaded())
@@ -154,9 +153,5 @@ cc.Class({
 
             this._am.checkUpdate();
         }
-    },
-
-    onDestroy: function () {
-        this._am && this._am.release();
     }
 });

@@ -58,11 +58,11 @@ cc.Class({
 
         // var progressTimer = new cc.ProgressTimer(this.sgCountdown);
         // progressTimer.setName('progressTimer');
-        // progressTimer.setMidpoint(cc.p(0.5, 0.5));
+        // progressTimer.setMidpoint(cc.v2(0.5, 0.5));
         // progressTimer.setType(cc.ProgressTimer.Type.RADIAL);
         // progressTimer.reverseDir = true;
         // this.betCounter._sgNode.addChild(progressTimer);
-        // progressTimer.setPosition(cc.p(0, -this.betCounter.height/2));
+        // progressTimer.setPosition(cc.v2(0, -this.betCounter.height/2));
         // progressTimer.setPercentage(0);
 
         // return progressTimer;

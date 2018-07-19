@@ -122,10 +122,10 @@ cc.Class({
 
         // var progressTimer = new cc.ProgressTimer(this.sgCountdown);
         // progressTimer.setName('progressTimer');
-        // progressTimer.setMidpoint(cc.p(0.5, 0.5));
+        // progressTimer.setMidpoint(cc.v2(0.5, 0.5));
         // progressTimer.setType(cc.ProgressTimer.Type.RADIAL);
         // this.playerInfo._sgNode.addChild(progressTimer);
-        // progressTimer.setPosition(cc.p(0, 0));
+        // progressTimer.setPosition(cc.v2(0, 0));
         // progressTimer.setPercentage(0);
 
         // return progressTimer;
@@ -159,9 +159,9 @@ cc.Class({
         newCard.init(card);
         newCard.reveal(show);
 
-        var startPos = cc.p(0, 0);
+        var startPos = cc.v2(0, 0);
         var index = this.actor.cards.length - 1;
-        var endPos = cc.p(this.cardSpace * index, 0);
+        var endPos = cc.v2(this.cardSpace * index, 0);
         newCard.node.setPosition(startPos);
 
         var moveAction = cc.moveTo(0.5, endPos);
