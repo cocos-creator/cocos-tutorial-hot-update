@@ -383,7 +383,10 @@ cc.Class({
 
     properties: {
         panel: UpdatePanel,
-        manifestUrl: cc.RawAsset,
+        manifestUrl: {
+            type: cc.Asset,
+            default: null
+        },
         updateUI: cc.Node,
         _updating: false,
         _canRetry: false,
@@ -519,7 +522,7 @@ cc.Class({
             return;
         }
         if (this._am.getState() === jsb.AssetsManager.State.UNINITED) {
-            this._am.loadLocalManifest(this.manifestUrl);
+            this._am.loadLocalManifest(this.manifestUrl.nativeUrl);
         }
         if (!this._am.getLocalManifest() || !this._am.getLocalManifest().isLoaded()) {
             this.panel.info.string = 'Failed to load local manifest ...';
@@ -538,7 +541,7 @@ cc.Class({
             cc.eventManager.addListener(this._updateListener, 1);
 
             if (this._am.getState() === jsb.AssetsManager.State.UNINITED) {
-                this._am.loadLocalManifest(this.manifestUrl);
+                this._am.loadLocalManifest(this.manifestUrl.nativeUrl);
             }
 
             this._failCount = 0;
@@ -591,9 +594,6 @@ cc.Class({
 
         // Init with empty manifest url for testing custom manifest
         this._am = new jsb.AssetsManager('', this._storagePath, this.versionCompareHandle);
-        if (!cc.sys.ENABLE_GC_FOR_NATIVE_OBJECTS) {
-            this._am.retain();
-        }
 
         var panel = this.panel;
         // Setup the verification callback, but we don't have md5 check function yet, so only print some message
@@ -634,9 +634,6 @@ cc.Class({
         if (this._updateListener) {
             cc.eventManager.removeListener(this._updateListener);
             this._updateListener = null;
-        }
-        if (this._am && !cc.sys.ENABLE_GC_FOR_NATIVE_OBJECTS) {
-            this._am.release();
         }
     }
 });

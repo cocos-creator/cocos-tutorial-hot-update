@@ -1,8 +1,9 @@
 {
   "appKey": "",
   "appSecret": "",
-  "encryptJs": true,
+  "encryptJs": false,
   "excludeScenes": [],
+  "fb-instant-games": {},
   "includeAnySDK": false,
   "includeSDKBox": false,
   "inlineSpriteFrames": true,
@@ -20,9 +21,21 @@
   },
   "packageName": "org.cocos2d.tutorialhotupdate",
   "privateKey": "",
+  "qqplay": {
+    "REMOTE_SERVER_ROOT": "",
+    "orientation": "portrait"
+  },
   "renderMode": "0",
   "startScene": "8a546935-70d4-42d2-a051-8d0e76f28008",
   "title": "tutorialhotupdate",
   "webOrientation": "auto",
-  "xxteaKey": "e8579297-5167-40"
+  "wechatgame": {
+    "REMOTE_SERVER_ROOT": "",
+    "appid": "wx6ac3f5090a6b99c5",
+    "isSubdomain": false,
+    "orientation": "portrait",
+    "subContext": ""
+  },
+  "xxteaKey": "e8579297-5167-40",
+  "zipCompressJs": true
 }
