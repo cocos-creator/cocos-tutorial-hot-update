@@ -1,24 +1,23 @@
-require = function e(t, n, r) {
+__require = function e(t, n, r) {
   function s(o, u) {
     if (!n[o]) {
       if (!t[o]) {
-        var a = "function" == typeof require && require;
+        var a = "function" == typeof __require && __require;
         if (!u && a) return a(o, !0);
         if (i) return i(o, !0);
-        var f = new Error("Cannot find module '" + o + "'");
-        throw f.code = "MODULE_NOT_FOUND", f;
+        throw new Error("Cannot find module '" + o + "'");
       }
-      var l = n[o] = {
+      var f = n[o] = {
         exports: {}
       };
-      t[o][0].call(l.exports, function(e) {
+      t[o][0].call(f.exports, function(e) {
         var n = t[o][1][e];
         return s(n || e);
-      }, l, l.exports, e, t, n, r);
+      }, f, f.exports, e, t, n, r);
     }
     return n[o].exports;
   }
-  var i = "function" == typeof require && require;
+  var i = "function" == typeof __require && __require;
   for (var o = 0; o < r.length; o++) s(r[o]);
   return s;
 }({
@@ -149,9 +148,9 @@ require = function e(t, n, r) {
         this.anchorCards.addChild(newCard.node);
         newCard.init(card);
         newCard.reveal(show);
-        var startPos = cc.p(0, 0);
+        var startPos = cc.v2(0, 0);
         var index = this.actor.cards.length - 1;
-        var endPos = cc.p(this.cardSpace * index, 0);
+        var endPos = cc.v2(this.cardSpace * index, 0);
         newCard.node.setPosition(startPos);
         var moveAction = cc.moveTo(.5, endPos);
         var callback = cc.callFunc(this._onDealEnd, this, this.cardSpace * index);
@@ -186,7 +185,7 @@ require = function e(t, n, r) {
         }
       },
       _updatePointPos: function _updatePointPos(xPos) {
-        this.cardInfo.setPositionX(xPos + 50);
+        this.cardInfo.x = xPos + 50;
       },
       showStakeChips: function showStakeChips(stake) {
         var chips = this.spChips;
@@ -207,7 +206,7 @@ require = function e(t, n, r) {
 
          case ActorPlayingState.Bust:
           var min = Utils.getMinMaxPoint(this.actor.cards).min;
-          this.labelCardInfo.string = "爆牌(" + min + ")";
+          this.labelCardInfo.string = "\u7206\u724c(" + min + ")";
           this.spCardInfo.spriteFrame = Game.instance.assetMng.texBust;
           this.cardInfo.active = true;
           this.animFX.show(true);
@@ -217,7 +216,7 @@ require = function e(t, n, r) {
 
          case ActorPlayingState.Stand:
           var max = Utils.getMinMaxPoint(this.actor.cards).max;
-          this.labelCardInfo.string = "停牌(" + max + ")";
+          this.labelCardInfo.string = "\u505c\u724c(" + max + ")";
           this.spCardInfo.spriteFrame = Game.instance.assetMng.texCardInfo;
           this.resetCountdown();
         }
@@ -363,27 +362,27 @@ require = function e(t, n, r) {
       properties: {
         winAudio: {
           default: null,
-          url: cc.AudioClip
+          type: cc.AudioClip
         },
         loseAudio: {
           default: null,
-          url: cc.AudioClip
+          type: cc.AudioClip
         },
         cardAudio: {
           default: null,
-          url: cc.AudioClip
+          type: cc.AudioClip
         },
         buttonAudio: {
           default: null,
-          url: cc.AudioClip
+          type: cc.AudioClip
         },
         chipsAudio: {
           default: null,
-          url: cc.AudioClip
+          type: cc.AudioClip
         },
         bgm: {
           default: null,
-          url: cc.AudioClip
+          type: cc.AudioClip
         }
       },
       playMusic: function playMusic() {
@@ -454,7 +453,7 @@ require = function e(t, n, r) {
         for (var i = 0; i < self.btnChips.length; ++i) registerBtn(i);
       },
       playAddChip: function playAddChip() {
-        var startPos = cc.p(50 * cc.randomMinus1To1(), 50 * cc.randomMinus1To1());
+        var startPos = cc.v2(2 * (Math.random() - .5) * 50, 2 * (Math.random() - .5) * 50);
         var chip = cc.instantiate(this.chipPrefab);
         this.anchorChipToss.addChild(chip);
         chip.setPosition(startPos);
@@ -769,7 +768,7 @@ require = function e(t, n, r) {
         if (this.totalChipsNum < delta) {
           console.log("not enough chips!");
           this.info.enabled = true;
-          this.info.string = "金币不足!";
+          this.info.string = "\u91d1\u5e01\u4e0d\u8db3!";
           return false;
         }
         this.totalChipsNum -= delta;
@@ -777,7 +776,7 @@ require = function e(t, n, r) {
         this.player.addStake(delta);
         this.audioMng.playChips();
         this.info.enabled = false;
-        this.info.string = "请下注";
+        this.info.string = "\u8bf7\u4e0b\u6ce8";
         return true;
       },
       resetStake: function resetStake() {
@@ -795,7 +794,7 @@ require = function e(t, n, r) {
           var anchor = this.playerAnchors[i];
           var switchSide = i > 2;
           anchor.addChild(playerNode);
-          playerNode.position = cc.p(0, 0);
+          playerNode.position = cc.v2(0, 0);
           var playerInfoPos = cc.find("anchorPlayerInfo", anchor).getPosition();
           var stakePos = cc.find("anchorStake", anchor).getPosition();
           var actorRenderer = playerNode.getComponent("ActorRenderer");
@@ -887,7 +886,7 @@ require = function e(t, n, r) {
           this.decks.reset();
           this.player.reset();
           this.dealer.reset();
-          this.info.string = "请下注";
+          this.info.string = "\u8bf7\u4e0b\u6ce8";
           this.inGameUI.showBetState();
           this.inGameUI.startCountdown();
           this.audioMng.resumeMusic();
@@ -919,7 +918,7 @@ require = function e(t, n, r) {
         },
         manifestUrl: {
           default: null,
-          url: cc.RawAsset
+          type: cc.Asset
         },
         percent: {
           default: null,
@@ -1028,17 +1027,9 @@ require = function e(t, n, r) {
         if (!cc.sys.isNative) return;
         var storagePath = (jsb.fileUtils ? jsb.fileUtils.getWritablePath() : "/") + "blackjack-remote-asset";
         cc.log("Storage path for remote asset : " + storagePath);
-        this._am = new jsb.AssetsManager(this.manifestUrl, storagePath);
-        this._am.retain();
+        this._am = new jsb.AssetsManager(this.manifestUrl.nativeUrl, storagePath);
         this._needUpdate = false;
-        if (this._am.getLocalManifest().isLoaded()) {
-          this._checkListener = new jsb.EventListenerAssetsManager(this._am, this.checkCb.bind(this));
-          cc.eventManager.addListener(this._checkListener, 1);
-          this._am.checkUpdate();
-        }
-      },
-      onDestroy: function onDestroy() {
-        this._am && this._am.release();
+        this._am.getLocalManifest().isLoaded();
       }
     });
     cc._RF.pop();
@@ -1186,31 +1177,31 @@ require = function e(t, n, r) {
     cc._RF.push(module, "4f9c5eXxqhHAKLxZeRmgHDB", "PlayerData");
     "use strict";
     var players = [ {
-      name: "燃烧吧，蛋蛋儿军",
+      name: "\u71c3\u70e7\u5427\uff0c\u86cb\u86cb\u513f\u519b",
       gold: 3e3,
       photoIdx: 0
     }, {
-      name: "地方政府",
+      name: "\u5730\u65b9\u653f\u5e9c",
       gold: 2e3,
       photoIdx: 1
     }, {
-      name: "手机超人",
+      name: "\u624b\u673a\u8d85\u4eba",
       gold: 1500,
       photoIdx: 2
     }, {
-      name: "天灵灵，地灵灵",
+      name: "\u5929\u7075\u7075\uff0c\u5730\u7075\u7075",
       gold: 500,
       photoIdx: 3
     }, {
-      name: "哟哟，切克闹",
+      name: "\u54df\u54df\uff0c\u5207\u514b\u95f9",
       gold: 9e3,
       photoIdx: 4
     }, {
-      name: "学姐不要死",
+      name: "\u5b66\u59d0\u4e0d\u8981\u6b7b",
       gold: 5e3,
       photoIdx: 5
     }, {
-      name: "提百万",
+      name: "\u63d0\u767e\u4e07",
       gold: 1e4,
       photoIdx: 6
     } ];
@@ -1523,9 +1514,9 @@ require = function e(t, n, r) {
         State.console = console;
         model = new State.StateMachine("root");
         var initial = new State.PseudoState("init-root", model, State.PseudoStateKind.Initial);
-        var bet = new State.State("下注", model);
-        playing = new State.State("已开局", model);
-        var settled = new State.State("结算", model);
+        var bet = new State.State("\u4e0b\u6ce8", model);
+        playing = new State.State("\u5df2\u5f00\u5c40", model);
+        var settled = new State.State("\u7ed3\u7b97", model);
         initial.to(bet);
         bet.to(playing).when(on("deal"));
         playing.to(settled).when(on("end"));
@@ -1542,10 +1533,10 @@ require = function e(t, n, r) {
         settled.exit(function() {
           target.onEndState(false);
         });
-        var initialP = new State.PseudoState("init 已开局", playing, State.PseudoStateKind.Initial);
-        var deal = new State.State("发牌", playing);
-        var playersTurn = new State.State("玩家决策", playing);
-        var dealersTurn = new State.State("庄家决策", playing);
+        var initialP = new State.PseudoState("init \u5df2\u5f00\u5c40", playing, State.PseudoStateKind.Initial);
+        var deal = new State.State("\u53d1\u724c", playing);
+        var playersTurn = new State.State("\u73a9\u5bb6\u51b3\u7b56", playing);
+        var dealersTurn = new State.State("\u5e84\u5bb6\u51b3\u7b56", playing);
         initialP.to(deal);
         deal.to(playersTurn).when(on("dealed"));
         playersTurn.to(dealersTurn).when(on("player acted"));
@@ -1666,14 +1657,14 @@ require = function e(t, n, r) {
       }();
       StateJS.Element = Element;
     })(StateJS || (StateJS = {}));
-    var __extends = function(d, b) {
+    var __extends = (void 0, function(d, b) {
       for (var p in b) b.hasOwnProperty(p) && (d[p] = b[p]);
       function __() {
         this.constructor = d;
       }
       __.prototype = b.prototype;
       d.prototype = new __();
-    };
+    });
     var StateJS;
     (function(StateJS) {
       var Region = function(_super) {
