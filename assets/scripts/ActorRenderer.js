@@ -208,7 +208,7 @@ cc.Class({
     },
 
     _updatePointPos: function (xPos) {
-        this.cardInfo.setPositionX(xPos + 50);
+        this.cardInfo.x = xPos + 50;
     },
 
     showStakeChips: function(stake) {

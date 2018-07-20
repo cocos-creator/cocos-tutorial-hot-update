@@ -148,10 +148,10 @@ cc.Class({
         this._needUpdate = false;
         if (this._am.getLocalManifest().isLoaded())
         {
-            this._checkListener = new jsb.EventListenerAssetsManager(this._am, this.checkCb.bind(this));
-            cc.eventManager.addListener(this._checkListener, 1);
+            // this._checkListener = new jsb.EventListenerAssetsManager(this._am, this.checkCb.bind(this));
+            // cc.eventManager.addListener(this._checkListener, 1);
 
-            this._am.checkUpdate();
+            // this._am.checkUpdate();
         }
     }
 });
