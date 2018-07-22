@@ -417,7 +417,7 @@ cc.Class({
                 return;
         }
         
-        cc.eventManager.removeListener(this._checkListener);
+        this._am.setEventCallback(null);
         this._checkListener = null;
         this._updating = false;
     },
@@ -474,13 +474,13 @@ cc.Class({
         }
 
         if (failed) {
-            cc.eventManager.removeListener(this._updateListener);
+            this._am.setEventCallback(null);
             this._updateListener = null;
             this._updating = false;
         }
 
         if (needRestart) {
-            cc.eventManager.removeListener(this._updateListener);
+            this._am.setEventCallback(null);
             this._updateListener = null;
             // Prepend the manifest's search path
             var searchPaths = jsb.fileUtils.getSearchPaths();
@@ -528,8 +528,7 @@ cc.Class({
             this.panel.info.string = 'Failed to load local manifest ...';
             return;
         }
-        this._checkListener = new jsb.EventListenerAssetsManager(this._am, this.checkCb.bind(this));
-        cc.eventManager.addListener(this._checkListener, 1);
+        this._am.setEventCallback(this.checkCb.bind(this));
 
         this._am.checkUpdate();
         this._updating = true;
@@ -537,8 +536,7 @@ cc.Class({
 
     hotUpdate: function () {
         if (this._am && !this._updating) {
-            this._updateListener = new jsb.EventListenerAssetsManager(this._am, this.updateCb.bind(this));
-            cc.eventManager.addListener(this._updateListener, 1);
+            this._am.setEventCallback(this.updateCb.bind(this));
 
             if (this._am.getState() === jsb.AssetsManager.State.UNINITED) {
                 this._am.loadLocalManifest(this.manifestUrl.nativeUrl);
@@ -632,7 +630,7 @@ cc.Class({
 
     onDestroy: function () {
         if (this._updateListener) {
-            cc.eventManager.removeListener(this._updateListener);
+            this._am.setEventCallback(null);
             this._updateListener = null;
         }
     }
