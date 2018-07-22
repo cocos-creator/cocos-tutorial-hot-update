@@ -486,7 +486,7 @@ cc.Class({
             var searchPaths = jsb.fileUtils.getSearchPaths();
             var newPaths = this._am.getLocalManifest().getSearchPaths();
             console.log(JSON.stringify(newPaths));
-            Array.prototype.unshift(searchPaths, newPaths);
+            Array.prototype.unshift.apply(searchPaths, newPaths);
             // This value will be retrieved and appended to the default search path during game startup,
             // please refer to samples/js-tests/main.js for detailed usage.
             // !!! Re-add the search paths in main.js is very important, otherwise, new scripts won't take effect.
