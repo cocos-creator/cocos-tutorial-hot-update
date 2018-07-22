@@ -101,15 +101,14 @@ window.boot = function () {
     cc.game.run(option, onStart);
 };
 
-require('src/settings.js');
-require('src/cocos2d-jsb.js');
-require('jsb-adapter/engine/index.js');
-
-if (cc.sys.isNative) { 
-    var hotUpdateSearchPaths = cc.sys.localStorage.getItem('HotUpdateSearchPaths'); 
-    if (hotUpdateSearchPaths) { 
+if (jsb) {
+    var hotUpdateSearchPaths = localStorage.getItem('HotUpdateSearchPaths');
+    if (hotUpdateSearchPaths) {
         jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths)); 
     }
 }
 
+require('src/settings.js');
+require('src/cocos2d-jsb.js');
+require('jsb-adapter/engine/index.js');
 window.boot();
