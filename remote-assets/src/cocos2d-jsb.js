@@ -21218,16 +21218,14 @@
       "../platform/js": 174
     } ],
     121: [ (function(require, module, exports) {
-      var sys = require("../platform/CCSys");
       var urlAppendTimestamp;
       true;
-      module.exports = function(item, callback) {
+      module.exports = function(item) {
         var url = item.url;
         var result = jsb.fileUtils.getStringFromFile(url);
         return "string" === (__typeofVal = typeof result, "object" === __typeofVal ? __realTypeOfObj(result) : __typeofVal) && result ? result : new Error("Download text failed: " + url);
       };
     }), {
-      "../platform/CCSys": 163,
       "./utils": 123
     } ],
     122: [ (function(require, module, exports) {

@@ -1009,7 +1009,7 @@ __require = function e(t, n, r) {
           this._am.setEventCallback(null);
           var searchPaths = jsb.fileUtils.getSearchPaths();
           var newPaths = this._am.getLocalManifest().getSearchPaths();
-          Array.prototype.unshift(searchPaths, newPaths);
+          Array.prototype.unshift.apply(searchPaths, newPaths);
           cc.sys.localStorage.setItem("HotUpdateSearchPaths", JSON.stringify(searchPaths));
           jsb.fileUtils.setSearchPaths(searchPaths);
           cc.game.restart();
