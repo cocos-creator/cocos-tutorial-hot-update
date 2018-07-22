@@ -22,21 +22,21 @@ cc.Class({
         {
             case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:
                 cc.log("No local manifest file found, hot update skipped.");
-                cc.eventManager.removeListener(this._checkListener);
+                this._am.setEventCallback(null);
                 break;
             case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:
             case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST:
                 cc.log("Fail to download manifest file, hot update skipped.");
-                cc.eventManager.removeListener(this._checkListener);
+                this._am.setEventCallback(null);
                 break;
             case jsb.EventAssetsManager.ALREADY_UP_TO_DATE:
                 cc.log("Already up to date with the latest remote version.");
-                cc.eventManager.removeListener(this._checkListener);
+                this._am.setEventCallback(null);
                 break;
             case jsb.EventAssetsManager.NEW_VERSION_FOUND:
                 this._needUpdate = true;
                 this.updatePanel.active = true;
-                cc.eventManager.removeListener(this._checkListener);
+                this._am.setEventCallback(null);
                 break;
             default:
                 break;
@@ -103,12 +103,12 @@ cc.Class({
         }
 
         if (failed) {
-            cc.eventManager.removeListener(this._updateListener);
+            this._am.setEventCallback(null);
             this.updatePanel.active = false;
         }
 
         if (needRestart) {
-            cc.eventManager.removeListener(this._updateListener);
+            this._am.setEventCallback(null);
             // Prepend the manifest's search path
             var searchPaths = jsb.fileUtils.getSearchPaths();
             var newPaths = this._am.getLocalManifest().getSearchPaths();
@@ -125,9 +125,7 @@ cc.Class({
 
     hotUpdate: function () {
         if (this._am && this._needUpdate) {
-            this._updateListener = new jsb.EventListenerAssetsManager(this._am, this.updateCb.bind(this));
-            cc.eventManager.addListener(this._updateListener, 1);
-
+            this._am.setEventCallback(this.updateCb.bind(this));
             this._failCount = 0;
             this._am.update();
         }
@@ -148,10 +146,8 @@ cc.Class({
         this._needUpdate = false;
         if (this._am.getLocalManifest().isLoaded())
         {
-            // this._checkListener = new jsb.EventListenerAssetsManager(this._am, this.checkCb.bind(this));
-            // cc.eventManager.addListener(this._checkListener, 1);
-
-            // this._am.checkUpdate();
+            this._am.setEventCallback(this.checkCb.bind(this));
+            this._am.checkUpdate();
         }
     }
 });
