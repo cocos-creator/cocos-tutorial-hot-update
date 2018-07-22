@@ -930,24 +930,24 @@ __require = function e(t, n, r) {
         switch (event.getEventCode()) {
          case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:
           cc.log("No local manifest file found, hot update skipped.");
-          cc.eventManager.removeListener(this._checkListener);
+          this._am.setEventCallback(null);
           break;
 
          case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:
          case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST:
           cc.log("Fail to download manifest file, hot update skipped.");
-          cc.eventManager.removeListener(this._checkListener);
+          this._am.setEventCallback(null);
           break;
 
          case jsb.EventAssetsManager.ALREADY_UP_TO_DATE:
           cc.log("Already up to date with the latest remote version.");
-          cc.eventManager.removeListener(this._checkListener);
+          this._am.setEventCallback(null);
           break;
 
          case jsb.EventAssetsManager.NEW_VERSION_FOUND:
           this._needUpdate = true;
           this.updatePanel.active = true;
-          cc.eventManager.removeListener(this._checkListener);
+          this._am.setEventCallback(null);
         }
       },
       updateCb: function updateCb(event) {
@@ -1002,11 +1002,11 @@ __require = function e(t, n, r) {
           cc.log(event.getMessage());
         }
         if (failed) {
-          cc.eventManager.removeListener(this._updateListener);
+          this._am.setEventCallback(null);
           this.updatePanel.active = false;
         }
         if (needRestart) {
-          cc.eventManager.removeListener(this._updateListener);
+          this._am.setEventCallback(null);
           var searchPaths = jsb.fileUtils.getSearchPaths();
           var newPaths = this._am.getLocalManifest().getSearchPaths();
           Array.prototype.unshift(searchPaths, newPaths);
@@ -1017,8 +1017,7 @@ __require = function e(t, n, r) {
       },
       hotUpdate: function hotUpdate() {
         if (this._am && this._needUpdate) {
-          this._updateListener = new jsb.EventListenerAssetsManager(this._am, this.updateCb.bind(this));
-          cc.eventManager.addListener(this._updateListener, 1);
+          this._am.setEventCallback(this.updateCb.bind(this));
           this._failCount = 0;
           this._am.update();
         }
@@ -1029,7 +1028,10 @@ __require = function e(t, n, r) {
         cc.log("Storage path for remote asset : " + storagePath);
         this._am = new jsb.AssetsManager(this.manifestUrl.nativeUrl, storagePath);
         this._needUpdate = false;
-        this._am.getLocalManifest().isLoaded();
+        if (this._am.getLocalManifest().isLoaded()) {
+          this._am.setEventCallback(this.checkCb.bind(this));
+          this._am.checkUpdate();
+        }
       }
     });
     cc._RF.pop();

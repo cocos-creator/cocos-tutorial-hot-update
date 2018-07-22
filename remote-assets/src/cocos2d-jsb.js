@@ -113,7 +113,7 @@
         "1618": "cc.Node.runAction(): action must be non-null",
         "1619": "callback function must be non-null",
         "1620": "interval must be positive",
-        "1622": "_ccsg.Node._requestDirtyFlag: failed to satisfy the request, key (%s) for flag have already been taken",
+        "1622": "cc.Node._requestDirtyFlag: failed to satisfy the request, key (%s) for flag have already been taken",
         "1623": "Set '%s' to normal node (not persist root node).",
         "1624": "Replacing with the same sgNode",
         "1625": "The replacement sgNode should not contain any child.",
@@ -275,7 +275,7 @@
         "3908": "animation not added or already removed",
         "3912": "already-playing",
         "4000": "Sorry, the cc.Font has been modified from Raw Asset to Asset. Please load the font asset before using.",
-        "4002": "_ccsg.Label._initBMFontWithString(): re-init is no longer supported",
+        "4002": "cc.Label._initBMFontWithString(): re-init is no longer supported",
         "4003": "Label font size can't be shirnked less than 0!",
         "4004": "force notify all fonts loaded!",
         "4011": "Property spriteFrame of Font '%s' is invalid. Using system font instead.",
@@ -355,13 +355,13 @@
         "5902": "cc.MotionStreak.setOpacity has not been supported.",
         "6000": "Custom should not be false if file is not specified.",
         "6001": "The new %s must not be NaN",
-        "6008": "_ccsg.ParticleSystem.initWithFile(): Particles: file not found",
-        "6009": "_ccsg.ParticleSystem.initWithDictionary(): Invalid emitterType in config file",
-        "6010": "_ccsg.ParticleSystem: error decoding or ungzipping textureImageData",
-        "6011": "_ccsg.ParticleSystem: unknown image format with Data",
-        "6012": "_ccsg.ParticleSystem.initWithDictionary() : error loading the texture",
+        "6008": "cc.ParticleSystem.initWithFile(): Particles: file not found",
+        "6009": "cc.ParticleSystem.initWithDictionary(): Invalid emitterType in config file",
+        "6010": "cc.ParticleSystem: error decoding or ungzipping textureImageData",
+        "6011": "cc.ParticleSystem: unknown image format with Data",
+        "6012": "cc.ParticleSystem.initWithDictionary() : error loading the texture",
         "6013": "Particle system: not enough memory",
-        "6015": "_ccsg.ParticleSystem.setDisplayFrame(): QuadParticle only supports SpriteFrames with no offsets",
+        "6015": "cc.ParticleSystem.setDisplayFrame(): QuadParticle only supports SpriteFrames with no offsets",
         "6017": "Incomplete or corrupt PNG file",
         "6018": "Invalid filter algorithm: %s",
         "6019": "Invalid byte order value.",
@@ -409,16 +409,16 @@
         "7201": "Method 'initWithXML' is no effect now, please set property 'tmxAsset' instead.",
         "7202": "Add component TiledLayer into node failed.",
         "7203": "Property 'mapLoaded' is unused now. Please write the logic to the callback 'start'.",
-        "7204": "_ccsg.TMXLayer.getTileAt(): TMXLayer: the tiles map has been released",
-        "7205": "_ccsg.TMXLayer.getTileGIDAt(): TMXLayer: the tiles map has been released",
-        "7206": "_ccsg.TMXLayer.setTileGID(): TMXLayer: the tiles map has been released",
-        "7207": "_ccsg.TMXLayer.setTileGID(): invalid gid: %s",
-        "7208": "_ccsg.TMXLayer.getTileFlagsAt(): TMXLayer: the tiles map has been released",
-        "7209": "_ccsg.TMXLayer.removeTileAt(): TMXLayer: the tiles map has been released",
+        "7204": "cc.TMXLayer.getTileAt(): TMXLayer: the tiles map has been released",
+        "7205": "cc.TMXLayer.getTileGIDAt(): TMXLayer: the tiles map has been released",
+        "7206": "cc.TMXLayer.setTileGID(): TMXLayer: the tiles map has been released",
+        "7207": "cc.TMXLayer.setTileGID(): invalid gid: %s",
+        "7208": "cc.TMXLayer.getTileFlagsAt(): TMXLayer: the tiles map has been released",
+        "7209": "cc.TMXLayer.removeTileAt(): TMXLayer: the tiles map has been released",
         "7210": "TMX Hexa zOrder not supported",
         "7211": "TMX invalid value",
-        "7212": "_ccsg.TMXTiledMap.initWithTMXFile(): Map not found. Please check the filename.",
-        "7213": "_ccsg.TMXTiledMap.initWithXML(): Map not found. Please check the filename.",
+        "7212": "cc.TMXTiledMap.initWithTMXFile(): Map not found. Please check the filename.",
+        "7213": "cc.TMXTiledMap.initWithXML(): Map not found. Please check the filename.",
         "7214": "propertiesForGID is deprecated. Please use getPropertiesForGID instead.",
         "7215": "cocos2d: Warning: TMX Layer %s has no tiles",
         "7216": "cocos2d: TMXFormat: Unsupported TMX version: %s",
@@ -427,19 +427,19 @@
         "7219": "cc.TMXMapInfo.parseXMLFile(): Only base64 and/or gzip/zlib maps are supported",
         "7221": "cc.TMXMapInfo.parseXMLFile(): Texture '%s' not found.",
         "7222": "Parse %s failed.",
-        "7223": "_ccsg.TMXLayer.setTileGID(): pos should be non-null",
-        "7224": "_ccsg.TMXTiledMap.getLayer(): layerName should be non-null or non-empty string.",
-        "7225": "_ccsg.TMXTiledMap.getObjectGroup(): groupName should be non-null or non-empty string.",
-        "7226": "_ccsg.TMXLayer.getTileAt(): pos should be non-null",
-        "7227": "_ccsg.TMXLayer.getTileAt(): invalid position",
-        "7228": "_ccsg.TMXLayer.getTileGIDAt(): pos should be non-null",
-        "7229": "_ccsg.TMXLayer.getTileGIDAt(): invalid position",
-        "7230": "_ccsg.TMXLayer.setTileGID(): pos should be non-null",
-        "7231": "_ccsg.TMXLayer.setTileGID(): invalid position",
-        "7232": "_ccsg.TMXLayer.getTileFlagsAt(): pos should be non-null",
-        "7233": "_ccsg.TMXLayer.getTileFlagsAt(): invalid position",
-        "7234": "_ccsg.TMXLayer.removeTileAt(): pos should be non-null",
-        "7235": "_ccsg.TMXLayer.removeTileAt(): invalid position",
+        "7223": "cc.TMXLayer.setTileGID(): pos should be non-null",
+        "7224": "cc.TMXTiledMap.getLayer(): layerName should be non-null or non-empty string.",
+        "7225": "cc.TMXTiledMap.getObjectGroup(): groupName should be non-null or non-empty string.",
+        "7226": "cc.TMXLayer.getTileAt(): pos should be non-null",
+        "7227": "cc.TMXLayer.getTileAt(): invalid position",
+        "7228": "cc.TMXLayer.getTileGIDAt(): pos should be non-null",
+        "7229": "cc.TMXLayer.getTileGIDAt(): invalid position",
+        "7230": "cc.TMXLayer.setTileGID(): pos should be non-null",
+        "7231": "cc.TMXLayer.setTileGID(): invalid position",
+        "7232": "cc.TMXLayer.getTileFlagsAt(): pos should be non-null",
+        "7233": "cc.TMXLayer.getTileFlagsAt(): invalid position",
+        "7234": "cc.TMXLayer.removeTileAt(): pos should be non-null",
+        "7235": "cc.TMXLayer.removeTileAt(): invalid position",
         "7401": "Failed to set _defaultArmatureIndex for '%s' because the index is out of range.",
         "7402": "Failed to set _animationIndex for '%s' because the index is out of range.",
         "7501": "Failed to set _defaultSkinIndex for '%s' because the index is out of range.",
@@ -7705,7 +7705,7 @@
             }
           }
         },
-        ctor: function(name) {
+        ctor: function() {
           this._reorderChildDirty = false;
           this._widget = null;
           this._renderComponent = null;
@@ -18395,7 +18395,7 @@
           }
         },
         pauseTarget: function(node, recursive) {
-          if (!(node instanceof cc._BaseNode || node instanceof _ccsg.Node)) {
+          if (!(node instanceof cc._BaseNode)) {
             cc.warnID(3506);
             return;
           }
@@ -18407,7 +18407,7 @@
           }
         },
         resumeTarget: function(node, recursive) {
-          if (!(node instanceof cc._BaseNode || node instanceof _ccsg.Node)) {
+          if (!(node instanceof cc._BaseNode)) {
             cc.warnID(3506);
             return;
           }
@@ -18747,7 +18747,7 @@
         },
         addListener: function(listener, nodeOrPriority) {
           cc.assertID(listener && nodeOrPriority, 3503);
-          if (!(cc.js.isNumber(nodeOrPriority) || nodeOrPriority instanceof cc._BaseNode || nodeOrPriority instanceof _ccsg.Node)) {
+          if (!(cc.js.isNumber(nodeOrPriority) || nodeOrPriority instanceof cc._BaseNode)) {
             cc.warnID(3506);
             return;
           }
@@ -18851,7 +18851,7 @@
         },
         removeListeners: function(listenerType, recursive) {
           var i, _t = this;
-          if (!(cc.js.isNumber(listenerType) || listenerType instanceof cc._BaseNode || listenerType instanceof _ccsg.Node)) {
+          if (!(cc.js.isNumber(listenerType) || listenerType instanceof cc._BaseNode)) {
             cc.warnID(3506);
             return;
           }
@@ -22378,7 +22378,7 @@
               return this._enabled;
             },
             set: function() {
-              cc.warnID("8200");
+              cc.warnID(8200);
             },
             visible: false,
             override: true
@@ -40953,6 +40953,7 @@
             _pass.setStencilFront(func, ref, stencilMask, failOp, zFailOp, zPassOp, writeMask);
             _pass.setStencilBack(func, ref, stencilMask, failOp, zFailOp, zPassOp, writeMask);
           }
+          return effect;
         },
         pushMask: function(mask) {
           this._maskStack.length + 1 > this._maxLevel && cc.errorID(9e3, this._maxLevel);
@@ -44492,8 +44493,8 @@
               }
               if (!self.isValid) return;
               self._plistFile = file.nativeUrl;
-              self._custom ? self._initTextureWithDictionary(content) : self._initWithDictionary(content);
-              file.texture && (self.spriteFrame = new cc.SpriteFrame(file.texture));
+              self._custom || self._initWithDictionary(content);
+              self.spriteFrame || (file.texture ? self.spriteFrame = new cc.SpriteFrame(file.texture) : self._custom && self._initTextureWithDictionary(content));
             }));
           }
         },
@@ -44598,9 +44599,9 @@
           this._initTextureWithDictionary(dict);
           return true;
         },
-        _onTextureLoaded: function(event) {
+        _onTextureLoaded: function() {
           this._texture = this._spriteFrame.getTexture();
-          this._renderData && (this._renderData.uvDirty = true);
+          this._simulator.updateUVs(true);
           this._activateMaterial();
         },
         _applySpriteFrame: function(oldFrame) {
@@ -45202,12 +45203,14 @@
           particle.degreesPerSecond = misc.degreesToRadians(psys.rotatePerS + psys.rotatePerSVar * (Math.random() - .5) * 2);
         }
       };
-      Simulator.prototype.updateUVs = function(particleCount) {
+      Simulator.prototype.updateUVs = function(force) {
+        var particleCount = this.particles.length;
         if (this.sys._buffer && this.sys._spriteFrame) {
           var FLOAT_PER_PARTICLE = 4 * this.sys._vertexFormat._bytes / 4;
           var vbuf = this.sys._buffer._vData;
           var uv = this.sys._spriteFrame.uv;
-          for (var i = this._uvFilled; i < particleCount; i++) {
+          var start = force ? 0 : this._uvFilled;
+          for (var i = start; i < particleCount; i++) {
             var offset = i * FLOAT_PER_PARTICLE;
             vbuf[offset + 2] = uv[0];
             vbuf[offset + 3] = uv[1];
@@ -45281,7 +45284,7 @@
         var particleCount = particles.length;
         buffer.reset();
         buffer.request(4 * particleCount, 6 * particles.length);
-        particleCount > this._uvFilled && this.updateUVs(particleCount);
+        particleCount > this._uvFilled && this.updateUVs();
         var particleIdx = 0;
         while (particleIdx < particles.length) {
           _tpa.x = _tpa.y = _tpb.x = _tpb.y = _tpc.x = _tpc.y = 0;
@@ -45976,7 +45979,7 @@
           return xy;
         },
         setTileGIDAt: function(gid, posOrX, flagsOrY, flags) {
-          if (void 0 === posOrX) throw new Error("_ccsg.TMXLayer.setTileGID(): pos should be non-null");
+          if (void 0 === posOrX) throw new Error("cc.TiledLayer.setTileGIDAt(): pos should be non-null");
           var pos = void 0;
           if (void 0 === flags && posOrX instanceof cc.Vec2) {
             pos = posOrX;
@@ -45984,7 +45987,7 @@
           } else pos = cc.v2(posOrX, flagsOrY);
           pos.x = Math.floor(pos.x);
           pos.y = Math.floor(pos.y);
-          if (this._isInvalidPosition(pos)) throw new Error("CCTiledLayer.setTileGID(): invalid position");
+          if (this._isInvalidPosition(pos)) throw new Error("cc.TiledLayer.setTileGIDAt(): invalid position");
           if (!this._tiles) {
             cc.logID(7206);
             return;
@@ -46006,13 +46009,13 @@
           idx < this._tiles.length && (this._tiles[idx] = gid);
         },
         getTileGIDAt: function(pos, y) {
-          if (void 0 === pos) throw new Error("_ccsg.TMXLayer.getTileGIDAt(): pos should be non-null");
+          if (void 0 === pos) throw new Error("cc.TiledLayer.getTileGIDAt(): pos should be non-null");
           var x = pos;
           if (void 0 === y) {
             x = pos.x;
             y = pos.y;
           }
-          if (this._isInvalidPosition(x, y)) throw new Error("_ccsg.TMXLayer.getTileGIDAt(): invalid position");
+          if (this._isInvalidPosition(x, y)) throw new Error("cc.TiledLayer.getTileGIDAt(): invalid position");
           if (!this._tiles) {
             cc.logID(7205);
             return null;
@@ -65311,7 +65314,7 @@
               var primaryPair = this.m_pairBuffer[i];
               var userDataA = primaryPair.proxyA.userData;
               var userDataB = primaryPair.proxyB.userData;
-              callback(userDataA, userDataB);
+              userDataA && userDataB && callback(userDataA, userDataB);
               ++i;
               while (i < this.m_pairCount) {
                 var pair = this.m_pairBuffer[i];
