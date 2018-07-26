@@ -366,7 +366,12 @@ cc.Class({
             return;
         }
         if (this._am.getState() === jsb.AssetsManager.State.UNINITED) {
-            this._am.loadLocalManifest(this.manifestUrl.nativeUrl);
+            // Resolve md5 url
+            var url = this.manifestUrl.nativeUrl;
+            if (cc.loader.md5Pipe) {
+                url = cc.loader.md5Pipe.transformURL(url);
+            }
+            this._am.loadLocalManifest(url);
         }
         if (!this._am.getLocalManifest() || !this._am.getLocalManifest().isLoaded()) {
             this.panel.info.string = 'Failed to load local manifest ...';
@@ -383,7 +388,12 @@ cc.Class({
             this._am.setEventCallback(this.updateCb.bind(this));
 
             if (this._am.getState() === jsb.AssetsManager.State.UNINITED) {
-                this._am.loadLocalManifest(this.manifestUrl.nativeUrl);
+                // Resolve md5 url
+                var url = this.manifestUrl.nativeUrl;
+                if (cc.loader.md5Pipe) {
+                    url = cc.loader.md5Pipe.transformURL(url);
+                }
+                this._am.loadLocalManifest(url);
             }
 
             this._failCount = 0;
