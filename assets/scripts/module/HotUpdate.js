@@ -141,7 +141,12 @@ cc.Class({
         cc.log('Storage path for remote asset : ' + storagePath);
 
         // cc.log('Local manifest URL : ' + this.manifestUrl.nativeUrl);
-        this._am = new jsb.AssetsManager(this.manifestUrl.nativeUrl, storagePath);
+        // Resolve md5 url 
+        var url = this.manifestUrl.nativeUrl;
+        if (cc.loader.md5Pipe) {
+            url = cc.loader.md5Pipe.transformURL(url);
+        }
+        this._am = new jsb.AssetsManager(url, storagePath);
 
         this._needUpdate = false;
         if (this._am.getLocalManifest().isLoaded())
