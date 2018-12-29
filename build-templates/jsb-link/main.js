@@ -110,5 +110,5 @@ if (jsb) {
 
 require('src/settings.js');
 require('src/cocos2d-jsb.js');
-require('jsb-adapter/engine/index.js');
+require('jsb-adapter/jsb-engine.js');
 window.boot();
