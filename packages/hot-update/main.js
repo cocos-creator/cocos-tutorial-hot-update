@@ -22,17 +22,16 @@ module.exports = {
                 }
 
                 var newStr =
-                    "(function () { \n"+
-                    "\n"+
-                    "    if (cc.sys.isNative) { \n" +
-                    "        var hotUpdateSearchPaths = cc.sys.localStorage.getItem('HotUpdateSearchPaths'); \n" +
-                    "        if (hotUpdateSearchPaths) { \n" +
-                    "            jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths)); \n" +
-                    "        }\n" +
-                    "    }";
-
-                var newData = data.replace("(function () {", newStr);
-                Fs.writeFile(url, newData, function (error) {
+                "(function () {\n" +
+                "    if (typeof window.jsb === 'object') {\n" +
+                "        var hotUpdateSearchPaths = localStorage.getItem('HotUpdateSearchPaths');\n" +
+                "        if (hotUpdateSearchPaths) {\n" +
+                "            jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths));\n" +
+                "        }\n" +
+                "    }\n" +
+                "})();\n";
+                newStr += data;
+                Fs.writeFile(url, newStr, function (error) {
                     if (err) {
                         throw err;
                     }

@@ -1,4 +1,11 @@
 window.boot = function () {
+    if (typeof window.jsb === 'object') {
+        var hotUpdateSearchPaths = localStorage.getItem('HotUpdateSearchPaths');
+        if (hotUpdateSearchPaths) {
+            jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths)); 
+        }
+    }
+
     var settings = window._CCSettings;
     window._CCSettings = undefined;
 
@@ -100,13 +107,6 @@ window.boot = function () {
 
     cc.game.run(option, onStart);
 };
-
-if (jsb) {
-    var hotUpdateSearchPaths = localStorage.getItem('HotUpdateSearchPaths');
-    if (hotUpdateSearchPaths) {
-        jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths)); 
-    }
-}
 
 require('src/settings.js');
 require('src/cocos2d-jsb.js');
