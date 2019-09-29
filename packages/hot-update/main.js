@@ -22,12 +22,14 @@ module.exports = {
                 }
 
                 var newStr =
-                "if (jsb) {\n" +
-                "   var hotUpdateSearchPaths = localStorage.getItem('HotUpdateSearchPaths');\n" +
-                "   if (hotUpdateSearchPaths) {\n" +
-                "       jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths));\n" +
+                "(function () {\n" +
+                "   if (typeof window.jsb === 'object') {\n" +
+                "      var hotUpdateSearchPaths = localStorage.getItem('HotUpdateSearchPaths');\n" +
+                "      if (hotUpdateSearchPaths) {\n" +
+                "           jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths));\n" +
+                "      }\n" +
                 "   }\n" +
-                "}\n";
+                "})();\n";
                 newStr += data;
                 Fs.writeFile(url, newStr, function (error) {
                     if (err) {
