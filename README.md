@@ -82,8 +82,11 @@ Manifest 文件中包含以下几个重要信息：
 ### 打包原生版本
 
 下载完成范例工程后，可以用 Cocos Creator 直接打开这个工程。打开`构建发布`面板，构建原生版本，建议使用 Windows / Mac 来测试。
+**注意**：
+ - 构建时请不要勾选 MD5 Cache，否则会导致热更新无效。
+ - 并且应该确保在工程目录的 packages 文件夹里导入 hot-update 编辑器插件（范例工程里已经导入了该插件）
 
-构建成功原生版本之后，打开原生发布包的地址，给 `main.js` 附加上搜索路径设置的逻辑：
+该编辑器插件会在每次构建结束后，自动给 `main.js` 附加上搜索路径设置的逻辑：
 
 ```
 // 在 main.js 的开头添加如下代码
@@ -97,8 +100,6 @@ Manifest 文件中包含以下几个重要信息：
 })();
 ```
 
-注意，每次使用 Cocos Creator 构建后，都需要重新修改 `main.js`。  
-或者在你的项目里使用 packages 目录下的 hot-update 插件，该插件会在每次构建结束后自动在 `main.js` 文件开头添加搜索路径设置的逻辑。
 
 这一步是必须要做的原因是，热更新的本质是用远程下载的文件取代原始游戏包中的文件。Cocos2d-x 的搜索路径恰好满足这个需求，它可以用来指定远程包的下载地址作为默认的搜索路径，这样游戏运行过程中就会使用下载好的远程版本。另外，这里搜索路径是在上一次更新的过程中使用 `cc.sys.localStorage`（它符合 WEB 标准的 [Local Storage API](https://developer.mozilla.org/en/docs/Web/API/Window/localStorage)）固化保存在用户机器上，`HotUpdateSearchPaths` 这个键值是在 `HotUpdate.js` 中指定的，保存和读取过程使用的名字必须匹配。
 
