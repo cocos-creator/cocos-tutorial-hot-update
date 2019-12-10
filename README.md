@@ -87,15 +87,18 @@ Manifest 文件中包含以下几个重要信息：
 
 ```
 // 在 main.js 的开头添加如下代码
-if (cc.sys.isNative) {
-    var hotUpdateSearchPaths = cc.sys.localStorage.getItem('HotUpdateSearchPaths');
-    if (hotUpdateSearchPaths) {
-        jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths));
+(function () {
+    if (typeof window.jsb === 'object') {
+        var hotUpdateSearchPaths = localStorage.getItem('HotUpdateSearchPaths');
+        if (hotUpdateSearchPaths) {
+            jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths));
+        }
     }
-}
+})();
 ```
 
-或者直接使用项目仓库根目录下的 `main.js` 覆盖原生打包文件夹内的 `main.js`。注意，每次使用 Cocos Creator 构建后，都需要重新修改 `main.js`。
+注意，每次使用 Cocos Creator 构建后，都需要重新修改 `main.js`。  
+或者在你的项目里使用 packages 目录下的 hot-update 插件，该插件会在每次构建结束后自动在 `main.js` 文件开头添加搜索路径设置的逻辑。
 
 这一步是必须要做的原因是，热更新的本质是用远程下载的文件取代原始游戏包中的文件。Cocos2d-x 的搜索路径恰好满足这个需求，它可以用来指定远程包的下载地址作为默认的搜索路径，这样游戏运行过程中就会使用下载好的远程版本。另外，这里搜索路径是在上一次更新的过程中使用 `cc.sys.localStorage`（它符合 WEB 标准的 [Local Storage API](https://developer.mozilla.org/en/docs/Web/API/Window/localStorage)）固化保存在用户机器上，`HotUpdateSearchPaths` 这个键值是在 `HotUpdate.js` 中指定的，保存和读取过程使用的名字必须匹配。
 
@@ -111,4 +114,4 @@ if (cc.sys.isNative) {
 
 ## 参考
 
-1. [资源管理器 Assets Manager 文档](http://www.cocos.com/doc/article/index?type=cocos2d-x&url=/doc/cocos-docs-master/manual/framework/html5/v3/assets-manager/zh.md)
+[资源管理器 Assets Manager 文档](http://www.cocos.com/doc/article/index?type=cocos2d-x&url=/doc/cocos-docs-master/manual/framework/html5/v3/assets-manager/zh.md)
