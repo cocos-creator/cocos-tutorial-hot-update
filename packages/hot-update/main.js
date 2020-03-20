@@ -26,7 +26,9 @@ module.exports = {
                 "    if (typeof window.jsb === 'object') {\n" +
                 "        var hotUpdateSearchPaths = localStorage.getItem('HotUpdateSearchPaths');\n" +
                 "        if (hotUpdateSearchPaths) {\n" +
-                "            jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths));\n" +
+                "            var paths = JSON.parse(hotUpdateSearchPaths);\n" +                
+                "            jsb.AssetsManager.checkFinish && jsb.AssetsManager.checkFinish(paths[0]);\n" +
+                "            jsb.fileUtils.setSearchPaths(paths);\n" +
                 "        }\n" +
                 "    }\n" +
                 "})();\n";
