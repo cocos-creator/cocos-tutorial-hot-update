@@ -3,6 +3,42 @@
 var Fs = require("fire-fs");
 var Path = require("fire-path");
 
+var inject_script = `
+(function () {
+    if (typeof window.jsb === 'object') {
+        var hotUpdateSearchPaths = localStorage.getItem('HotUpdateSearchPaths');
+        if (hotUpdateSearchPaths) {
+            var paths = JSON.parse(hotUpdateSearchPaths);
+            jsb.fileUtils.setSearchPaths(paths);
+
+            var fileList = [];
+            var storagePath = paths[0] || '';
+            var tempPath = storagePath + '_temp/';
+            var baseOffset = tempPath.length;
+
+            if (jsb.fileUtils.isDirectoryExist(tempPath) && !jsb.fileUtils.isFileExist(tempPath + 'project.manifest.temp')) {
+                jsb.fileUtils.listFilesRecursively(tempPath, fileList);
+                fileList.forEach(srcPath => {
+                    var relativePath = srcPath.substr(baseOffset);
+                    var dstPath = storagePath + relativePath;
+
+                    if (srcPath[srcPath.length] == '/') {
+                        cc.fileUtils.createDirectory(dstPath)
+                    }
+                    else {
+                        if (cc.fileUtils.isFileExist(dstPath)) {
+                            cc.fileUtils.removeFile(dstPath)
+                        }
+                        cc.fileUtils.renameFile(srcPath, dstPath);
+                    }
+                })
+                cc.fileUtils.removeDirectory(tempPath);
+            }
+        }
+    }
+})();
+`;
+
 module.exports = {
     load: function () {
         // 当 package 被正确加载的时候执行
@@ -21,18 +57,7 @@ module.exports = {
                     throw err;
                 }
 
-                var newStr =
-                "(function () {\n" +
-                "    if (typeof window.jsb === 'object') {\n" +
-                "        var hotUpdateSearchPaths = localStorage.getItem('HotUpdateSearchPaths');\n" +
-                "        if (hotUpdateSearchPaths) {\n" +
-                "            var paths = JSON.parse(hotUpdateSearchPaths);\n" +                
-                "            jsb.AssetsManager.checkFinish && jsb.AssetsManager.checkFinish(paths[0]);\n" +
-                "            jsb.fileUtils.setSearchPaths(paths);\n" +
-                "        }\n" +
-                "    }\n" +
-                "})();\n";
-                newStr += data;
+                var newStr = inject_script + data;
                 Fs.writeFile(url, newStr, function (error) {
                     if (err) {
                         throw err;
