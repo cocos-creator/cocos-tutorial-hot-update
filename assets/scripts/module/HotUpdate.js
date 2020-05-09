@@ -252,7 +252,7 @@ cc.Class({
                 this.panel.info.string = "Already up to date with the latest remote version.";
                 break;
             case jsb.EventAssetsManager.NEW_VERSION_FOUND:
-                this.panel.info.string = 'New version found, please try to update.';
+                this.panel.info.string = 'New version found, please try to update. (' + this._am.getTotalBytes() + ')';
                 this.panel.checkBtn.active = false;
                 this.panel.fileProgress.progress = 0;
                 this.panel.byteProgress.progress = 0;
