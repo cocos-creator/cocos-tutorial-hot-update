@@ -35,15 +35,13 @@ Manifest 文件中包含以下几个重要信息：
 
 ## 在 Cocos Creator 项目中支持热更新
 
-在这篇教程中，将提出一种针对 Cocos Creator 项目可行的热更新方案，不过我们将在 Cocos2d-x 的未来版本中开放 Downloader 的 JavaScript 接口，届时用户可以自由开发自己的热更新方案。
-
-在开始详细讲解之前，开发者可以看一下 Cocos Creator 发布原生版本后的目录结构，这个目录结构和 Cocos2d-x JS 项目的目录是完全一致的。以前没有接触过 Cocos2d-x 的用户可以参考[项目结构文档](http://www.cocos.com/doc/article/index?type=cocos2d-x&url=/doc/cocos-docs-master/manual/framework/cocos2d-js/4-essential-concepts/4-1-cocos2d-js-project/zh.md)。对于 Cocos Creator 来说，所有 JS 脚本将会打包到 src 目录中，其他 Assets 资源将会被导出到 res 目录。
+在这篇教程中，将提出一种针对 Cocos Creator 项目可行的热更新方案，不过我们将在 Cocos2d-x 的未来版本中开放 Downloader 的 JavaScript 接口，届时用户可以自由开发自己的热更新方案。对于 Cocos Creator 来说，所有 JS 脚本将会打包到 src 目录中，其他 Assets 资源将会被导出到 assets 目录。
 
 基于这样的项目结构，本篇教程中的热更新思路很简单：
 
-1. 基于原生打包目录中的 res 和 src 目录生成本地 Manifest 文件。
+1. 基于原生打包目录中的 assets 和 src 目录生成本地 Manifest 文件。
 2. 创建一个热更新组件来负责热更新逻辑。
-3. 游戏发布后，若需要更新版本，则生成一套远程版本资源，包含 res 目录、src 目录和 Manifest 文件，将远程版本部署到服务端。
+3. 游戏发布后，若需要更新版本，则生成一套远程版本资源，包含 assets 目录、src 目录和 Manifest 文件，将远程版本部署到服务端。
 4. 当热更新组件检测到服务端 Manifest 版本不一致时，就会开始热更新
 
 教程所使用的范例工程是基于 21 点范例修改而来的，为了展示热更新的过程，将工程中的 table 场景（牌桌场景）删除，设为 1.0.0 版本。并在 `remote-assets` 目录中保存带有 table 场景的完整版本，设为 1.1.0 版本。游戏开始时会检查远程是否有版本更新，如果发现远程版本则提示用户更新，更新完成后，用户重新进入游戏即可进入牌桌场景。
@@ -86,7 +84,7 @@ Manifest 文件中包含以下几个重要信息：
  - 构建时请不要勾选 MD5 Cache，否则会导致热更新无效。
  - 并且应该确保在工程目录的 packages 文件夹里导入 hot-update 编辑器插件（范例工程里已经导入了该插件）
 
-该编辑器插件会在每次构建结束后，自动给 `main.js` 附加上搜索路径设置的逻辑：
+该编辑器插件会在每次构建结束后，自动给 `main.js` 附加上搜索路径设置的逻辑和更新中断修复代码：
 
 ```
 // 在 main.js 的开头添加如下代码
@@ -94,7 +92,32 @@ Manifest 文件中包含以下几个重要信息：
     if (typeof window.jsb === 'object') {
         var hotUpdateSearchPaths = localStorage.getItem('HotUpdateSearchPaths');
         if (hotUpdateSearchPaths) {
-            jsb.fileUtils.setSearchPaths(JSON.parse(hotUpdateSearchPaths));
+            var paths = JSON.parse(hotUpdateSearchPaths);
+            jsb.fileUtils.setSearchPaths(paths);
+
+            var fileList = [];
+            var storagePath = paths[0] || '';
+            var tempPath = storagePath + '_temp/';
+            var baseOffset = tempPath.length;
+
+            if (jsb.fileUtils.isDirectoryExist(tempPath) && !jsb.fileUtils.isFileExist(tempPath + 'project.manifest.temp')) {
+                jsb.fileUtils.listFilesRecursively(tempPath, fileList);
+                fileList.forEach(srcPath => {
+                    var relativePath = srcPath.substr(baseOffset);
+                    var dstPath = storagePath + relativePath;
+
+                    if (srcPath[srcPath.length] == '/') {
+                        cc.fileUtils.createDirectory(dstPath)
+                    }
+                    else {
+                        if (cc.fileUtils.isFileExist(dstPath)) {
+                            cc.fileUtils.removeFile(dstPath)
+                        }
+                        cc.fileUtils.renameFile(srcPath, dstPath);
+                    }
+                })
+                cc.fileUtils.removeDirectory(tempPath);
+            }
         }
     }
 })();
