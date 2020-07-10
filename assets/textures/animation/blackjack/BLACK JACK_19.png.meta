@@ -1,13 +1,18 @@
 {
-  "ver": "2.2.0",
+  "ver": "2.3.5",
   "uuid": "1a29c30d-b7ac-4954-bede-87fcdb682483",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 250,
+  "height": 250,
+  "platformSettings": {},
   "subMetas": {
     "BLACK JACK_19": {
-      "ver": "1.0.3",
+      "ver": "1.0.4",
       "uuid": "bb07c6d5-c9e7-4830-8d25-6015d553b97c",
       "rawTextureUuid": "1a29c30d-b7ac-4954-bede-87fcdb682483",
       "trimType": "auto",

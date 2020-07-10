@@ -1,13 +1,18 @@
 {
-  "ver": "2.2.0",
+  "ver": "2.3.5",
   "uuid": "871d9cfc-5635-4273-ae50-db0eb42ff363",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 16,
+  "height": 16,
+  "platformSettings": {},
   "subMetas": {
     "hongtao_small": {
-      "ver": "1.0.3",
+      "ver": "1.0.4",
       "uuid": "bc8753ba-23f5-45dc-ac87-0850140a05d0",
       "rawTextureUuid": "871d9cfc-5635-4273-ae50-db0eb42ff363",
       "trimType": "auto",
