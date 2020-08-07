@@ -134,8 +134,8 @@ Manifest 文件中包含以下几个重要信息：
 
 ## 结语
 
-以上介绍的是目前一种可能的热更新方案，Cocos Creator 在未来版本中提供更成熟的热更新方案，直接集成到编辑器中。当然，也会提供底层 Downloader API 来允许用户自由实现自己的热更新方案，并通过插件机制在编辑器中搭建完整可视化的工作流。这篇教程和范例工程提供给大家参考，并不是官方方案，也鼓励开发者针对自己的工作流进行定制。如果有问题和交流也欢迎反馈到[论坛](http://www.cocoachina.com/bbs/thread.php?fid-71.html)中。
+以上介绍的是目前一种可能的热更新方案，Cocos Creator 在未来版本中提供更成熟的热更新方案，直接集成到编辑器中。当然，也会提供底层 Downloader API 来允许用户自由实现自己的热更新方案，并通过插件机制在编辑器中搭建完整可视化的工作流。这篇教程和范例工程提供给大家参考，并不是官方方案，也鼓励开发者针对自己的工作流进行定制。如果有问题和交流也欢迎反馈到[论坛](https://forum.cocos.org/c/Creator)中。
 
 ## 参考
 
-[资源管理器 Assets Manager 文档](http://www.cocos.com/doc/article/index?type=cocos2d-x&url=/doc/cocos-docs-master/manual/framework/html5/v3/assets-manager/zh.md)
+[资源管理器 Assets Manager 文档](https://docs.cocos.com/creator/manual/zh/advanced-topics/assets-manager.html)
