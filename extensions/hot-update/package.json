@@ -1,0 +1,9 @@
+{
+    "name": "hot-update",
+    "version": "0.0.2",
+    "package_version": 2,
+    "description": "用于热更新插件 (3.0.0)",
+    "contributions": {
+        "builder": "./builder"
+    }
+}
