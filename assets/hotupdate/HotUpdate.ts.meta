@@ -1,0 +1,17 @@
+{
+  "ver": "4.0.10",
+  "importer": "typescript",
+  "imported": true,
+  "uuid": "8ee7ab5e-ece5-4312-9876-aee14260b419",
+  "files": [
+    ".js",
+    "editor.js",
+    ".trans"
+  ],
+  "subMetas": {},
+  "userData": {
+    "importAsPlugin": false,
+    "moduleId": "project:///assets/hotupdate/HotUpdate.js",
+    "importerSettings": 7
+  }
+}

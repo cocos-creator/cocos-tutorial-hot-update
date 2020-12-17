@@ -2,7 +2,7 @@
 
 ## 前言
 
-**本篇文档基于 Cocos Creator v0.8 完成**
+**本篇文档基于 Cocos Creator v3.0.0 完成**
 
 之所以这篇文档的标题为教程，是因为目前 Cocos Creator 资源热更新的工作流还没有彻底集成到编辑器中，不过引擎本身对于热更新的支持是完备的，所以借助一些外围脚本和一些额外的工作就可以达成。
 
@@ -44,10 +44,6 @@ Manifest 文件中包含以下几个重要信息：
 3. 游戏发布后，若需要更新版本，则生成一套远程版本资源，包含 assets 目录、src 目录和 Manifest 文件，将远程版本部署到服务端。
 4. 当热更新组件检测到服务端 Manifest 版本不一致时，就会开始热更新
 
-教程所使用的范例工程是基于 21 点范例修改而来的，为了展示热更新的过程，将工程中的 table 场景（牌桌场景）删除，设为 1.0.0 版本。并在 `remote-assets` 目录中保存带有 table 场景的完整版本，设为 1.1.0 版本。游戏开始时会检查远程是否有版本更新，如果发现远程版本则提示用户更新，更新完成后，用户重新进入游戏即可进入牌桌场景。
-
-**注意**，项目中包含的 `remove-assets` 为 debug 模式，开发者在测试的时候必须使用 debug 模式构建项目才有效，否则 release 模式的 jsc 文件优先级会高于 `remove-assets` 中的资源而导致脚本失效。
-
 ### 使用 Version Generator 来生成 Manifest 文件
 
 在范例工程中，我们提供了一个 [version_generator.js 文件](https://github.com/cocos-creator/tutorial-hot-update/blob/master/version_generator.js)，这是一个用于生成 Manfiest 文件的 NodeJS 脚本。使用方式如下：
@@ -65,7 +61,7 @@ Manifest 文件中包含以下几个重要信息：
 
 ### 热更新组件
 
-在范例工程中，热更新组件的实现位于 [`assets/scripts/module/HotUpdate.js`](https://github.com/cocos-creator/tutorial-hot-update/blob/master/assets/scripts/module/HotUpdate.js) 中，开发者可以参考这种实现，也可以自由得按自己的需求修改。
+在范例工程中，热更新组件的实现位于 [`assets/hotupdate/HotUpdate.js`](https://github.com/cocos-creator/tutorial-hot-update/blob/master/assets/hotupdate/HotUpdate.js) 中，开发者可以参考这种实现，也可以自由得按自己的需求修改。
 
 除此之外，范例工程中还搭配了一个 `Canvas/update` 节点用于提示更新和显示更新进度供参考。
 
@@ -124,7 +120,7 @@ Manifest 文件中包含以下几个重要信息：
 ```
 
 
-这一步是必须要做的原因是，热更新的本质是用远程下载的文件取代原始游戏包中的文件。Cocos2d-x 的搜索路径恰好满足这个需求，它可以用来指定远程包的下载地址作为默认的搜索路径，这样游戏运行过程中就会使用下载好的远程版本。另外，这里搜索路径是在上一次更新的过程中使用 `cc.sys.localStorage`（它符合 WEB 标准的 [Local Storage API](https://developer.mozilla.org/en/docs/Web/API/Window/localStorage)）固化保存在用户机器上，`HotUpdateSearchPaths` 这个键值是在 `HotUpdate.js` 中指定的，保存和读取过程使用的名字必须匹配。
+这一步是必须要做的原因是，热更新的本质是用远程下载的文件取代原始游戏包中的文件。Cocos2d-x 的搜索路径恰好满足这个需求，它可以用来指定远程包的下载地址作为默认的搜索路径，这样游戏运行过程中就会使用下载好的远程版本。另外，这里搜索路径是在上一次更新的过程中使用 `localStorage`（它符合 WEB 标准的 [Local Storage API](https://developer.mozilla.org/en/docs/Web/API/Window/localStorage)）固化保存在用户机器上，`HotUpdateSearchPaths` 这个键值是在 `HotUpdate.js` 中指定的，保存和读取过程使用的名字必须匹配。
 
 此外，打开工程过程中如果遇到这个警告可以忽略：`loader for [.manifest] not exists!`。
 
@@ -134,7 +130,7 @@ Manifest 文件中包含以下几个重要信息：
 
 ## 结语
 
-以上介绍的是目前一种可能的热更新方案，Cocos Creator 在未来版本中提供更成熟的热更新方案，直接集成到编辑器中。当然，也会提供底层 Downloader API 来允许用户自由实现自己的热更新方案，并通过插件机制在编辑器中搭建完整可视化的工作流。这篇教程和范例工程提供给大家参考，并不是官方方案，也鼓励开发者针对自己的工作流进行定制。如果有问题和交流也欢迎反馈到[论坛](https://forum.cocos.org/c/Creator)中。
+以上介绍的是目前一种可能的热更新方案，Cocos Creator 在未来版本中提供更成熟的热更新方案，直接集成到编辑器中。当然，也会提供底层 Downloader API 来允许用户自由实现自己的热更新方案，并通过插件机制在编辑器中搭建完整可视化的工作流。这篇教程和范例工程提供给大家参考，并不是官方方案，也鼓励开发者针对自己的工作流进行定制。如果有问题和交流也欢迎反馈到[论坛](https://forum.cocos.com/c/Creator)中。
 
 ## 参考
 
