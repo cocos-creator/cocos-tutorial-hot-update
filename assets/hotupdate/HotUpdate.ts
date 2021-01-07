@@ -247,9 +247,10 @@ export class HotUpdate extends Component {
             localStorage.setItem('HotUpdateSearchPaths', JSON.stringify(searchPaths));
             jsb.fileUtils.setSearchPaths(searchPaths);
 
-            // audioEngine.stopAll();
-            // this.panel.info.string
-            // game.restart();
+            // restart game.
+            setTimeout(()=>{
+                game.restart();
+            }, 1000)            
         }
     }
 
