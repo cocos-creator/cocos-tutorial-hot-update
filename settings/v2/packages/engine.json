@@ -1,18 +1,20 @@
 {
-  "__version__": "1.0.3",
+  "__version__": "1.0.5",
   "modules": {
     "cache": {},
     "includeModules": [
       "base",
+      "graphcis",
       "gfx-webgl",
-      "gfx-webgl2",
+      "3d",
+      "2d",
       "ui",
       "particle",
       "physics-cannon",
-      "physics-framework",
       "physics-2d-box2d",
-      "physics-2d-framework",
       "intersection-2d",
+      "primitive",
+      "profiler",
       "particle-2d",
       "audio",
       "video",
@@ -21,7 +23,7 @@
       "terrain",
       "tiled-map",
       "spine",
-      "dragonbones"
+      "dragon-bones"
     ]
   }
 }
