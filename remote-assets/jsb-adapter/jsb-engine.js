@@ -881,7 +881,7 @@ const cacheManager = require('./jsb-cache-manager');
   ////////////////////////////////////////////////////////////
 
 
-  let superProto = cc.internal.UIRenderable.prototype;
+  let superProto = cc.internal.Renderable2D.prototype;
   let armatureDisplayProto = cc.internal.ArmatureDisplay.prototype;
   const AnimationCacheMode = cc.internal.ArmatureDisplay.AnimationCacheMode;
 
@@ -1090,9 +1090,13 @@ const cacheManager = require('./jsb-cache-manager');
       this._factory.add(this._armature);
     }
 
+    this._onSyncTransform();
+
     this.syncTransform(true);
 
     this._flushAssembler();
+
+    middleware.retain();
   };
 
   let _onDisable = superProto.onDisable;
@@ -1103,6 +1107,10 @@ const cacheManager = require('./jsb-cache-manager');
     if (this._armature && !this.isAnimationCached()) {
       this._factory.remove(this._armature);
     }
+
+    this._offSyncTransform();
+
+    middleware.release();
   };
 
   armatureDisplayProto.once = function (eventType, listener, target) {
@@ -1158,29 +1166,26 @@ const cacheManager = require('./jsb-cache-manager');
     let node = this.node;
     if (!node) return;
     let paramsBuffer = this._paramsBuffer;
-    if (!paramsBuffer) return;
+    if (!paramsBuffer) return; // sync node world matrix to native
 
-    if (force || node.hasChangedFlags) {
-      // sync node world matrix to native
-      node.updateWorldTransform();
-      let worldMat = node._mat;
-      paramsBuffer[1] = worldMat.m00;
-      paramsBuffer[2] = worldMat.m01;
-      paramsBuffer[3] = worldMat.m02;
-      paramsBuffer[4] = worldMat.m03;
-      paramsBuffer[5] = worldMat.m04;
-      paramsBuffer[6] = worldMat.m05;
-      paramsBuffer[7] = worldMat.m06;
-      paramsBuffer[8] = worldMat.m07;
-      paramsBuffer[9] = worldMat.m08;
-      paramsBuffer[10] = worldMat.m09;
-      paramsBuffer[11] = worldMat.m10;
-      paramsBuffer[12] = worldMat.m11;
-      paramsBuffer[13] = worldMat.m12;
-      paramsBuffer[14] = worldMat.m13;
-      paramsBuffer[15] = worldMat.m14;
-      paramsBuffer[16] = worldMat.m15;
-    }
+    node.updateWorldTransform();
+    let worldMat = node._mat;
+    paramsBuffer[1] = worldMat.m00;
+    paramsBuffer[2] = worldMat.m01;
+    paramsBuffer[3] = worldMat.m02;
+    paramsBuffer[4] = worldMat.m03;
+    paramsBuffer[5] = worldMat.m04;
+    paramsBuffer[6] = worldMat.m05;
+    paramsBuffer[7] = worldMat.m06;
+    paramsBuffer[8] = worldMat.m07;
+    paramsBuffer[9] = worldMat.m08;
+    paramsBuffer[10] = worldMat.m09;
+    paramsBuffer[11] = worldMat.m10;
+    paramsBuffer[12] = worldMat.m11;
+    paramsBuffer[13] = worldMat.m12;
+    paramsBuffer[14] = worldMat.m13;
+    paramsBuffer[15] = worldMat.m14;
+    paramsBuffer[16] = worldMat.m15;
   };
 
   armatureDisplayProto.setAnimationCacheMode = function (cacheMode) {
@@ -1211,8 +1216,6 @@ const cacheManager = require('./jsb-cache-manager');
       this._renderOrder = middleware.renderOrder;
       middleware.renderOrder++;
     }
-
-    this.syncTransform();
 
     if (this.__preColor__ === undefined || !this.color.equals(this.__preColor__)) {
       let compColor = this.color;
@@ -1632,20 +1635,56 @@ const cacheManager = require('./jsb-cache-manager');
 (function () {
   if (!window.middleware) return;
   let middlewareMgr = middleware.MiddlewareManager.getInstance();
+  let reference = 0;
   let director = cc.director;
   let nativeXYZUVC = middleware.vfmtPosUvColor = 9;
   let nativeXYZUVCC = middleware.vfmtPosUvTwoColor = 13;
+  let bytesXYZUVC = nativeXYZUVC * 4;
+  let bytesXYZUVCC = nativeXYZUVCC * 4;
   let vfmtPosUvColor = cc.internal.vfmtPosUvColor;
   let vfmtPosUvTwoColor = cc.internal.vfmtPosUvTwoColor;
   let renderInfoLookup = middleware.RenderInfoLookup = {};
   renderInfoLookup[nativeXYZUVC] = [];
   renderInfoLookup[nativeXYZUVCC] = [];
   middleware.preRenderComponent = null;
-  middleware.preRenderBufferIndex = null;
+  middleware.preRenderBufferIndex = 0;
   middleware.preRenderBufferType = nativeXYZUVC;
   middleware.renderOrder = 0;
   middleware.indicesStart = 0;
   middleware.resetIndicesStart = false;
+
+  middleware.retain = function () {
+    reference++;
+  };
+
+  middleware.release = function () {
+    if (reference === 0) {
+      cc.warn("middleware reference error: reference count should be greater than 0");
+      return;
+    }
+
+    reference--;
+
+    if (reference === 0) {
+      const batcher2D = director.root.batcher2D;
+      const uvcBuffers = renderInfoLookup[nativeXYZUVC];
+
+      for (let i = 0; i < uvcBuffers.length; i++) {
+        batcher2D.unRegisterCustomBuffer(uvcBuffers[i]);
+        uvcBuffers[i].destroy();
+      }
+
+      uvcBuffers.length = 0;
+      const uvccBuffers = renderInfoLookup[nativeXYZUVCC];
+
+      for (let i = 0; i < uvccBuffers.length; i++) {
+        batcher2D.unRegisterCustomBuffer(uvccBuffers[i]);
+        uvccBuffers[i].destroy();
+      }
+
+      uvccBuffers.length = 0;
+    }
+  };
 
   function CopyNativeBufferToJS(renderer, nativeFormat, jsFormat) {
     if (!renderer) return;
@@ -1657,11 +1696,17 @@ const cacheManager = require('./jsb-cache-manager');
       let srcIndicesCount = ibBytesLength / 2; // USHORT
 
       let srcVertexFloatCount = srcVertexCount * nativeFormat;
-      let buffer = renderer.acquireBufferBatch(jsFormat);
+      let buffer = renderInfoLookup[nativeFormat][i];
+
+      if (!buffer) {
+        buffer = renderer.registerCustomBuffer(jsFormat);
+      }
+
+      buffer.reset();
       const isRecreate = buffer.request(srcVertexCount, srcIndicesCount);
 
       if (!isRecreate) {
-        buffer = renderer.currBufferBatch;
+        buffer = renderer.registerCustomBuffer(jsFormat);
       }
 
       const vBuf = buffer.vData;
@@ -1669,7 +1714,9 @@ const cacheManager = require('./jsb-cache-manager');
       const srcVBuf = middlewareMgr.getVBTypedArray(nativeFormat, i);
       const srcIBuf = middlewareMgr.getIBTypedArray(nativeFormat, i);
       vBuf.set(srcVBuf.subarray(0, srcVertexFloatCount), 0);
-      iBuf.set(srcIBuf.subarray(0, srcIndicesCount), 0); // forbid auto merge, because of it's meanless
+      iBuf.set(srcIBuf.subarray(0, srcIndicesCount), 0); // forbid js upload data, call by middleware
+
+      buffer.uploadBuffers(); // forbid auto merge, because of it's meanless
 
       buffer.indicesOffset = 0;
       renderInfoLookup[nativeFormat][i] = buffer;
@@ -1677,20 +1724,22 @@ const cacheManager = require('./jsb-cache-manager');
   }
 
   director.on(cc.Director.EVENT_BEFORE_UPDATE, function () {
+    if (reference === 0) return;
     middlewareMgr.update(director._deltaTime);
   });
   director.on(cc.Director.EVENT_BEFORE_DRAW, function () {
+    if (reference === 0) return;
     middlewareMgr.render(director._deltaTime); // reset render order
 
     middleware.renderOrder = 0;
     middleware.preRenderComponent = null;
-    middleware.preRenderBufferIndex = null;
+    middleware.preRenderBufferIndex = 0;
     middleware.preRenderBufferType = nativeXYZUVC;
     middleware.indicesStart = 0;
     middleware.resetIndicesStart = false;
-    let ui = director.root.ui;
-    CopyNativeBufferToJS(ui, nativeXYZUVC, vfmtPosUvColor);
-    CopyNativeBufferToJS(ui, nativeXYZUVCC, vfmtPosUvTwoColor);
+    let batcher2D = director.root.batcher2D;
+    CopyNativeBufferToJS(batcher2D, nativeXYZUVC, vfmtPosUvColor);
+    CopyNativeBufferToJS(batcher2D, nativeXYZUVCC, vfmtPosUvTwoColor);
   });
   let renderInfoMgr = middlewareMgr.getRenderInfoMgr();
   renderInfoMgr.renderInfo = renderInfoMgr.getSharedBuffer();
@@ -2772,6 +2821,16 @@ cc.assetManager.init = function (options) {
       this.shadows.destroy();
     }
 
+    render(cameras) {
+      let handles = [];
+
+      for (let i = 0, len = cameras.length; i < len; ++i) {
+        handles.push(cameras[i].handle);
+      }
+
+      super.render(handles);
+    }
+
     init() {
       this.fog = new cc.Fog();
       this.ambient = new cc.Ambient();
@@ -2945,12 +3004,27 @@ cc.assetManager.init = function (options) {
  THE SOFTWARE.
  ****************************************************************************/
 // JS to Native bridges
-if (window.JavascriptJavaBridge && cc.sys.os == cc.sys.OS_ANDROID) {
-  jsb.reflection = new JavascriptJavaBridge();
-  cc.sys.capabilities["keyboard"] = true;
-} else if (window.JavaScriptObjCBridge && (cc.sys.os == cc.sys.OS_IOS || cc.sys.os == cc.sys.OS_OSX)) {
-  jsb.reflection = new JavaScriptObjCBridge();
-}
+// set to lazy
+Object.defineProperty(jsb, "reflection", {
+  get: function () {
+    if (jsb.__bridge !== undefined) return jsb.__bridge;
+
+    if (window.JavascriptJavaBridge && cc.sys.os === cc.sys.OS_ANDROID) {
+      jsb.__bridge = new JavascriptJavaBridge();
+    } else if (window.JavaScriptObjCBridge && (cc.sys.os === cc.sys.OS_IOS || cc.sys.os === cc.sys.OS_OSX)) {
+      jsb.__bridge = new JavaScriptObjCBridge();
+    } else {
+      jsb.__bridge = null;
+    }
+
+    return jsb.__bridge;
+  },
+  enumerable: true,
+  configurable: true,
+  set: function (value) {
+    jsb.__bridge = value;
+  }
+});
 
 },{}],14:[function(require,module,exports){
 "use strict";
@@ -3400,11 +3474,15 @@ const cacheManager = require('./jsb-cache-manager');
   skeleton.onEnable = function () {
     _onEnable.call(this);
 
+    this._onSyncTransform();
+
     this.syncTransform(true);
 
     if (this._nativeSkeleton) {
       this._nativeSkeleton.onEnable();
     }
+
+    middleware.retain();
   };
 
   let _onDisable = skeleton.onDisable;
@@ -3412,9 +3490,13 @@ const cacheManager = require('./jsb-cache-manager');
   skeleton.onDisable = function () {
     _onDisable.call(this);
 
+    this._offSyncTransform();
+
     if (this._nativeSkeleton) {
       this._nativeSkeleton.onDisable();
     }
+
+    middleware.release();
   };
 
   skeleton.setVertexEffectDelegate = function (effectDelegate) {
@@ -3427,29 +3509,26 @@ const cacheManager = require('./jsb-cache-manager');
     let node = this.node;
     if (!node) return;
     let paramsBuffer = this._paramsBuffer;
-    if (!paramsBuffer) return;
+    if (!paramsBuffer) return; // sync node world matrix to native
 
-    if (force || node.hasChangedFlags) {
-      // sync node world matrix to native
-      node.updateWorldTransform();
-      let worldMat = node._mat;
-      paramsBuffer[1] = worldMat.m00;
-      paramsBuffer[2] = worldMat.m01;
-      paramsBuffer[3] = worldMat.m02;
-      paramsBuffer[4] = worldMat.m03;
-      paramsBuffer[5] = worldMat.m04;
-      paramsBuffer[6] = worldMat.m05;
-      paramsBuffer[7] = worldMat.m06;
-      paramsBuffer[8] = worldMat.m07;
-      paramsBuffer[9] = worldMat.m08;
-      paramsBuffer[10] = worldMat.m09;
-      paramsBuffer[11] = worldMat.m10;
-      paramsBuffer[12] = worldMat.m11;
-      paramsBuffer[13] = worldMat.m12;
-      paramsBuffer[14] = worldMat.m13;
-      paramsBuffer[15] = worldMat.m14;
-      paramsBuffer[16] = worldMat.m15;
-    }
+    node.updateWorldTransform();
+    let worldMat = node._mat;
+    paramsBuffer[1] = worldMat.m00;
+    paramsBuffer[2] = worldMat.m01;
+    paramsBuffer[3] = worldMat.m02;
+    paramsBuffer[4] = worldMat.m03;
+    paramsBuffer[5] = worldMat.m04;
+    paramsBuffer[6] = worldMat.m05;
+    paramsBuffer[7] = worldMat.m06;
+    paramsBuffer[8] = worldMat.m07;
+    paramsBuffer[9] = worldMat.m08;
+    paramsBuffer[10] = worldMat.m09;
+    paramsBuffer[11] = worldMat.m10;
+    paramsBuffer[12] = worldMat.m11;
+    paramsBuffer[13] = worldMat.m12;
+    paramsBuffer[14] = worldMat.m13;
+    paramsBuffer[15] = worldMat.m14;
+    paramsBuffer[16] = worldMat.m15;
   };
 
   skeleton.update = function () {
@@ -3464,8 +3543,6 @@ const cacheManager = require('./jsb-cache-manager');
       this._renderOrder = middleware.renderOrder;
       middleware.renderOrder++;
     }
-
-    this.syncTransform();
 
     if (this.__preColor__ === undefined || !this.color.equals(this.__preColor__)) {
       let compColor = this.color;
@@ -4015,7 +4092,7 @@ Object.assign(sys, {
       imageBitmap: false,
       touches: this.isMobile,
       mouse: !this.isMobile,
-      keyboard: !this.isMobile,
+      keyboard: !this.isMobile || window.JavascriptJavaBridge && cc.sys.os === cc.sys.OS_ANDROID,
       accelerometer: this.isMobile
     };
     this.__audioSupport = {
@@ -4097,8 +4174,9 @@ if (cc.internal.VideoPlayer) {
     EventType
   } = cc.internal.VideoPlayer;
   let vec3 = cc.Vec3;
+  let mat4 = cc.Mat4;
 
-  let _mat4_temp = cc.mat4();
+  let _mat4_temp = new mat4();
 
   let _topLeft = new vec3();
 
@@ -4111,6 +4189,7 @@ if (cc.internal.VideoPlayer) {
   class VideoPlayerImplJSB extends cc.internal.VideoPlayerImpl {
     constructor(componenet) {
       super(componenet);
+      this._matViewProj_temp = new mat4();
     }
 
     syncClip(clip) {
@@ -4272,14 +4351,16 @@ if (cc.internal.VideoPlayer) {
 
     pause() {
       if (this.video) {
-        this.video.pause();
         this._cachedCurrentTime = this.video.currentTime();
+        this.video.pause();
       }
     }
 
     stop() {
       if (this.video) {
         this._ignorePause = true;
+        this.video.seekTo(0);
+        this._cachedCurrentTime = 0;
         this.video.stop();
       }
     }
@@ -4311,9 +4392,11 @@ if (cc.internal.VideoPlayer) {
         height
       } = this._uiTrans.contentSize;
 
-      if (!this._forceUpdate && this._m00 === _mat4_temp.m00 && this._m01 === _mat4_temp.m01 && this._m04 === _mat4_temp.m04 && this._m05 === _mat4_temp.m05 && this._m12 === _mat4_temp.m12 && this._m13 === _mat4_temp.m13 && this._w === width && this._h === height) {
+      if (!this._forceUpdate && camera.matViewProj.equals(this._matViewProj_temp) && this._m00 === _mat4_temp.m00 && this._m01 === _mat4_temp.m01 && this._m04 === _mat4_temp.m04 && this._m05 === _mat4_temp.m05 && this._m12 === _mat4_temp.m12 && this._m13 === _mat4_temp.m13 && this._w === width && this._h === height) {
         return;
-      } // update matrix cache
+      }
+
+      this._matViewProj_temp.set(camera.matViewProj); // update matrix cache
 
 
       this._m00 = _mat4_temp.m00;
@@ -4332,7 +4415,9 @@ if (cc.internal.VideoPlayer) {
       vec3.set(_bottomRight, (1 - ap.x) * this._w, -ap.y * this._h, 0); // Convert to world space
 
       vec3.transformMat4(_topLeft, _topLeft, _mat4_temp);
-      vec3.transformMat4(_bottomRight, _bottomRight, _mat4_temp); // Convert to Screen space
+      vec3.transformMat4(_bottomRight, _bottomRight, _mat4_temp); // need update camera data
+
+      camera.update(); // Convert to Screen space
 
       camera.worldToScreen(_topLeft, _topLeft);
       camera.worldToScreen(_bottomRight, _bottomRight);
@@ -4379,8 +4464,9 @@ if (cc.internal.WebView) {
     EventType
   } = cc.internal.WebView;
   let vec3 = cc.Vec3;
+  let mat4 = cc.Mat4;
 
-  let _mat4_temp = new cc.Mat4();
+  let _mat4_temp = new mat4();
 
   let _topLeft = new vec3();
 
@@ -4395,6 +4481,7 @@ if (cc.internal.WebView) {
       super(componenet);
       this.jsCallback = null;
       this.interfaceSchema = null;
+      this._matViewProj_temp = new mat4();
     }
 
     _bindEvent() {
@@ -4487,7 +4574,7 @@ if (cc.internal.WebView) {
     }
 
     syncMatrix() {
-      if (!this._webview || !this._component) return;
+      if (!this._webview || !this._component || !this._uiTrans) return;
       const camera = this.UICamera;
 
       if (!camera) {
@@ -4501,9 +4588,11 @@ if (cc.internal.WebView) {
         height
       } = this._uiTrans.contentSize;
 
-      if (!this._forceUpdate && this._m00 === _mat4_temp.m00 && this._m01 === _mat4_temp.m01 && this._m04 === _mat4_temp.m04 && this._m05 === _mat4_temp.m05 && this._m12 === _mat4_temp.m12 && this._m13 === _mat4_temp.m13 && this._w === width && this._h === height) {
+      if (!this._forceUpdate && camera.matViewProj.equals(this._matViewProj_temp) && this._m00 === _mat4_temp.m00 && this._m01 === _mat4_temp.m01 && this._m04 === _mat4_temp.m04 && this._m05 === _mat4_temp.m05 && this._m12 === _mat4_temp.m12 && this._m13 === _mat4_temp.m13 && this._w === width && this._h === height) {
         return;
-      } // update matrix cache
+      }
+
+      this._matViewProj_temp.set(camera.matViewProj); // update matrix cache
 
 
       this._m00 = _mat4_temp.m00;
@@ -4522,14 +4611,18 @@ if (cc.internal.WebView) {
       vec3.set(_bottomRight, (1 - ap.x) * this._w, -ap.y * this._h, 0); // Convert to world space
 
       vec3.transformMat4(_topLeft, _topLeft, _mat4_temp);
-      vec3.transformMat4(_bottomRight, _bottomRight, _mat4_temp); // Convert to Screen space
+      vec3.transformMat4(_bottomRight, _bottomRight, _mat4_temp); // need update camera data
 
-      camera.worldToScreen(_topLeft, _topLeft, canvas_width, canvas_height);
-      camera.worldToScreen(_bottomRight, _bottomRight, canvas_width, canvas_height);
+      camera.update(); // Convert to Screen space
+
+      camera.worldToScreen(_topLeft, _topLeft);
+      camera.worldToScreen(_bottomRight, _bottomRight);
       let finalWidth = _bottomRight.x - _topLeft.x;
       let finalHeight = _topLeft.y - _bottomRight.y;
 
       this._webview.setFrame(_topLeft.x, canvas_height - _topLeft.y, finalWidth, finalHeight);
+
+      this._forceUpdate = false;
     }
 
   }

@@ -7,6 +7,20 @@ System.register([], function (_export, _context) {
   }) {
     // NOTE: before here we shall not import any module!
     let promise = Promise.resolve();
+    promise = promise.then(() => topLevelImport('wait-for-ammo-instantiation')).then(({
+      default: waitForAmmoInstantiation
+    }) => {
+      const {
+        isWasm,
+        wasmBinaryURL
+      } = waitForAmmoInstantiation;
+
+      if (!isWasm) {
+        return waitForAmmoInstantiation();
+      } else {
+        return Promise.resolve(fetchWasm(wasmBinaryURL)).then(wasmBinary => waitForAmmoInstantiation(wasmBinary));
+      }
+    });
     return promise.then(() => {
       return {
         start,
