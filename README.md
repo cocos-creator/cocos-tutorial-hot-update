@@ -103,22 +103,21 @@ Manifest 文件中包含以下几个重要信息：
                     var dstPath = storagePath + relativePath;
 
                     if (srcPath[srcPath.length] == '/') {
-                        cc.fileUtils.createDirectory(dstPath)
+                        jsb.fileUtils.createDirectory(dstPath)
                     }
                     else {
-                        if (cc.fileUtils.isFileExist(dstPath)) {
-                            cc.fileUtils.removeFile(dstPath)
+                        if (jsb.fileUtils.isFileExist(dstPath)) {
+                            jsb.fileUtils.removeFile(dstPath)
                         }
-                        cc.fileUtils.renameFile(srcPath, dstPath);
+                        jsb.fileUtils.renameFile(srcPath, dstPath);
                     }
                 })
-                cc.fileUtils.removeDirectory(tempPath);
+                jsb.fileUtils.removeDirectory(tempPath);
             }
         }
     }
 })();
 ```
-
 
 这一步是必须要做的原因是，热更新的本质是用远程下载的文件取代原始游戏包中的文件。Cocos2d-x 的搜索路径恰好满足这个需求，它可以用来指定远程包的下载地址作为默认的搜索路径，这样游戏运行过程中就会使用下载好的远程版本。另外，这里搜索路径是在上一次更新的过程中使用 `localStorage`（它符合 WEB 标准的 [Local Storage API](https://developer.mozilla.org/en/docs/Web/API/Window/localStorage)）固化保存在用户机器上，`HotUpdateSearchPaths` 这个键值是在 `HotUpdate.js` 中指定的，保存和读取过程使用的名字必须匹配。
 
