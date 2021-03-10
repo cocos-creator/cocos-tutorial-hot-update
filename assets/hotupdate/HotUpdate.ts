@@ -7,58 +7,50 @@ const jsb = (<any>window).jsb;
 // 2. res/raw-assets/2d/2d86a854-63c4-4b90-8b88-a4328b8526c2.png
 // So when custom manifest used, you should be able to find them in downloaded remote assets
 var customManifestStr = JSON.stringify({
-    "packageUrl": "http://127.0.0.1:5500/remote-assets/",
-    "remoteManifestUrl": "http://127.0.0.1:5500/remote-assets/project.manifest",
-    "remoteVersionUrl": "http://127.0.0.1:5500/remote-assets/version.manifest",
-    "version": "1.0.1",
+    "packageUrl": "http://192.168.55.13:5502/remote-assets/",
+    "remoteManifestUrl": "http://192.168.55.13:5502/remote-assets/project.manifest",
+    "remoteVersionUrl": "http://192.168.55.13:5502/remote-assets/version.manifest",
+    "version": "1.0.0",
     "assets": {
         "src/application.js": {
-            "size": 5106,
-            "md5": "02ab1ca7d9a0d06d3d7d8ab279881b8d"
+            "size": 5514,
+            "md5": "d09753aaed7c55c4566cecf766cbc5c3"
         },
-        "src/chunks/bundle.js": {
-            "size": 1935,
-            "md5": "783e7dfdcd833123e46754ad439553af"
+        "src/cocos-js/ammo-instantiated-45eaa448.js": {
+            "size": 2318381,
+            "md5": "081a863c98742000893bca3bb87c1775"
         },
         "src/cocos-js/cc.js": {
-            "size": 5787090,
-            "md5": "4ee4ca556b790be41e8b10e55e8c8102"
+            "size": 1774495,
+            "md5": "c4ba032d442580df30778c0369917917"
         },
-        "src/cocos-js/glsl1-ad847f02.js": {
-            "size": 129117,
-            "md5": "768e74b5b88b232b5587d8f8d9517792"
-        },
-        "src/cocos-js/glsl3-9896e095.js": {
-            "size": 144213,
-            "md5": "bb81211de1723253e210ee5ca1057702"
-        },
-        "src/cocos-js/glsl4-fe9122f5.js": {
-            "size": 151634,
-            "md5": "c8b174876db8c60db7f80e8e7bad9b2f"
+        "src/cocos-js/wait-for-ammo-instantiation.js": {
+            "size": 625,
+            "md5": "c9c1bf74589762eca08ae868d216f243"
         },
         "src/import-map.json": {
-            "size": 51,
-            "md5": "0a4b903dc20b74fe4a5a977a98b9d094"
+            "size": 111,
+            "md5": "498f3926fc713deab3e0ac6fcbb3d549"
         },
         "src/settings.json": {
-            "size": 32156,
-            "md5": "bf277e8a18555d638c3746fbf2f01a8b"
+            "size": 31619,
+            "md5": "f54273c3c1c29dc9040f129ee11db461"
         },
         "src/system.bundle.js": {
-            "size": 19628,
-            "md5": "61644e34333c0b0ac77bd7f3085ccf2b"
+            "size": 6275,
+            "md5": "3f3f2b5f3725599ff2c8b9801195ee37"
         },
         "assets/main/config.json": {
-            "size": 2243,
-            "md5": "57c06265bde1288eb6d4ab0da3e2f187"
+            "size": 918,
+            "md5": "757c93f3908a069aaaa062541715edcf"
         },
         "assets/main/import/08/0897a7610.json": {
-            "size": 318,
-            "md5": "31d47437140f3bb8e5fab4936a9725f0"
+            "size": 248,
+            "md5": "12b2792f517c08d878378119a80a09cc"
         },
         "assets/main/import/0f/0f4f09600.json": {
-            "size": 7842,
-            "md5": "e544000e4d8a737575f704f049072b11"
+            "size": 8090,
+            "md5": "755c01fe8bae77adb19e3b21f11e95d7"
         },
         "assets/main/import/70/700faa17-11a6-46cd-aeb5-d6900bc264f8.json": {
             "size": 69,
@@ -81,20 +73,20 @@ var customManifestStr = JSON.stringify({
             "md5": "1f9cadcf049e884e057ca8cf797d73a1"
         },
         "assets/main/import/fd/fd8ec536-a354-4a17-9c74-4f3883c378c8.json": {
-            "size": 675,
-            "md5": "de4c2079ad4142452051aced1cc11fba"
+            "size": 480,
+            "md5": "731f44a39ce9377ee6de8ba34edaf039"
         },
         "assets/main/index.js": {
-            "size": 24117,
-            "md5": "a754392fea5b84716cda88fb617ece87"
+            "size": 12682,
+            "md5": "e2fd04611b129a14138444b6207c1ab7"
         },
         "assets/main/native/70/700faa17-11a6-46cd-aeb5-d6900bc264f8.png": {
             "size": 3765,
             "md5": "878e89a0a3e02b13beee9f3274f2ca39"
         },
         "assets/main/native/80/800f94fd-7424-4202-9629-d3ca77f3b72d.manifest": {
-            "size": 2941,
-            "md5": "10e6dfa38ddbd0932ab036826db3df2b"
+            "size": 2808,
+            "md5": "507a24062f30709e41e0891ae6a53c7f"
         },
         "assets/main/native/9e/9e71ecbc-8d63-45dd-b0e3-26cefa3d07b1.png": {
             "size": 2548,
@@ -113,12 +105,12 @@ var customManifestStr = JSON.stringify({
             "md5": "94d761c4626df88053787f17fa09914d"
         },
         "jsb-adapter/jsb-builtin.js": {
-            "size": 170818,
-            "md5": "15b9314f7a08f365d2fe6651d0c3bf5e"
+            "size": 170485,
+            "md5": "f7f79bebbd40822e195af8f099332b0e"
         },
         "jsb-adapter/jsb-engine.js": {
-            "size": 75321,
-            "md5": "c1b82d5d33554752739440fe1514e209"
+            "size": 140954,
+            "md5": "2846deccc21c73b49e8bae51e3d5387a"
         }
     },
     "searchPaths": []
@@ -131,22 +123,22 @@ const { ccclass, property } = _decorator;
 export class HotUpdate extends Component {
 
     @property(UpdatePanel)
-    panel: UpdatePanel = <any>null;
+    panel: UpdatePanel = null!;
 
     @property(Asset)
-    manifestUrl: Asset = <any>null;
+    manifestUrl: Asset = null!;
 
     @property(Node)
-    updateUI: Node = <any>null;
+    updateUI: Node = null!;
 
     private _updating = false;
     private _canRetry = false;
     private _storagePath = '';
-    private _am = <any>null;
+    private _am: jsb.AssetsManager = null!;
     private _checkListener = null;
     private _updateListener = null;
     private _failCount = 0;
-    private versionCompareHandle = <any>null;
+    private versionCompareHandle: (versionA: string, versionB: string) => number = null!;
 
     checkCb(event: any) {
         console.log('Code: ' + event.getEventCode());
@@ -172,7 +164,7 @@ export class HotUpdate extends Component {
         }
 
 
-        this._am.setEventCallback(null);
+        this._am.setEventCallback(null!);
         this._checkListener = null;
         this._updating = false;
     }
@@ -228,13 +220,13 @@ export class HotUpdate extends Component {
         }
 
         if (failed) {
-            this._am.setEventCallback(null);
+            this._am.setEventCallback(null!);
             this._updateListener = null;
             this._updating = false;
         }
 
         if (needRestart) {
-            this._am.setEventCallback(null);
+            this._am.setEventCallback(null!);
             this._updateListener = null;
             // Prepend the manifest's search path
             var searchPaths = jsb.fileUtils.getSearchPaths();
@@ -248,9 +240,9 @@ export class HotUpdate extends Component {
             jsb.fileUtils.setSearchPaths(searchPaths);
 
             // restart game.
-            setTimeout(()=>{
+            setTimeout(() => {
                 game.restart();
-            }, 1000)            
+            }, 1000)
         }
     }
 
@@ -374,21 +366,13 @@ export class HotUpdate extends Component {
         });
 
         this.panel.info.string = 'Hot update is ready, please check or directly update.';
-
-        if (sys.os === sys.OS_ANDROID) {
-            // Some Android device may slow down the download process when concurrent tasks is too much.
-            // The value may not be accurate, please do more test and find what's most suitable for your game.
-            this._am.setMaxConcurrentTask(2);
-            this.panel.info.string = "Max concurrent tasks count have been limited to 2";
-        }
-
         this.panel.fileProgress.progress = 0;
         this.panel.byteProgress.progress = 0;
     }
 
     onDestroy() {
         if (this._updateListener) {
-            this._am.setEventCallback(null);
+            this._am.setEventCallback(null!);
             this._updateListener = null;
         }
     }

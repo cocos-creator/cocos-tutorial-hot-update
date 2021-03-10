@@ -24,16 +24,16 @@ var inject_script = `
                     var dstPath = storagePath + relativePath;
 
                     if (srcPath[srcPath.length] == '/') {
-                        cc.fileUtils.createDirectory(dstPath)
+                        jsb.fileUtils.createDirectory(dstPath)
                     }
                     else {
-                        if (cc.fileUtils.isFileExist(dstPath)) {
-                            cc.fileUtils.removeFile(dstPath)
+                        if (jsb.fileUtils.isFileExist(dstPath)) {
+                            jsb.fileUtils.removeFile(dstPath)
                         }
-                        cc.fileUtils.renameFile(srcPath, dstPath);
+                        jsb.fileUtils.renameFile(srcPath, dstPath);
                     }
                 })
-                cc.fileUtils.removeDirectory(tempPath);
+                jsb.fileUtils.removeDirectory(tempPath);
             }
         }
     }

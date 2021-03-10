@@ -6,30 +6,30 @@ const { ccclass, property } = _decorator;
 export class UpdatePanel extends Component {
 
     @property(Label)
-    info: Label = <any>null;
+    info: Label = null!;
 
     @property(ProgressBar)
-    fileProgress: ProgressBar = <any>null;
+    fileProgress: ProgressBar = null!;
 
     @property(Label)
-    fileLabel: Label = <any>null;
+    fileLabel: Label = null!;
     @property(ProgressBar)
-    byteProgress: ProgressBar = <any>null;
+    byteProgress: ProgressBar = null!;
 
     @property(Label)
-    byteLabel: Label = <any>null;
+    byteLabel: Label = null!;
 
     @property(Node)
-    close: Node = <any>null;
+    close: Node = null!;
 
     @property(Node)
-    checkBtn: Node = <any>null;
+    checkBtn: Node = null!;
 
     @property(Node)
-    retryBtn: Node = <any>null;
+    retryBtn: Node = null!;
 
     @property(Node)
-    updateBtn: Node = <any>null;
+    updateBtn: Node = null!;
 
     onLoad() {
 
