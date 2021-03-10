@@ -4,7 +4,10 @@
 root=$(cd "$(dirname "$0")";pwd)
 
 # generate manifest (change version first!).
-node version_generator.js -v 1.1.0 -u http://192.168.55.58:5502/remote-assets/ -s ./build/android/assets -d assets/
+node version_generator.js -v 1.0.0 -u http://192.168.55.13:5502/remote-assets/ -s ./build/android/assets -d assets/
+
+# return when generate version 1.0.0.
+exit
 
 # remove old remote-assets
 if [ -d "./remote-assets/" ];then
