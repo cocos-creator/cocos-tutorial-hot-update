@@ -1,11 +1,16 @@
-__require = function e(t, n, r) {
+window.__require = function e(t, n, r) {
   function s(o, u) {
     if (!n[o]) {
       if (!t[o]) {
-        var a = "function" == typeof __require && __require;
-        if (!u && a) return a(o, !0);
-        if (i) return i(o, !0);
-        throw new Error("Cannot find module '" + o + "'");
+        var b = o.split("/");
+        b = b[b.length - 1];
+        if (!t[b]) {
+          var a = "function" == typeof __require && __require;
+          if (!u && a) return a(b, !0);
+          if (i) return i(b, !0);
+          throw new Error("Cannot find module '" + o + "'");
+        }
+        o = b;
       }
       var f = n[o] = {
         exports: {}
@@ -1026,7 +1031,9 @@ __require = function e(t, n, r) {
         if (!cc.sys.isNative) return;
         var storagePath = (jsb.fileUtils ? jsb.fileUtils.getWritablePath() : "/") + "blackjack-remote-asset";
         cc.log("Storage path for remote asset : " + storagePath);
-        this._am = new jsb.AssetsManager(this.manifestUrl.nativeUrl, storagePath);
+        var url = this.manifestUrl.nativeUrl;
+        cc.loader.md5Pipe && (url = cc.loader.md5Pipe.transformURL(url));
+        this._am = new jsb.AssetsManager(url, storagePath);
         this._needUpdate = false;
         if (this._am.getLocalManifest().isLoaded()) {
           this._am.setEventCallback(this.checkCb.bind(this));
@@ -1829,7 +1836,7 @@ __require = function e(t, n, r) {
           this.source.outgoing.push(this);
           this.source.getRoot().clean = false;
         }
-        Transition.prototype.else = function() {
+        Transition.prototype["else"] = function() {
           this.guard = Transition.FalseGuard;
           return this;
         };
@@ -2105,7 +2112,7 @@ __require = function e(t, n, r) {
             return leave(_this.behaviour(stateMachineInstance.getCurrent(region))).invoke(message, stateMachineInstance);
           });
           deepHistoryAbove || !regionInitial || regionInitial.isHistory() ? endEnter(this.behaviour(region)).push(function(message, stateMachineInstance, history) {
-            enter(_this.behaviour(history || regionInitial.isHistory() ? stateMachineInstance.getCurrent(region) || regionInitial : regionInitial)).invoke(message, stateMachineInstance, history || regionInitial.kind === StateJS.PseudoStateKind.DeepHistory);
+            enter(_this.behaviour((history || regionInitial.isHistory()) && stateMachineInstance.getCurrent(region) || regionInitial)).invoke(message, stateMachineInstance, history || regionInitial.kind === StateJS.PseudoStateKind.DeepHistory);
           }) : endEnter(this.behaviour(region)).push(enter(this.behaviour(regionInitial)));
           this.visitElement(region, deepHistoryAbove);
         };
@@ -2218,5 +2225,12 @@ __require = function e(t, n, r) {
     })(StateJS || (StateJS = {}));
     module.exports = StateJS;
     cc._RF.pop();
+  }, {} ],
+  "use_v2.0.x_cc.Toggle_event": [ function(require, module, exports) {
+    "use strict";
+    cc._RF.push(module, "fcdc0avaPFOx7HYN0ixRVWq", "use_v2.0.x_cc.Toggle_event");
+    "use strict";
+    cc.Toggle && (cc.Toggle._triggerEventInScript_check = true);
+    cc._RF.pop();
   }, {} ]
-}, {}, [ "Actor", "ActorRenderer", "AssetMng", "AudioMng", "Bet", "Card", "CounterTest", "Dealer", "FXPlayer", "Game", "Menu", "Player", "SideSwitcher", "TossChip", "ButtonScaler", "InGameUI", "RankItem", "RankList", "state.com", "Decks", "HotUpdate", "Mask", "PlayerData", "Types", "Utils", "game-fsm" ]);
+}, {}, [ "use_v2.0.x_cc.Toggle_event", "Actor", "ActorRenderer", "AssetMng", "AudioMng", "Bet", "Card", "CounterTest", "Dealer", "FXPlayer", "Game", "Menu", "Player", "SideSwitcher", "TossChip", "ButtonScaler", "InGameUI", "RankItem", "RankList", "state.com", "Decks", "HotUpdate", "Mask", "PlayerData", "Types", "Utils", "game-fsm" ]);

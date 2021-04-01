@@ -1,0 +1,1427 @@
+[
+  1,
+  [
+    "4bIxuwWO5AS4BWU9FzzFC4",
+    "3ey5CMnEpPAqLMPiqIOHcb",
+    "4b1nNVel5DVKzYTNUX7vmF",
+    "e7VinP0pRKU6dbanPypoOq",
+    "11rsNvSzJJWbQyndZzQvQ9",
+    "7fONO6rLhAHKqeJgmmARFa",
+    "dflz0x5stCDYFXiDduskYQ",
+    "7aJjdBeZFHTJXQ893slHfl",
+    "a7LCYVl7pMpp+RuXT4XjXr",
+    "dbgxcLVWBAU76dreHFlDhd",
+    "d3TKmc6ItNyr4NT/aat7in",
+    "43tP0kUsVJRpF0SwGItJkj",
+    "90xsEY/OZAnp7tL+3avb/v",
+    "9clY/kx1FEj4TPuZrFVvU4",
+    "09zs82pPJLKL05jhMlbRFG",
+    "9429ehpoBNZLOfHLg9k47f",
+    "60gbpQN05Ay4pN1YS5mWyJ",
+    "baWuvU4l9DwKCm3Y32p8mX",
+    "b8JoscxeZEYKSMUmZxcdJ9",
+    "b0K9R0M0pGU5A32EDr88YD",
+    "08omVVB1RIeYbCrhYcPhl0",
+    "9eSPO4hf9IEIPG8nreq3IE",
+    "e3GD40RlJDpIAsaScpiUbS",
+    "3fDqoV5ppNCJ/wjEBXXoIG",
+    "2e3MQS+i5Os75gLQBuqLyS",
+    "afZmKYxc1JaLlvar/0VltY",
+    "d38yiSrL1G8ZYViSoFcTb/",
+    "9btK/GJIFITKWdOeKGwYff",
+    "81DT3Mi0tCcqEzLJGm52SI",
+    "27ybkY9JlMTYzW1QdEFuCw",
+    "2ffaZHzxVAUIWotqra+lk0",
+    "68sWBOfFhOG69udCfxIXGz",
+    "1alvCDjjZOY6qUEFbA0il2",
+    "bbB8bVyedIMI0lYBXVU7l8",
+    "b7CQuXrfBFLK8MFKtLEe0G",
+    "a0xSYV725KkIJfvdrmiuPS",
+    "f3kzKqhJBIA5nZgxVGoToR",
+    "31r/F2P6ZCJaoCVZiCFeC8",
+    "1aKcMNt6xJVL7eh/zbaCSD",
+    "a3V57fTwdHWJegx2NO7NRh",
+    "0fa+uIhqZDUJrpVZLZs8I0",
+    "47KZ5pVxNOl7j10t2gbfbl",
+    "13p/u+1FlK0bN2VpWXXavo",
+    "f2Nud4A+lIY7lh067Scwfs"
+  ],
+  [
+    "value",
+    "_textureSetter"
+  ],
+  [
+    "cc.SpriteFrame",
+    [
+      "cc.AnimationClip",
+      [
+        "_name",
+        "_duration",
+        "sample",
+        "events",
+        "curveData"
+      ],
+      -1,
+      11
+    ]
+  ],
+  [
+    [
+      1,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  ],
+  [
+    [
+      [
+        {
+          "name": "BLACK JACK_6",
+          "rect": [
+            23,
+            37,
+            204,
+            178
+          ],
+          "offset": [
+            0,
+            -1
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        13
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_12",
+          "rect": [
+            23,
+            29,
+            204,
+            192
+          ],
+          "offset": [
+            0,
+            0
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        14
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_9",
+          "rect": [
+            23,
+            34,
+            204,
+            184
+          ],
+          "offset": [
+            0,
+            -1
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        15
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_10",
+          "rect": [
+            23,
+            33,
+            204,
+            186
+          ],
+          "offset": [
+            0,
+            -1
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        16
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_3",
+          "rect": [
+            21,
+            52,
+            207,
+            151
+          ],
+          "offset": [
+            -0.5,
+            -2.5
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        17
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_17",
+          "rect": [
+            23,
+            26,
+            204,
+            200
+          ],
+          "offset": [
+            0,
+            -1
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        18
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_2",
+          "rect": [
+            8,
+            78,
+            233,
+            101
+          ],
+          "offset": [
+            -0.5,
+            -3.5
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        19
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_4",
+          "rect": [
+            23,
+            40,
+            204,
+            173
+          ],
+          "offset": [
+            0,
+            -1.5
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        20
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_11",
+          "rect": [
+            23,
+            32,
+            204,
+            188
+          ],
+          "offset": [
+            0,
+            -1
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        21
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_13",
+          "rect": [
+            23,
+            29,
+            204,
+            193
+          ],
+          "offset": [
+            0,
+            -0.5
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        22
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_7",
+          "rect": [
+            23,
+            36,
+            204,
+            180
+          ],
+          "offset": [
+            0,
+            -1
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        23
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_1",
+          "rect": [
+            0,
+            76,
+            250,
+            79
+          ],
+          "offset": [
+            0,
+            9.5
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        24
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_18",
+          "rect": [
+            23,
+            25,
+            204,
+            201
+          ],
+          "offset": [
+            0,
+            -0.5
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        25
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_21",
+          "rect": [
+            20,
+            22,
+            208,
+            207
+          ],
+          "offset": [
+            -1,
+            -0.5
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        26
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_14",
+          "rect": [
+            23,
+            29,
+            204,
+            194
+          ],
+          "offset": [
+            0,
+            -1
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        27
+      ]
+    ],
+    [
+      [
+        [
+          0,
+          "blackjack",
+          0.85,
+          40,
+          [
+            {
+              "frame": 0.85,
+              "func": "hideFX",
+              "params": []
+            }
+          ],
+          [
+            {
+              "props": {}
+            },
+            "comps",
+            11,
+            [
+              {},
+              "cc.Sprite",
+              11,
+              [
+                {},
+                "spriteFrame",
+                12,
+                [
+                  [
+                    [
+                      {
+                        "frame": 0
+                      },
+                      "value",
+                      6,
+                      0
+                    ],
+                    [
+                      {
+                        "frame": 0.025
+                      },
+                      "value",
+                      6,
+                      1
+                    ],
+                    [
+                      {
+                        "frame": 0.05
+                      },
+                      "value",
+                      6,
+                      2
+                    ],
+                    [
+                      {
+                        "frame": 0.075
+                      },
+                      "value",
+                      6,
+                      3
+                    ],
+                    [
+                      {
+                        "frame": 0.1
+                      },
+                      "value",
+                      6,
+                      4
+                    ],
+                    [
+                      {
+                        "frame": 0.125
+                      },
+                      "value",
+                      6,
+                      5
+                    ],
+                    [
+                      {
+                        "frame": 0.15
+                      },
+                      "value",
+                      6,
+                      6
+                    ],
+                    [
+                      {
+                        "frame": 0.175
+                      },
+                      "value",
+                      6,
+                      7
+                    ],
+                    [
+                      {
+                        "frame": 0.2
+                      },
+                      "value",
+                      6,
+                      8
+                    ],
+                    [
+                      {
+                        "frame": 0.225
+                      },
+                      "value",
+                      6,
+                      9
+                    ],
+                    [
+                      {
+                        "frame": 0.25
+                      },
+                      "value",
+                      6,
+                      10
+                    ],
+                    [
+                      {
+                        "frame": 0.275
+                      },
+                      "value",
+                      6,
+                      11
+                    ],
+                    [
+                      {
+                        "frame": 0.3
+                      },
+                      "value",
+                      6,
+                      12
+                    ],
+                    [
+                      {
+                        "frame": 0.325
+                      },
+                      "value",
+                      6,
+                      13
+                    ],
+                    [
+                      {
+                        "frame": 0.35
+                      },
+                      "value",
+                      6,
+                      14
+                    ],
+                    [
+                      {
+                        "frame": 0.375
+                      },
+                      "value",
+                      6,
+                      15
+                    ],
+                    [
+                      {
+                        "frame": 0.4
+                      },
+                      "value",
+                      6,
+                      16
+                    ],
+                    [
+                      {
+                        "frame": 0.425
+                      },
+                      "value",
+                      6,
+                      17
+                    ],
+                    [
+                      {
+                        "frame": 0.45
+                      },
+                      "value",
+                      6,
+                      18
+                    ],
+                    [
+                      {
+                        "frame": 0.475
+                      },
+                      "value",
+                      6,
+                      19
+                    ],
+                    [
+                      {
+                        "frame": 0.5
+                      },
+                      "value",
+                      6,
+                      20
+                    ],
+                    [
+                      {
+                        "frame": 0.525
+                      },
+                      "value",
+                      6,
+                      21
+                    ],
+                    [
+                      {
+                        "frame": 0.55
+                      },
+                      "value",
+                      6,
+                      22
+                    ],
+                    [
+                      {
+                        "frame": 0.575
+                      },
+                      "value",
+                      6,
+                      23
+                    ],
+                    [
+                      {
+                        "frame": 0.6
+                      },
+                      "value",
+                      6,
+                      24
+                    ],
+                    [
+                      {
+                        "frame": 0.625
+                      },
+                      "value",
+                      6,
+                      25
+                    ],
+                    [
+                      {
+                        "frame": 0.65
+                      },
+                      "value",
+                      6,
+                      26
+                    ],
+                    [
+                      {
+                        "frame": 0.675
+                      },
+                      "value",
+                      6,
+                      27
+                    ],
+                    [
+                      {
+                        "frame": 0.7
+                      },
+                      "value",
+                      6,
+                      28
+                    ],
+                    [
+                      {
+                        "frame": 0.725
+                      },
+                      "value",
+                      6,
+                      29
+                    ],
+                    [
+                      {
+                        "frame": 0.75
+                      },
+                      "value",
+                      6,
+                      30
+                    ],
+                    [
+                      {
+                        "frame": 0.775
+                      },
+                      "value",
+                      6,
+                      31
+                    ],
+                    [
+                      {
+                        "frame": 0.8
+                      },
+                      "value",
+                      6,
+                      32
+                    ],
+                    [
+                      {
+                        "frame": 0.825
+                      },
+                      "value",
+                      6,
+                      33
+                    ],
+                    [
+                      {
+                        "frame": 0.85
+                      },
+                      "value",
+                      6,
+                      34
+                    ]
+                  ],
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11,
+                  11
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      0,
+      0,
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        28,
+        0,
+        0,
+        1,
+        1,
+        2,
+        2,
+        3,
+        3,
+        4,
+        4,
+        5,
+        5,
+        6,
+        6,
+        29,
+        30,
+        31,
+        32,
+        7,
+        7,
+        8,
+        8,
+        9,
+        9,
+        10,
+        10,
+        11,
+        11,
+        12,
+        12,
+        33,
+        34,
+        35,
+        36
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_20",
+          "rect": [
+            21,
+            23,
+            206,
+            205
+          ],
+          "offset": [
+            -1,
+            -0.5
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        37
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_19",
+          "rect": [
+            22,
+            23,
+            205,
+            204
+          ],
+          "offset": [
+            -0.5,
+            0
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        38
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_16",
+          "rect": [
+            23,
+            26,
+            204,
+            199
+          ],
+          "offset": [
+            0,
+            -0.5
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        39
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_15",
+          "rect": [
+            23,
+            27,
+            204,
+            197
+          ],
+          "offset": [
+            0,
+            -0.5
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        40
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_8",
+          "rect": [
+            23,
+            35,
+            204,
+            182
+          ],
+          "offset": [
+            0,
+            -1
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        41
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_5",
+          "rect": [
+            23,
+            38,
+            204,
+            176
+          ],
+          "offset": [
+            0,
+            -1
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        42
+      ]
+    ],
+    [
+      [
+        {
+          "name": "BLACK JACK_22",
+          "rect": [
+            22,
+            25,
+            205,
+            200
+          ],
+          "offset": [
+            -0.5,
+            0
+          ],
+          "originalSize": [
+            250,
+            250
+          ],
+          "capInsets": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      [
+        0
+      ],
+      0,
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        43
+      ]
+    ]
+  ]
+]
