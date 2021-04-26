@@ -331,6 +331,11 @@ cc.Class({
             var newPaths = this._am.getLocalManifest().getSearchPaths();
             console.log(JSON.stringify(newPaths));
             Array.prototype.unshift.apply(searchPaths, newPaths);
+            for (var i = 0; i < newPaths.length; i++) {
+                if (searchPaths.indexOf(newPaths[i]) == -1) {
+                    Array.prototype.unshift.apply(searchPaths, [newPaths[i]]);
+                }
+            }
             // This value will be retrieved and appended to the default search path during game startup,
             // please refer to samples/js-tests/main.js for detailed usage.
             // !!! Re-add the search paths in main.js is very important, otherwise, new scripts won't take effect.
