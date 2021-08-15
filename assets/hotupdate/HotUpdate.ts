@@ -1,6 +1,6 @@
 import { UpdatePanel } from './UpdatePanel';
 
-import { _decorator, Component, Node, Asset, game, sys } from 'cc';
+import { _decorator, Component, Node, game, sys } from 'cc';
 const { ccclass, property } = _decorator;
 
 @ccclass('HotUpdate')
@@ -14,11 +14,8 @@ export class HotUpdate extends Component {
 
     private _updating = false;
     private _canRetry = false;
-    private _am: jsb.AssetsManager = null!;
-    private _checkListener = null;
-    private _updateListener = null;
+    private _assetsManager: jsb.AssetsManager = null!;
     private _failCount = 0;
-    private versionCompareHandle: (versionA: string, versionB: string) => number = null!;
 
     checkCb(event: any) {
         console.log('Code: ' + event.getEventCode());
@@ -34,7 +31,7 @@ export class HotUpdate extends Component {
                 this.panel.info.string = "Already up to date with the latest remote version.";
                 break;
             case jsb.EventAssetsManager.NEW_VERSION_FOUND:
-                this.panel.info.string = 'New version found, please try to update. (' + Math.ceil(this._am.getTotalBytes() / 1024) + 'kb)';
+                this.panel.info.string = 'New version found, please try to update. (' + Math.ceil(this._assetsManager.getTotalBytes() / 1024) + 'kb)';
                 this.panel.checkBtn.active = false;
                 this.panel.fileProgress.progress = 0;
                 this.panel.byteProgress.progress = 0;
@@ -42,10 +39,7 @@ export class HotUpdate extends Component {
             default:
                 return;
         }
-
-
-        this._am.setEventCallback(null!);
-        this._checkListener = null;
+        this._assetsManager.setEventCallback(null!);
         this._updating = false;
     }
 
@@ -100,25 +94,12 @@ export class HotUpdate extends Component {
         }
 
         if (failed) {
-            this._am.setEventCallback(null!);
-            this._updateListener = null;
+            this._assetsManager.setEventCallback(null!);
             this._updating = false;
         }
 
         if (needRestart) {
-            this._am.setEventCallback(null!);
-            this._updateListener = null;
-            // Prepend the manifest's search path
-            var searchPaths = jsb.fileUtils.getSearchPaths();
-            var newPaths = this._am.getLocalManifest().getSearchPaths();
-            console.log(JSON.stringify(newPaths));
-            Array.prototype.unshift.apply(searchPaths, newPaths);
-            // This value will be retrieved and appended to the default search path during game startup,
-            // please refer to samples/js-tests/main.js for detailed usage.
-            // !!! Re-add the search paths in main.js is very important, otherwise, new scripts won't take effect.
-            localStorage.setItem('HotUpdateSearchPaths', JSON.stringify(searchPaths));
-            jsb.fileUtils.setSearchPaths(searchPaths);
-
+            this._assetsManager.setEventCallback(null!);
             // restart game.
             setTimeout(() => {
                 game.restart();
@@ -132,7 +113,7 @@ export class HotUpdate extends Component {
             this._canRetry = false;
 
             this.panel.info.string = 'Retry failed Assets...';
-            this._am.downloadFailedAssets();
+            this._assetsManager.downloadFailedAssets();
         }
     }
 
@@ -141,17 +122,17 @@ export class HotUpdate extends Component {
             this.panel.info.string = 'Checking or updating ...';
             return;
         }
-        this._am.setEventCallback(this.checkCb.bind(this));
-        this._am.checkUpdate();
+        this._assetsManager.setEventCallback(this.checkCb.bind(this));
+        this._assetsManager.checkUpdate();
         this._updating = true;
     }
 
     hotUpdate() {
-        if (this._am && !this._updating) {
-            this._am.setEventCallback(this.updateCb.bind(this));
+        if (this._assetsManager && !this._updating) {
+            this._assetsManager.setEventCallback(this.updateCb.bind(this));
 
             this._failCount = 0;
-            this._am.update();
+            this._assetsManager.update();
             this.panel.updateBtn.active = false;
             this._updating = true;
         }
@@ -169,39 +150,16 @@ export class HotUpdate extends Component {
         if (!sys.isNative) {
             return;
         }
-
-        this.versionCompareHandle = function (versionA: string, versionB: string) {
-            console.log("JS Custom Version Compare: version A is " + versionA + ', version B is ' + versionB);
-            var vA = versionA.split('.');
-            var vB = versionB.split('.');
-            for (var i = 0; i < vA.length; ++i) {
-                var a = parseInt(vA[i]);
-                var b = parseInt(vB[i] || '0');
-                if (a === b) {
-                    continue;
-                }
-                else {
-                    return a - b;
-                }
-            }
-            if (vB.length > vA.length) {
-                return -1;
-            }
-            else {
-                return 0;
-            }
-        };
-
         const writablePath = jsb.fileUtils.getWritablePath();
         console.log('WritablePath', JSON.stringify(writablePath));
         const manifestUrl = 'project.manifest';
         // Init with empty manifest url for testing custom manifest
-        this._am = new jsb.AssetsManager(manifestUrl, `${writablePath}/hotupdate_storage`);
+        this._assetsManager = new jsb.AssetsManager(manifestUrl, `${writablePath}/hotupdate_storage`);
 
         var panel = this.panel;
         // Setup the verification callback, but we don't have md5 check function yet, so only print some message
         // Return true if the verification passed, otherwise return false
-        this._am.setVerifyCallback(function (path: string, asset: any) {
+        this._assetsManager.setVerifyCallback(function (path: string, asset: any) {
             // When asset is compressed, we don't need to check its md5, because zip file have been deleted.
             var compressed = asset.compressed;
             // Retrieve the correct md5 value.
@@ -226,9 +184,6 @@ export class HotUpdate extends Component {
     }
 
     onDestroy() {
-        if (this._updateListener) {
-            this._am.setEventCallback(null!);
-            this._updateListener = null;
-        }
+        this._assetsManager.setEventCallback(null!);
     }
 }
