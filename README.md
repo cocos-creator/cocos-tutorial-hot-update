@@ -102,7 +102,7 @@ Manifest 文件中包含以下几个重要信息：
                     var relativePath = srcPath.substr(baseOffset);
                     var dstPath = storagePath + relativePath;
 
-                    if (srcPath[srcPath.length] == '/') {
+                    if (srcPath[srcPath.length - 1] == '/') {
                         jsb.fileUtils.createDirectory(dstPath)
                     }
                     else {
