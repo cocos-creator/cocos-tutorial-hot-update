@@ -16,8 +16,8 @@
       "name": "texture",
       "userData": {
         "imageUuidOrDatabaseUri": "c1e757ac-f5bb-46ed-b86a-fdabff7aeb55",
-        "wrapModeS": "repeat",
-        "wrapModeT": "repeat",
+        "wrapModeS": "clamp-to-edge",
+        "wrapModeT": "clamp-to-edge",
         "minfilter": "linear",
         "magfilter": "linear",
         "mipfilter": "none",

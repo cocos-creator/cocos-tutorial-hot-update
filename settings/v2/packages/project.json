@@ -5,5 +5,11 @@
       "name": "canvas_19",
       "value": 524288
     }
-  ]
+  ],
+  "general": {
+    "designResolution": {
+      "width": 1280,
+      "height": 720
+    }
+  }
 }

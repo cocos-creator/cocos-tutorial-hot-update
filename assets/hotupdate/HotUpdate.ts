@@ -1,6 +1,6 @@
 import { UpdatePanel } from './UpdatePanel';
 
-import { _decorator, Component, Node, Asset, game } from 'cc';
+import { _decorator, Component, Node, Asset, game, sys } from 'cc';
 const { ccclass, property } = _decorator;
 
 @ccclass('HotUpdate')
@@ -166,14 +166,37 @@ export class HotUpdate extends Component {
     // use this for initialization
     onLoad() {
         // Hot update is only available in Native build
-        if (!jsb) {
+        if (!sys.isNative) {
             return;
         }
+
+        this.versionCompareHandle = function (versionA: string, versionB: string) {
+            console.log("JS Custom Version Compare: version A is " + versionA + ', version B is ' + versionB);
+            var vA = versionA.split('.');
+            var vB = versionB.split('.');
+            for (var i = 0; i < vA.length; ++i) {
+                var a = parseInt(vA[i]);
+                var b = parseInt(vB[i] || '0');
+                if (a === b) {
+                    continue;
+                }
+                else {
+                    return a - b;
+                }
+            }
+            if (vB.length > vA.length) {
+                return -1;
+            }
+            else {
+                return 0;
+            }
+        };
+
         const writablePath = jsb.fileUtils.getWritablePath();
         console.log('WritablePath', JSON.stringify(writablePath));
         const manifestUrl = 'project.manifest';
         // Init with empty manifest url for testing custom manifest
-        this._am = new jsb.AssetsManager(manifestUrl, 'hotupdate_storage');
+        this._am = new jsb.AssetsManager(manifestUrl, `${writablePath}/hotupdate_storage`);
 
         var panel = this.panel;
         // Setup the verification callback, but we don't have md5 check function yet, so only print some message
