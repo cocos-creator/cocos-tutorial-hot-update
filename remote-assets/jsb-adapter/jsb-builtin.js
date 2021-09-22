@@ -678,51 +678,7 @@ window.setInterval = function (cb) {
 };
 
 window.clearInterval = window.clearTimeout;
-window.alert = console.error.bind(console);
-var __motionCallbackID = 0;
-var __motionEnabled = false;
-var __motionInterval = 16.6; // milliseconds
-
-jsb.device.setMotionInterval = function (milliseconds) {
-  __motionInterval = milliseconds; // convert to seconds
-
-  jsb.device.setAccelerometerInterval(__motionInterval / 1000);
-
-  if (__motionEnabled) {
-    jsb.device.setMotionEnabled(false);
-    jsb.device.setMotionEnabled(true);
-  }
-};
-
-jsb.device.setMotionEnabled = function (enabled) {
-  if (__motionEnabled === enabled) return;
-  jsb.device.setAccelerometerEnabled(enabled);
-
-  if (enabled) {
-    var motionValue;
-    var event = new DeviceMotionEvent();
-    __motionCallbackID = window.setInterval(function () {
-      motionValue = jsb.device.getDeviceMotionValue();
-      event._acceleration.x = motionValue[0];
-      event._acceleration.y = motionValue[1];
-      event._acceleration.z = motionValue[2];
-      event._accelerationIncludingGravity.x = motionValue[3];
-      event._accelerationIncludingGravity.y = motionValue[4];
-      event._accelerationIncludingGravity.z = motionValue[5];
-      event._rotationRate.alpha = motionValue[6];
-      event._rotationRate.beta = motionValue[7];
-      event._rotationRate.gamma = motionValue[8];
-      event._interval = __motionInterval;
-      jsb.device.dispatchDeviceMotionEvent(event);
-    }, __motionInterval);
-  } else {
-    window.clearInterval(__motionCallbackID);
-    __motionCallbackID = 0;
-  }
-
-  __motionEnabled = enabled;
-}; // File utils (Temporary, won't be accessible)
-
+window.alert = console.error.bind(console); // File utils (Temporary, won't be accessible)
 
 if (typeof jsb.FileUtils !== 'undefined') {
   jsb.fileUtils = jsb.FileUtils.getInstance();
@@ -1655,101 +1611,6 @@ class EventTarget {
   }
 
 }
-
-function touchEventHandlerFactory(type) {
-  return touches => {
-    const touchEvent = new TouchEvent(type);
-    touchEvent.touches = touches;
-    touchEvent.targetTouches = Array.prototype.slice.call(touchEvent.touches);
-    touchEvent.changedTouches = touches; //event.changedTouches
-    // touchEvent.timeStamp = event.timeStamp
-
-    var i = 0,
-        touchCount = touches.length;
-    var target;
-    var touchListenerMap = __listenerMap.touch;
-
-    for (let key in touchListenerMap) {
-      target = touchListenerMap[key];
-
-      for (i = 0; i < touchCount; ++i) {
-        touches[i].target = target;
-      }
-
-      target.dispatchEvent(touchEvent);
-    }
-  };
-}
-
-jsb.onTouchStart = touchEventHandlerFactory('touchstart');
-jsb.onTouchMove = touchEventHandlerFactory('touchmove');
-jsb.onTouchEnd = touchEventHandlerFactory('touchend');
-jsb.onTouchCancel = touchEventHandlerFactory('touchcancel');
-
-function mouseEventHandlerFactory(type) {
-  return event => {
-    var button = event.button;
-    var x = event.x;
-    var y = event.y;
-    const mouseEvent = new MouseEvent(type, {
-      button: button,
-      which: button + 1,
-      wheelDelta: event.wheelDeltaY && event.wheelDeltaY * 120,
-      // scale up to match the web interface
-      clientX: x,
-      clientY: y,
-      screenX: x,
-      screenY: y,
-      pageX: x,
-      pageY: y
-    });
-    var target;
-    var mouseListenerMap = __listenerMap.mouse;
-
-    for (let key in mouseListenerMap) {
-      target = mouseListenerMap[key];
-      target.dispatchEvent(mouseEvent);
-    }
-  };
-}
-
-jsb.onMouseDown = mouseEventHandlerFactory('mousedown');
-jsb.onMouseMove = mouseEventHandlerFactory('mousemove');
-jsb.onMouseUp = mouseEventHandlerFactory('mouseup');
-jsb.onMouseWheel = mouseEventHandlerFactory('mousewheel');
-
-function keyboardEventHandlerFactory(type) {
-  return event => {
-    const keyboardEvent = new KeyboardEvent(type, {
-      altKey: event.altKey,
-      ctrlKey: event.ctrlKey,
-      metaKey: event.metaKey,
-      shiftKey: event.shiftKey,
-      repeat: event.repeat,
-      keyCode: event.keyCode
-    });
-    var target;
-    var keyboardListenerMap = __listenerMap.keyboard;
-
-    for (let key in keyboardListenerMap) {
-      target = keyboardListenerMap[key];
-      target.dispatchEvent(keyboardEvent);
-    }
-  };
-}
-
-jsb.onKeyDown = keyboardEventHandlerFactory('keydown');
-jsb.onKeyUp = keyboardEventHandlerFactory('keyup');
-
-jsb.device.dispatchDeviceMotionEvent = function (event) {
-  var target;
-  var devicemotionListenerMap = __listenerMap.devicemotion;
-
-  for (let key in devicemotionListenerMap) {
-    target = devicemotionListenerMap[key];
-    target.dispatchEvent(event);
-  }
-};
 
 module.exports = EventTarget;
 
@@ -3409,6 +3270,7 @@ const location = {
   pathname: 'game.js',
   search: '',
   hash: '',
+  protocol: '',
 
   reload() {}
 

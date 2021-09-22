@@ -1,0 +1,70 @@
+{
+    "importBase": "import",
+    "nativeBase": "native",
+    "name": "main",
+    "deps": [],
+    "uuids": [
+        "0897a7610",
+        "09206bb20",
+        "0f4f09600",
+        "700faa17-11a6-46cd-aeb5-d6900bc264f8",
+        "700faa17-11a6-46cd-aeb5-d6900bc264f8@6c48a",
+        "700faa17-11a6-46cd-aeb5-d6900bc264f8@f9941",
+        "800f94fd-7424-4202-9629-d3ca77f3b72d",
+        "8a546935-70d4-42d2-a051-8d0e76f28008",
+        "9e71ecbc-8d63-45dd-b0e3-26cefa3d07b1",
+        "9e71ecbc-8d63-45dd-b0e3-26cefa3d07b1@6c48a",
+        "9e71ecbc-8d63-45dd-b0e3-26cefa3d07b1@f9941",
+        "ae4e2188-2b7b-42a9-85e1-8fb987600b04",
+        "ae4e2188-2b7b-42a9-85e1-8fb987600b04@6c48a",
+        "ae4e2188-2b7b-42a9-85e1-8fb987600b04@f9941",
+        "c1e757ac-f5bb-46ed-b86a-fdabff7aeb55",
+        "c1e757ac-f5bb-46ed-b86a-fdabff7aeb55@6c48a",
+        "c1e757ac-f5bb-46ed-b86a-fdabff7aeb55@f9941",
+        "edd97988-52a3-4312-8671-90a51bb563ae",
+        "edd97988-52a3-4312-8671-90a51bb563ae@6c48a",
+        "edd97988-52a3-4312-8671-90a51bb563ae@f9941",
+        "fd8ec536-a354-4a17-9c74-4f3883c378c8"
+    ],
+    "paths": {
+        "fd8ec536-a354-4a17-9c74-4f3883c378c8": [
+            "db:/internal/default_renderpipeline/builtin-forward",
+            "cc.RenderPipeline"
+        ]
+    },
+    "scenes": {
+        "db://assets/scenes/menu.scene": "8a546935-70d4-42d2-a051-8d0e76f28008"
+    },
+    "packs": {
+        "09206bb20": [
+            "9e71ecbc-8d63-45dd-b0e3-26cefa3d07b1",
+            "700faa17-11a6-46cd-aeb5-d6900bc264f8",
+            "ae4e2188-2b7b-42a9-85e1-8fb987600b04",
+            "c1e757ac-f5bb-46ed-b86a-fdabff7aeb55",
+            "edd97988-52a3-4312-8671-90a51bb563ae"
+        ],
+        "0f4f09600": [
+            "700faa17-11a6-46cd-aeb5-d6900bc264f8@f9941",
+            "800f94fd-7424-4202-9629-d3ca77f3b72d",
+            "8a546935-70d4-42d2-a051-8d0e76f28008",
+            "9e71ecbc-8d63-45dd-b0e3-26cefa3d07b1@f9941",
+            "ae4e2188-2b7b-42a9-85e1-8fb987600b04@f9941",
+            "c1e757ac-f5bb-46ed-b86a-fdabff7aeb55@f9941",
+            "edd97988-52a3-4312-8671-90a51bb563ae@f9941"
+        ],
+        "0897a7610": [
+            "9e71ecbc-8d63-45dd-b0e3-26cefa3d07b1@6c48a",
+            "700faa17-11a6-46cd-aeb5-d6900bc264f8@6c48a",
+            "ae4e2188-2b7b-42a9-85e1-8fb987600b04@6c48a",
+            "c1e757ac-f5bb-46ed-b86a-fdabff7aeb55@6c48a",
+            "edd97988-52a3-4312-8671-90a51bb563ae@6c48a"
+        ]
+    },
+    "versions": {
+        "import": [],
+        "native": []
+    },
+    "redirect": [],
+    "debug": true,
+    "extensionMap": {}
+}

@@ -1,1 +1,50 @@
-System.register(["./ammo-instantiated-45eaa448.js"],(function(t){"use strict";var e;return{setters:[function(r){e=r.bc,t("default",r.g0)}],execute:function(){e._global.atob=function(t){const e="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";let r="",n=0,a=0,i=0,o=0,c=0,f=0,d=0,h=0;t=t.replace(/[^A-Za-z0-9\+\/\=]/g,"");do{o=e.indexOf(t.charAt(h++)),c=e.indexOf(t.charAt(h++)),f=e.indexOf(t.charAt(h++)),d=e.indexOf(t.charAt(h++)),n=o<<2|c>>4,a=(15&c)<<4|f>>2,i=(3&f)<<6|d,r+=String.fromCharCode(n),64!==f&&(r+=String.fromCharCode(a)),64!==d&&(r+=String.fromCharCode(i))}while(h<t.length);return r}}}}));
+System.register(['./instantiated-332bb9e9.js'], function (exports) {
+    'use strict';
+    var legacyCC;
+    return {
+        setters: [function (module) {
+            legacyCC = module.a_;
+            exports('default', module.ge);
+        }],
+        execute: function () {
+
+            function atob(input) {
+              const keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+              let output = '';
+              let chr1 = 0;
+              let chr2 = 0;
+              let chr3 = 0;
+              let enc1 = 0;
+              let enc2 = 0;
+              let enc3 = 0;
+              let enc4 = 0;
+              let i = 0;
+              input = input.replace(/[^A-Za-z0-9\+\/\=]/g, '');
+
+              do {
+                enc1 = keyStr.indexOf(input.charAt(i++));
+                enc2 = keyStr.indexOf(input.charAt(i++));
+                enc3 = keyStr.indexOf(input.charAt(i++));
+                enc4 = keyStr.indexOf(input.charAt(i++));
+                chr1 = enc1 << 2 | enc2 >> 4;
+                chr2 = (enc2 & 15) << 4 | enc3 >> 2;
+                chr3 = (enc3 & 3) << 6 | enc4;
+                output += String.fromCharCode(chr1);
+
+                if (enc3 !== 64) {
+                  output += String.fromCharCode(chr2);
+                }
+
+                if (enc4 !== 64) {
+                  output += String.fromCharCode(chr3);
+                }
+              } while (i < input.length);
+
+              return output;
+            }
+
+            legacyCC._global.atob = atob;
+
+        }
+    };
+});
