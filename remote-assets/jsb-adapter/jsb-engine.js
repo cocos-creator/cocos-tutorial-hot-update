@@ -29,11 +29,11 @@ require('./jsb-reflection.js');
 
 require('./jsb-assets-manager.js');
 
-require('./jsb-sys.js');
-
 require('./jsb-game.js');
 
 require('./jsb-gfx.js');
+
+require('./jsb-scene.js');
 
 require('./jsb-loader.js');
 
@@ -41,13 +41,7 @@ require('./jsb-videoplayer.js');
 
 require('./jsb-webview.js');
 
-require('./jsb-audio.js');
-
 require('./jsb-editbox.js');
-
-require('./jsb-pipeline.js');
-
-require('./jsb-safearea.js');
 
 require('./jsb-editor-support.js');
 
@@ -55,7 +49,9 @@ require('./jsb-spine-skeleton.js');
 
 require('./jsb-dragonbones.js');
 
-},{"./jsb-assets-manager.js":2,"./jsb-audio.js":3,"./jsb-dragonbones.js":5,"./jsb-editbox.js":6,"./jsb-editor-support.js":7,"./jsb-game.js":9,"./jsb-gfx.js":10,"./jsb-loader.js":11,"./jsb-pipeline.js":12,"./jsb-reflection.js":13,"./jsb-safearea.js":14,"./jsb-spine-skeleton.js":15,"./jsb-sys.js":16,"./jsb-videoplayer.js":17,"./jsb-webview.js":18}],2:[function(require,module,exports){
+if (cc.physics && cc.physics.PhysicsSystem.PHYSICS_PHYSX) require('./jsb-physics.js');
+
+},{"./jsb-assets-manager.js":2,"./jsb-dragonbones.js":4,"./jsb-editbox.js":5,"./jsb-editor-support.js":6,"./jsb-game.js":8,"./jsb-gfx.js":9,"./jsb-loader.js":10,"./jsb-physics.js":11,"./jsb-reflection.js":12,"./jsb-scene.js":13,"./jsb-spine-skeleton.js":14,"./jsb-videoplayer.js":15,"./jsb-webview.js":16}],2:[function(require,module,exports){
 "use strict";
 
 /*
@@ -116,227 +112,6 @@ if (jsb.AssetsManager) {
 }
 
 },{}],3:[function(require,module,exports){
-/****************************************************************************
- Copyright (c) 2013-2016 Chukong Technologies Inc.
- Copyright (c) 2017-2020 Xiamen Yaji Software Co., Ltd.
-
- https://www.cocos.com/
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated engine source code (the "Software"), a limited,
- worldwide, royalty-free, non-assignable, revocable and  non-exclusive license
- to use Cocos Creator solely to develop games on your target platforms. You shall
- not use Cocos Creator software for developing other software or tools that's
- used for developing games. You are not granted to publish, distribute,
- sublicense, and/or sell copies of Cocos Creator.
-
- The software or tools in this License Agreement are licensed, not sold.
- Xiamen Yaji Software Co., Ltd. reserves all rights not expressly granted to you.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- THE SOFTWARE.
- ****************************************************************************/
-'use strict';
-
-const AudioPlayer = cc.internal.AudioPlayer;
-
-if (AudioPlayer) {
-  const {
-    PlayingState,
-    AudioType
-  } = cc.AudioClip;
-
-  cc.AudioClip.prototype._getPlayer = function (clip) {
-    this._loadMode = AudioType.JSB_AUDIO;
-    return AudioPlayerJSB;
-  };
-
-  class AudioPlayerJSB extends AudioPlayer {
-    constructor(info) {
-      super(info);
-      this._startTime = 0;
-      this._offset = 0;
-      this._volume = 1;
-      this._loop = false;
-      this._url = info.nativeAudio;
-      this._audio = -1;
-      this._onEnded = this._onEnded.bind(this);
-    }
-
-    play() {
-      if (this._state === PlayingState.PLAYING) {
-        return;
-      }
-
-      if (this._blocking) {
-        this._interrupted = true;
-        return;
-      }
-
-      this._doPlay(); // delay eval here to yield uniform behavior with other platforms
-
-
-      cc.director.once(cc.Director.EVENT_AFTER_UPDATE, this._onPlay, this);
-    }
-
-    pause() {
-      if (this._audio < 0) {
-        return;
-      }
-
-      this._interrupted = false;
-
-      if (this._state !== PlayingState.PLAYING) {
-        return;
-      }
-
-      jsb.AudioEngine.pause(this._audio);
-
-      this._onPause();
-    }
-
-    stop() {
-      if (this._audio < 0) {
-        return;
-      }
-
-      this._interrupted = false;
-      jsb.AudioEngine.stop(this._audio);
-      this._audio = -1;
-
-      this._onStop();
-    }
-
-    playOneShot(volume) {
-      if (volume === undefined) {
-        volume = 1;
-      }
-
-      jsb.AudioEngine.play(this._url, false, volume);
-    }
-
-    getCurrentTime() {
-      if (this._state !== PlayingState.PLAYING) {
-        return this._offset / 1000;
-      }
-
-      let current = (performance.now() - this._startTime + this._offset) / 1000;
-
-      while (current > this._duration) {
-        if (this._loop) {
-          current -= this._duration;
-          this._startTime += this._duration * 1000;
-        } else current = 0; // onEnded callback may lag behind a few frames
-
-      }
-
-      return current;
-    }
-
-    setCurrentTime(val) {
-      if (this._audio < 0) {
-        return;
-      }
-
-      val = cc.math.clamp(val, 0, this._duration);
-      jsb.AudioEngine.setCurrentTime(this._audio, val);
-      this._offset = val * 1000;
-      this._startTime = performance.now();
-    }
-
-    getVolume() {
-      return this._volume;
-    }
-
-    setVolume(val, immediate) {
-      this._volume = val;
-
-      if (this._audio >= 0) {
-        jsb.AudioEngine.setVolume(this._audio, val);
-      }
-    }
-
-    getLoop() {
-      return this._loop;
-    }
-
-    setLoop(val) {
-      this._loop = val;
-
-      if (this._audio >= 0) {
-        jsb.AudioEngine.setLoop(this._audio, val);
-      }
-    }
-
-    destroy() {
-      if (this._audio >= 0) {
-        jsb.AudioEngine.uncache(this._url);
-        this._audio = -1;
-      }
-
-      super.destroy();
-    }
-
-    _doPlay() {
-      if (this._audio >= 0) jsb.AudioEngine.resume(this._audio);else {
-        this._audio = jsb.AudioEngine.play(this._url, this._loop, this._volume);
-        jsb.AudioEngine.setErrorCallback(this._audio, console.error);
-        jsb.AudioEngine.setFinishCallback(this._audio, this._onEnded);
-      }
-    }
-
-    _onPlay() {
-      if (this._state === PlayingState.PLAYING) {
-        return;
-      }
-
-      this._state = PlayingState.PLAYING;
-      this._startTime = performance.now();
-
-      this._clip.emit('started');
-    }
-
-    _onPause() {
-      if (this._state === PlayingState.STOPPED) {
-        return;
-      }
-
-      this._state = PlayingState.STOPPED;
-      this._offset += performance.now() - this._startTime;
-    }
-
-    _onStop() {
-      this._offset = 0;
-
-      if (this._state === PlayingState.STOPPED) {
-        return;
-      }
-
-      this._state = PlayingState.STOPPED;
-    }
-
-    _onEnded() {
-      this._offset = 0;
-      this._audio = -1;
-
-      if (this._state === PlayingState.STOPPED) {
-        return;
-      }
-
-      this._state = PlayingState.STOPPED;
-
-      this._clip.emit('ended');
-    }
-
-  }
-}
-
-},{}],4:[function(require,module,exports){
 "use strict";
 
 /****************************************************************************
@@ -465,7 +240,7 @@ var cacheManager = {
     caches.sort(function (a, b) {
       return a.lastTime - b.lastTime;
     });
-    caches.length = Math.floor(this.cachedFiles.count / 3);
+    caches.length = Math.floor(caches.length / 3);
     if (caches.length === 0) return;
 
     for (var i = 0, l = caches.length; i < l; i++) {
@@ -509,7 +284,7 @@ var cacheManager = {
 };
 cc.assetManager.cacheManager = module.exports = cacheManager;
 
-},{"./jsb-fs-utils":8}],5:[function(require,module,exports){
+},{"./jsb-fs-utils":7}],4:[function(require,module,exports){
 "use strict";
 
 /****************************************************************************
@@ -727,7 +502,7 @@ const cacheManager = require('./jsb-cache-manager');
 
   dbAtlas.removeRecordTexture = function (texture) {
     if (!texture) return;
-    delete _textureIdx2Name[texture.url];
+    delete _textureIdx2Name[texture.image.url];
     let index = texture.__textureIndex__;
 
     if (index) {
@@ -763,7 +538,7 @@ const cacheManager = require('./jsb-cache-manager');
   };
 
   dbAtlas.updateTextureAtlasData = function (factory) {
-    let url = this._texture.url;
+    let url = this._texture.image.url;
     let preAtlasInfo = _textureIdx2Name[url];
     let index; // If the texture has store the atlas info before,then get native atlas object,and 
     // update script texture map.
@@ -884,6 +659,7 @@ const cacheManager = require('./jsb-cache-manager');
   let superProto = cc.internal.Renderable2D.prototype;
   let armatureDisplayProto = cc.internal.ArmatureDisplay.prototype;
   const AnimationCacheMode = cc.internal.ArmatureDisplay.AnimationCacheMode;
+  let armatureSystem = cc.internal.ArmatureSystem;
 
   armatureDisplayProto.initFactory = function () {
     this._factory = dragonBones.CCFactory.getFactory();
@@ -1084,32 +860,34 @@ const cacheManager = require('./jsb-cache-manager');
   let _onEnable = superProto.onEnable;
 
   armatureDisplayProto.onEnable = function () {
-    _onEnable.call(this);
+    if (_onEnable) {
+      _onEnable.call(this);
+    }
 
     if (this._armature && !this.isAnimationCached()) {
       this._factory.add(this._armature);
     }
 
-    this._onSyncTransform();
-
     this.syncTransform(true);
 
     this._flushAssembler();
 
+    armatureSystem.getInstance().add(this);
     middleware.retain();
   };
 
   let _onDisable = superProto.onDisable;
 
   armatureDisplayProto.onDisable = function () {
-    _onDisable.call(this);
+    if (_onDisable) {
+      _onDisable.call(this);
+    }
 
     if (this._armature && !this.isAnimationCached()) {
       this._factory.remove(this._armature);
     }
 
-    this._offSyncTransform();
-
+    armatureSystem.getInstance().remove(this);
     middleware.release();
   };
 
@@ -1166,26 +944,29 @@ const cacheManager = require('./jsb-cache-manager');
     let node = this.node;
     if (!node) return;
     let paramsBuffer = this._paramsBuffer;
-    if (!paramsBuffer) return; // sync node world matrix to native
+    if (!paramsBuffer) return;
 
-    node.updateWorldTransform();
-    let worldMat = node._mat;
-    paramsBuffer[1] = worldMat.m00;
-    paramsBuffer[2] = worldMat.m01;
-    paramsBuffer[3] = worldMat.m02;
-    paramsBuffer[4] = worldMat.m03;
-    paramsBuffer[5] = worldMat.m04;
-    paramsBuffer[6] = worldMat.m05;
-    paramsBuffer[7] = worldMat.m06;
-    paramsBuffer[8] = worldMat.m07;
-    paramsBuffer[9] = worldMat.m08;
-    paramsBuffer[10] = worldMat.m09;
-    paramsBuffer[11] = worldMat.m10;
-    paramsBuffer[12] = worldMat.m11;
-    paramsBuffer[13] = worldMat.m12;
-    paramsBuffer[14] = worldMat.m13;
-    paramsBuffer[15] = worldMat.m14;
-    paramsBuffer[16] = worldMat.m15;
+    if (force || node.hasChangedFlags || node._dirtyFlags) {
+      // sync node world matrix to native
+      node.updateWorldTransform();
+      let worldMat = node._mat;
+      paramsBuffer[1] = worldMat.m00;
+      paramsBuffer[2] = worldMat.m01;
+      paramsBuffer[3] = worldMat.m02;
+      paramsBuffer[4] = worldMat.m03;
+      paramsBuffer[5] = worldMat.m04;
+      paramsBuffer[6] = worldMat.m05;
+      paramsBuffer[7] = worldMat.m06;
+      paramsBuffer[8] = worldMat.m07;
+      paramsBuffer[9] = worldMat.m08;
+      paramsBuffer[10] = worldMat.m09;
+      paramsBuffer[11] = worldMat.m10;
+      paramsBuffer[12] = worldMat.m11;
+      paramsBuffer[13] = worldMat.m12;
+      paramsBuffer[14] = worldMat.m13;
+      paramsBuffer[15] = worldMat.m14;
+      paramsBuffer[16] = worldMat.m15;
+    }
   };
 
   armatureDisplayProto.setAnimationCacheMode = function (cacheMode) {
@@ -1204,7 +985,7 @@ const cacheManager = require('./jsb-cache-manager');
     }
   };
 
-  armatureDisplayProto.update = function () {
+  armatureDisplayProto.updateAnimation = function () {
     let nativeDisplay = this._nativeDisplay;
     if (!nativeDisplay) return;
     let node = this.node;
@@ -1216,6 +997,8 @@ const cacheManager = require('./jsb-cache-manager');
       this._renderOrder = middleware.renderOrder;
       middleware.renderOrder++;
     }
+
+    this.syncTransform();
 
     if (this.__preColor__ === undefined || !this.color.equals(this.__preColor__)) {
       let compColor = this.color;
@@ -1339,9 +1122,9 @@ const cacheManager = require('./jsb-cache-manager');
     for (let index = 0; index < matLen; index++) {
       realTextureIndex = renderInfo[renderInfoOffset + materialIdx++];
       realTexture = this.dragonAtlasAsset.getTextureByIndex(realTextureIndex);
-      if (!realTexture) return; // SpineMaterialType.TWO_COLORED 2
-      // SpineMaterialType.COLORED_TEXTURED 0
-      // cache material
+      if (!realTexture) return; //HACK
+
+      const mat = this.material; // cache material
 
       this.material = this.getMaterialForBlend(renderInfo[renderInfoOffset + materialIdx++], renderInfo[renderInfoOffset + materialIdx++]);
       _tempBufferIndex = renderInfo[renderInfoOffset + materialIdx++];
@@ -1355,7 +1138,8 @@ const cacheManager = require('./jsb-cache-manager');
         middleware.resetIndicesStart = false;
       }
 
-      ui.commitComp(this, realTexture._texture, this._assembler, null);
+      ui.commitComp(this, realTexture, this._assembler, null);
+      this.material = mat;
     }
   }; //////////////////////////////////////////
   // assembler
@@ -1386,7 +1170,7 @@ const cacheManager = require('./jsb-cache-manager');
   };
 })();
 
-},{"./jsb-cache-manager":4}],6:[function(require,module,exports){
+},{"./jsb-cache-manager":3}],5:[function(require,module,exports){
 "use strict";
 
 /****************************************************************************
@@ -1605,7 +1389,7 @@ const cacheManager = require('./jsb-cache-manager');
   EditBox._EditBoxImpl = JsbEditBoxImpl;
 })();
 
-},{}],7:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 
 /****************************************************************************
@@ -1637,10 +1421,9 @@ const cacheManager = require('./jsb-cache-manager');
   let middlewareMgr = middleware.MiddlewareManager.getInstance();
   let reference = 0;
   let director = cc.director;
+  let game = cc.game;
   let nativeXYZUVC = middleware.vfmtPosUvColor = 9;
   let nativeXYZUVCC = middleware.vfmtPosUvTwoColor = 13;
-  let bytesXYZUVC = nativeXYZUVC * 4;
-  let bytesXYZUVCC = nativeXYZUVCC * 4;
   let vfmtPosUvColor = cc.internal.vfmtPosUvColor;
   let vfmtPosUvTwoColor = cc.internal.vfmtPosUvTwoColor;
   let renderInfoLookup = middleware.RenderInfoLookup = {};
@@ -1725,11 +1508,11 @@ const cacheManager = require('./jsb-cache-manager');
 
   director.on(cc.Director.EVENT_BEFORE_UPDATE, function () {
     if (reference === 0) return;
-    middlewareMgr.update(director._deltaTime);
+    middlewareMgr.update(game.deltaTime);
   });
   director.on(cc.Director.EVENT_BEFORE_DRAW, function () {
     if (reference === 0) return;
-    middlewareMgr.render(director._deltaTime); // reset render order
+    middlewareMgr.render(game.deltaTime); // reset render order
 
     middleware.renderOrder = 0;
     middleware.preRenderComponent = null;
@@ -1801,7 +1584,7 @@ const cacheManager = require('./jsb-cache-manager');
   };
 })();
 
-},{}],8:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 
 /****************************************************************************
@@ -2052,7 +1835,7 @@ var fsUtils = {
 };
 window.fsUtils = module.exports = fsUtils;
 
-},{}],9:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 
 /****************************************************************************
@@ -2092,37 +1875,11 @@ jsb.onError(function (location, message, stack) {
   console.error(location, message, stack);
 });
 
-jsb.onPause = function () {
-  cc.game.emit(cc.Game.EVENT_HIDE);
-};
-
-jsb.onResume = function () {
-  cc.game.emit(cc.Game.EVENT_SHOW);
-};
-
-jsb.onResize = function (size) {
-  if (size.width === 0 || size.height === 0) return;
-  cc.sys.windowPixelResolution = {
-    width: size.width,
-    height: size.height
-  };
-  size.width /= window.devicePixelRatio;
-  size.height /= window.devicePixelRatio;
-  window.resize(size.width, size.height);
-};
-
-jsb.onOrientationChanged = function (event) {
-  window.orientation = event.orientation;
-  window.dispatchEvent({
-    type: 'orientationchange'
-  });
-};
-
 jsb.onMemoryWarning = function () {
   cc.game.emit(cc.Game.EVENT_LOW_MEMORY);
 };
 
-},{}],10:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 
 /****************************************************************************
@@ -2174,10 +1931,8 @@ let _converters = {
     }
   },
   DeviceInfo: function (info) {
-    let width = cc.game.canvas.width,
-        height = cc.game.canvas.height,
-        handler = window.windowHandler;
-    return new gfx.DeviceInfo(handler, width, height, info.nativeWidth, info.nativeHeight, null, info.bindingMappingInfo);
+    let handler = window.windowHandler;
+    return new gfx.DeviceInfo(info.isAntialias, handler, info.width, info.height, info.devicePixelRatio, info.bindingMappingInfo);
   }
 }; // Helper functions to convert the original jsb function to a wrapper function
 
@@ -2273,56 +2028,52 @@ descriptorSetProto.update = function () {
   this.dirtyJSB = false;
 };
 
-let deviceProtos = [gfx.CCVKDevice && gfx.CCVKDevice.prototype, gfx.CCMTLDevice && gfx.CCMTLDevice.prototype, gfx.GLES3Device && gfx.GLES3Device.prototype, gfx.GLES2Device && gfx.GLES2Device.prototype];
-deviceProtos.forEach(function (item, index) {
-  if (item !== undefined) {
-    replace(item, {
-      initialize: replaceFunction('_initialize', _converters.DeviceInfo)
-    });
-    let oldCopyTexImagesToTextureFunc = item.copyTexImagesToTexture;
+replace(gfx.DeviceManager, {
+  create: replaceFunction('_create', _converters.DeviceInfo)
+});
+let deviceProto = gfx.Device.prototype;
+let oldCopyTexImagesToTextureFunc = deviceProto.copyTexImagesToTexture;
 
-    item.copyTexImagesToTexture = function (texImages, texture, regions) {
-      let images = _converters.texImagesToBuffers(texImages);
+deviceProto.copyTexImagesToTexture = function (texImages, texture, regions) {
+  let images = _converters.texImagesToBuffers(texImages);
 
-      oldCopyTexImagesToTextureFunc.call(this, images, texture, regions);
-    };
+  oldCopyTexImagesToTextureFunc.call(this, images, texture, regions);
+};
 
-    let oldDeviceCreatBufferFun = item.createBuffer;
+let oldDeviceCreatBufferFun = deviceProto.createBuffer;
 
-    item.createBuffer = function (info) {
-      let buffer;
+deviceProto.createBuffer = function (info) {
+  let buffer;
 
-      if (info.buffer) {
-        buffer = oldDeviceCreatBufferFun.call(this, info, true);
-      } else {
-        buffer = oldDeviceCreatBufferFun.call(this, info, false);
-      }
-
-      buffer.cachedUsage = info.usage;
-      return buffer;
-    };
-
-    let oldDeviceCreatTextureFun = item.createTexture;
-
-    item.createTexture = function (info) {
-      if (info.texture) {
-        return oldDeviceCreatTextureFun.call(this, info, true);
-      } else {
-        return oldDeviceCreatTextureFun.call(this, info, false);
-      }
-    };
-
-    Object.defineProperty(item, 'uboOffsetAlignment', {
-      get() {
-        if (this.cachedUboOffsetAlignment === undefined) {
-          this.cachedUboOffsetAlignment = this.getUboOffsetAlignment();
-        }
-
-        return this.cachedUboOffsetAlignment;
-      }
-
-    });
+  if (info.buffer) {
+    buffer = oldDeviceCreatBufferFun.call(this, info, true);
+  } else {
+    buffer = oldDeviceCreatBufferFun.call(this, info, false);
   }
+
+  buffer.cachedUsage = info.usage;
+  return buffer;
+};
+
+let oldDeviceCreatTextureFun = deviceProto.createTexture;
+
+deviceProto.createTexture = function (info) {
+  if (info.texture) {
+    return oldDeviceCreatTextureFun.call(this, info, true);
+  } else {
+    return oldDeviceCreatTextureFun.call(this, info, false);
+  }
+};
+
+Object.defineProperty(deviceProto, 'uboOffsetAlignment', {
+  get() {
+    if (this.cachedUboOffsetAlignment === undefined) {
+      this.cachedUboOffsetAlignment = this.getUboOffsetAlignment();
+    }
+
+    return this.cachedUboOffsetAlignment;
+  }
+
 });
 let shaderProto = gfx.Shader.prototype;
 cc.js.get(shaderProto, 'id', function () {
@@ -2386,7 +2137,7 @@ textureProto.initialize = function (info) {
   }
 };
 
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /****************************************************************************
  Copyright (c) 2013-2016 Chukong Technologies Inc.
  Copyright (c) 2017-2020 Xiamen Yaji Software Co., Ltd.
@@ -2607,7 +2358,7 @@ function downloadBundle(nameOrUrl, options, onComplete) {
     }
   }
 
-  var config = `${url}/config.${version ? version + '.' : ''}json`;
+  var config = `${url}/cc.config.${version ? version + '.' : ''}json`;
   options.__cacheBundleRoot__ = bundleName;
   downloadJson(config, options, function (err, response) {
     if (err) {
@@ -2622,16 +2373,58 @@ function downloadBundle(nameOrUrl, options, onComplete) {
         return onComplete(err, null);
       }
 
-      downloader.importBundleEntry(bundleName).then(function () {
-        onComplete(null, out);
-      }).catch(function (err) {
-        onComplete(err);
-      });
+      onComplete(null, out);
     });
   });
 }
 
 ;
+
+const downloadCCON = (url, options, onComplete) => {
+  downloadJson(url, options, (err, json) => {
+    if (err) {
+      onComplete(err);
+      return;
+    }
+
+    const cconPreface = cc.internal.parseCCONJson(json);
+    const chunkPromises = Promise.all(cconPreface.chunks.map(chunk => new Promise((resolve, reject) => {
+      downloadArrayBuffer(`${cc.path.mainFileName(url)}${chunk}`, {}, (errChunk, chunkBuffer) => {
+        if (errChunk) {
+          reject(errChunk);
+        } else {
+          resolve(new Uint8Array(chunkBuffer));
+        }
+      });
+    })));
+    chunkPromises.then(chunks => {
+      const ccon = new cc.internal.CCON(cconPreface.document, chunks);
+      onComplete(null, ccon);
+    }).catch(err => {
+      onComplete(err);
+    });
+  });
+};
+
+const downloadCCONB = (url, options, onComplete) => {
+  downloadArrayBuffer(url, options, (err, arrayBuffer) => {
+    if (err) {
+      onComplete(err);
+      return;
+    }
+
+    try {
+      const ccon = cc.internal.decodeCCONBinary(new Uint8Array(arrayBuffer));
+      onComplete(null, ccon);
+    } catch (err) {
+      onComplete(err);
+    }
+  });
+};
+
+function downloadArrayBuffer(url, options, onComplete) {
+  download(url, parseArrayBuffer, options, options.onFileProgress, onComplete);
+}
 
 function loadFont(url, options, onComplete) {
   let fontFamilyName = _getFontFamily(url);
@@ -2661,6 +2454,21 @@ parser.parsePKMTex = downloader.downloadDomImage;
 parser.parseASTCTex = downloader.downloadDomImage;
 parser.parsePlist = parsePlist;
 downloader.downloadScript = downloadScript;
+
+function loadAudioPlayer(url, options, onComplete) {
+  cc.AudioPlayer.load(url).then(player => {
+    const audioMeta = {
+      player,
+      url,
+      duration: player.duration,
+      type: player.type
+    };
+    onComplete(null, audioMeta);
+  }).catch(err => {
+    onComplete(err);
+  });
+}
+
 downloader.register({
   // JS
   '.js': downloadScript,
@@ -2683,6 +2491,8 @@ downloader.register({
   '.ogg': downloadAsset,
   '.wav': downloadAsset,
   '.m4a': downloadAsset,
+  '.ccon': downloadCCON,
+  '.cconb': downloadCCONB,
   // Video
   '.mp4': downloadAsset,
   '.avi': downloadAsset,
@@ -2728,6 +2538,11 @@ parser.register({
   '.tiff': downloader.downloadDomImage,
   '.webp': downloader.downloadDomImage,
   '.image': downloader.downloadDomImage,
+  // Audio
+  '.mp3': loadAudioPlayer,
+  '.ogg': loadAudioPlayer,
+  '.wav': loadAudioPlayer,
+  '.m4a': loadAudioPlayer,
   // compressed texture
   '.pvr': downloader.downloadDomImage,
   '.pkm': downloader.downloadDomImage,
@@ -2764,6 +2579,12 @@ cc.assetManager.transformPipeline.append(function (task) {
     if (item.config) {
       item.options.__cacheBundleRoot__ = item.config.name;
     }
+
+    if (item.ext === '.cconb') {
+      item.url = item.url.replace(item.ext, '.bin');
+    } else if (item.ext === '.ccon') {
+      item.url = item.url.replace(item.ext, '.json');
+    }
   }
 });
 var originInit = cc.assetManager.init;
@@ -2774,209 +2595,1084 @@ cc.assetManager.init = function (options) {
   cacheManager.init();
 };
 
-},{"./jsb-cache-manager":4,"./jsb-fs-utils":8}],12:[function(require,module,exports){
-"use strict";
+},{"./jsb-cache-manager":3,"./jsb-fs-utils":7}],11:[function(require,module,exports){
+'use strict';
 
-/****************************************************************************
- Copyright (c) 2019 Xiamen Yaji Software Co., Ltd.
+const jsbPhy = globalThis['jsb.physics'];
+jsbPhy['CACHE'] = {
+  trimesh: {},
+  convex: {},
+  height: {},
+  material: {}
+};
+jsbPhy['OBJECT'] = {
+  books: [],
+  ptrToObj: {},
+  raycastOptions: {
+    origin: null,
+    unitDir: null,
+    distance: 0,
+    mask: 0,
+    queryTrigger: true
+  }
+};
+jsbPhy['CONFIG'] = {
+  heightScale: 1 / 5000
+};
+const books = jsbPhy['OBJECT'].books;
+const ptrToObj = jsbPhy['OBJECT'].ptrToObj;
+const raycastOptions = jsbPhy['OBJECT'].raycastOptions;
+const TriggerEventObject = {
+  type: 'onTriggerEnter',
+  selfCollider: null,
+  otherCollider: null,
+  impl: null
+};
+const CollisionEventObject = {
+  type: 'onCollisionEnter',
+  selfCollider: null,
+  otherCollider: null,
+  contacts: [],
+  impl: null
+};
 
- https://www.cocos.com/
+function emitTriggerEvent(t, c0, c1, impl) {
+  TriggerEventObject.type = t;
+  TriggerEventObject.impl = impl;
 
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated engine source code (the "Software"), a limited,
-  worldwide, royalty-free, non-assignable, revocable and non-exclusive license
- to use Cocos Creator solely to develop games on your target platforms. You
- shall not use Cocos Creator software for developing other software or tools
- that's used for developing games. You are not granted to publish, distribute,
-  sublicense, and/or sell copies of Cocos Creator.
-
- The software or tools in this License Agreement are licensed, not sold.
- Xiamen Yaji Software Co., Ltd. reserves all rights not expressly granted to
- you.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- THE SOFTWARE.
- ****************************************************************************/
-(function () {
-  if (cc.ForwardPipeline) return;
-
-  class ForwardPipeline extends nr.ForwardPipeline {
-    constructor() {
-      super();
-      this._tag = 0;
-      this._flows = [];
-      this.renderTextures = [];
-      this.materials = [];
-    }
-
-    destroy() {
-      this.fog.destroy();
-      this.ambient.destroy();
-      this.skybox.destroy();
-      this.shadows.destroy();
-    }
-
-    render(cameras) {
-      let handles = [];
-
-      for (let i = 0, len = cameras.length; i < len; ++i) {
-        handles.push(cameras[i].handle);
-      }
-
-      super.render(handles);
-    }
-
-    init() {
-      this.fog = new cc.Fog();
-      this.ambient = new cc.Ambient();
-      this.skybox = new cc.Skybox();
-      this.shadows = new cc.Shadows();
-      this.setFog(this.fog.handle);
-      this.setAmbient(this.ambient.handle);
-      this.setSkybox(this.skybox.handle);
-      this.setShadows(this.shadows.handle);
-
-      for (let i = 0; i < this._flows.length; i++) {
-        this._flows[i].init();
-      }
-
-      let info = new nr.RenderPipelineInfo(this._tag, this._flows);
-      this.initialize(info);
-    }
-
-  } // hook to invoke init after deserialization
-
-
-  ForwardPipeline.prototype.onAfterDeserialize_JSB = ForwardPipeline.prototype.init;
-
-  class ForwardFlow extends nr.ForwardFlow {
-    constructor() {
-      super();
-      this._name = 0;
-      this._priority = 0;
-      this._tag = 0;
-      this._stages = [];
-    }
-
-    init() {
-      for (let i = 0; i < this._stages.length; i++) {
-        this._stages[i].init();
-      }
-
-      let info = new nr.RenderFlowInfo(this._name, this._priority, this._tag, this._stages);
-      this.initialize(info);
-    }
-
+  if (c0.needTriggerEvent) {
+    TriggerEventObject.selfCollider = c0;
+    TriggerEventObject.otherCollider = c1;
+    c0.emit(t, TriggerEventObject);
   }
 
-  class ShadowFlow extends nr.ShadowFlow {
-    constructor() {
-      super();
-      this._name = 0;
-      this._priority = 0;
-      this._tag = 0;
-      this._stages = [];
-    }
+  if (c1.needTriggerEvent) {
+    TriggerEventObject.selfCollider = c1;
+    TriggerEventObject.otherCollider = c0;
+    c1.emit(t, TriggerEventObject);
+  }
+}
 
-    init() {
-      for (let i = 0; i < this._stages.length; i++) {
-        this._stages[i].init();
+const quat = new cc.Quat();
+const contactsPool = [];
+const contactBufferElementLength = 12;
+
+class ContactPoint {
+  constructor(e) {
+    this.event = e;
+    this.impl = null;
+    this.colliderA = null;
+    this.colliderB = null;
+    this.index = 0;
+  }
+
+  get isBodyA() {
+    return this.colliderA.uuid === this.event.selfCollider.uuid;
+  }
+
+  getLocalPointOnA(o) {
+    this.getWorldPointOnB(o);
+    cc.Vec3.subtract(o, o, this.colliderA.node.worldPosition);
+  }
+
+  getLocalPointOnB(o) {
+    this.getWorldPointOnB(o);
+    cc.Vec3.subtract(o, o, this.colliderB.node.worldPosition);
+  }
+
+  getWorldPointOnA(o) {
+    this.getWorldPointOnB(o);
+  }
+
+  getWorldPointOnB(o) {
+    const i = this.index * contactBufferElementLength;
+    o.x = this.impl[i];
+    o.y = this.impl[i + 1];
+    o.z = this.impl[i + 2];
+  }
+
+  getLocalNormalOnA(o) {
+    this.getWorldNormalOnA(o);
+    cc.Quat.conjugate(quat, this.colliderA.node.worldRotation);
+    cc.Vec3.transformQuat(o, o, quat);
+  }
+
+  getLocalNormalOnB(o) {
+    this.getWorldNormalOnB(o);
+    cc.Quat.conjugate(quat, this.colliderB.node.worldRotation);
+    cc.Vec3.transformQuat(out, out, quat);
+  }
+
+  getWorldNormalOnA(o) {
+    this.getWorldNormalOnB(o);
+    if (!this.isBodyA) cc.Vec3.negate(o, o);
+  }
+
+  getWorldNormalOnB(o) {
+    const i = this.index * contactBufferElementLength + 3;
+    o.x = this.impl[i];
+    o.y = this.impl[i + 1];
+    o.z = this.impl[i + 2];
+  }
+
+}
+
+function emitCollisionEvent(t, c0, c1, impl, b) {
+  CollisionEventObject.type = t;
+  CollisionEventObject.impl = impl;
+  const contacts = CollisionEventObject.contacts;
+  contactsPool.push.apply(contactsPool, contacts);
+  contacts.length = 0;
+  const contactCount = b.length / contactBufferElementLength;
+
+  for (let i = 0; i < contactCount; i++) {
+    let c = contactsPool.length > 0 ? contactsPool.pop() : new ContactPoint(CollisionEventObject);
+    c.colliderA = c0;
+    c.colliderB = c1;
+    c.impl = b;
+    c.index = i;
+    contacts.push(c);
+  }
+
+  if (c0.needCollisionEvent) {
+    CollisionEventObject.selfCollider = c0;
+    CollisionEventObject.otherCollider = c1;
+    c0.emit(t, CollisionEventObject);
+  }
+
+  if (c1.needCollisionEvent) {
+    CollisionEventObject.selfCollider = c1;
+    CollisionEventObject.otherCollider = c0;
+    c1.emit(t, CollisionEventObject);
+  }
+}
+
+class PhysicsWorld {
+  get impl() {
+    return this._impl;
+  }
+
+  constructor() {
+    this._impl = new jsbPhy.World();
+  }
+
+  setGravity(v) {
+    this._impl.setGravity(v.x, v.y, v.z);
+  }
+
+  setAllowSleep(v) {
+    this._impl.setAllowSleep(v);
+  }
+
+  setDefaultMaterial(v) {}
+
+  step(f, t, m) {
+    // books.forEach((v) => { v.syncToNativeTransform(); });
+    this._impl.step(f);
+  }
+
+  raycast(r, o, p, rs) {
+    raycastOptions.origin = r.o;
+    raycastOptions.unitDir = r.d;
+    raycastOptions.mask = o.mask >>> 0;
+    raycastOptions.distance = o.maxDistance;
+    raycastOptions.queryTrigger = !!o.queryTrigger;
+
+    const isHit = this._impl.raycast(raycastOptions);
+
+    if (isHit) {
+      const hits = this._impl.raycastResult();
+
+      for (let i = 0; i < hits.length; i++) {
+        const hit = hits[i];
+        const out = p.add();
+
+        out._assign(hit.hitPoint, hit.distance, ptrToObj[hit.shape].collider, hit.hitNormal);
+
+        rs.push(out);
       }
-
-      let info = new nr.RenderFlowInfo(this._name, this._priority, this._tag, this._stages);
-      this.initialize(info);
     }
 
+    return isHit;
   }
 
-  class ForwardStage extends nr.ForwardStage {
-    constructor() {
-      super();
-      this._name = 0;
-      this._priority = 0;
-      this._tag = 0;
-      this.renderQueues = [];
+  raycastClosest(r, o, out) {
+    raycastOptions.origin = r.o;
+    raycastOptions.unitDir = r.d;
+    raycastOptions.mask = o.mask >>> 0;
+    raycastOptions.distance = o.maxDistance;
+    raycastOptions.queryTrigger = !!o.queryTrigger;
+
+    const isHit = this._impl.raycastClosest(raycastOptions);
+
+    if (isHit) {
+      const hit = this._impl.raycastClosestResult();
+
+      out._assign(hit.hitPoint, hit.distance, ptrToObj[hit.shape].collider, hit.hitNormal);
     }
 
-    init() {
-      const queues = [];
+    return isHit;
+  }
 
-      for (let i = 0; i < this.renderQueues.length; i++) {
-        queues.push(this.renderQueues[i].init());
+  emitEvents() {
+    this.emitTriggerEvent();
+    this.emitCollisionEvent();
+
+    this._impl.emitEvents();
+  }
+
+  syncSceneToPhysics() {
+    this._impl.syncSceneToPhysics();
+  }
+
+  syncAfterEvents() {// this._impl.syncSceneToPhysics() 
+  }
+
+  destroy() {
+    this._impl.destroy();
+  }
+
+  emitTriggerEvent() {
+    const teps = this._impl.getTriggerEventPairs();
+
+    const len = teps.length / 3;
+
+    for (let i = 0; i < len; i++) {
+      const t = i * 3;
+      const sa = ptrToObj[teps[t + 0]],
+            sb = ptrToObj[teps[t + 1]];
+      if (!sa || !sb) continue;
+      const c0 = sa.collider,
+            c1 = sb.collider;
+      if (!(c0 && c0.isValid && c1 && c1.isValid)) continue;
+      if (!c0.needTriggerEvent && !c1.needTriggerEvent) continue;
+      const state = teps[t + 2];
+
+      if (state === 1) {
+        emitTriggerEvent('onTriggerStay', c0, c1, teps);
+      } else if (state === 0) {
+        emitTriggerEvent('onTriggerEnter', c0, c1, teps);
+      } else {
+        emitTriggerEvent('onTriggerExit', c0, c1, teps);
       }
-
-      let info = new nr.RenderStageInfo(this._name, this._priority, this._tag, queues);
-      this.initialize(info);
     }
-
   }
 
-  class ShadowStage extends nr.ShadowStage {
-    constructor() {
-      super();
-      this._name = 0;
-      this._priority = 0;
-      this._tag = 0;
-    }
+  emitCollisionEvent() {
+    const ceps = this._impl.getContactEventPairs();
 
-    init() {
-      let info = new nr.RenderStageInfo(this._name, this._priority, this._tag, []);
-      this.initialize(info);
-    }
+    const len2 = ceps.length / 4;
 
+    for (let i = 0; i < len2; i++) {
+      const t = i * 4;
+      const sa = ptrToObj[ceps[t + 0]],
+            sb = ptrToObj[ceps[t + 1]];
+      if (!sa || !sb) continue;
+      const c0 = sa.collider,
+            c1 = sb.collider;
+      if (!(c0 && c0.isValid && c1 && c1.isValid)) continue;
+      if (!c0.needCollisionEvent && !c1.needCollisionEvent) continue;
+      const state = ceps[t + 2];
+
+      if (state === 1) {
+        emitCollisionEvent('onCollisionStay', c0, c1, ceps, ceps[t + 3]);
+      } else if (state === 0) {
+        emitCollisionEvent('onCollisionEnter', c0, c1, ceps, ceps[t + 3]);
+      } else {
+        emitCollisionEvent('onCollisionExit', c0, c1, ceps, ceps[t + 3]);
+      }
+    }
   }
 
-  let instancedBufferProto = nr.InstancedBuffer;
-  let oldGetFunc = instancedBufferProto.get;
+}
 
-  instancedBufferProto.get = function (pass) {
-    return oldGetFunc.call(this, pass.handle);
-  };
+function bookNode(v) {
+  if (v._physicsBookIndex === undefined) {
+    v._physicsBookIndex = books.length;
+    books.push(v);
+  }
+}
 
-  class RenderQueueDesc {
-    constructor() {
-      this.isTransparent = false;
-      this.sortMode = 0;
-      this.stages = [];
-    }
+function unBookNode(v) {
+  const index = v._physicsBookIndex;
 
-    init() {
-      let desc = new nr.RenderQueueDesc(this.isTransparent, this.sortMode, this.stages);
-      return desc;
-    }
+  if (index !== undefined) {
+    books[index] = books[books.length - 1];
+    books[index]._physicsBookIndex = index;
+    books.length -= 1;
+    v._physicsBookIndex = undefined;
+  }
+}
 
+function updateCollisionMatrix() {
+  const phy = cc.PhysicsSystem.instance;
+  const world = phy.physicsWorld.impl;
+  const cm = phy.collisionMatrix;
+
+  if (cm.updateArray && cm.updateArray.length > 0) {
+    cm.updateArray.forEach(e => {
+      const key = `${1 << e}`;
+      const mask = cm[key];
+      world.setCollisionMatrix(e, mask);
+    });
+    cm.updateArray.length = 0;
+  }
+}
+
+class RigidBody {
+  get impl() {
+    return this._impl;
   }
 
-  cc.js.setClassName('ForwardPipeline', ForwardPipeline);
-  cc.js.setClassName('ForwardFlow', ForwardFlow);
-  cc.js.setClassName('ShadowFlow', ShadowFlow);
-  cc.js.setClassName('ForwardStage', ForwardStage);
-  cc.js.setClassName('ShadowStage', ShadowStage);
-  cc.js.setClassName('RenderQueueDesc', RenderQueueDesc);
-  let getOrCreatePipelineState = nr.PipelineStateManager.getOrCreatePipelineState;
+  get rigidBody() {
+    return this._com;
+  }
 
-  nr.PipelineStateManager.getOrCreatePipelineState = function (device, pass, shader, renderPass, ia) {
-    return getOrCreatePipelineState.call(this, pass.handle, shader, renderPass, ia);
-  };
+  get isAwake() {
+    return this._impl.isAwake();
+  }
 
-  const RootProto = cc.Root.prototype;
-  Object.assign(RootProto, {
-    createDefaultPipeline() {
-      const pipeline = new nr.ForwardPipeline();
-      const info = new nr.RenderPipelineInfo(0, []);
-      pipeline.initialize(info);
-      return pipeline;
+  get isSleepy() {
+    return false;
+  }
+
+  get isSleeping() {
+    return this._impl.isSleeping();
+  }
+
+  constructor() {
+    updateCollisionMatrix();
+    this._impl = new jsbPhy.RigidBody();
+    this._isUsingCCD = false;
+  }
+
+  initialize(v) {
+    v.node.updateWorldTransform();
+    this._com = v;
+
+    this._impl.initialize(v.node.native, v.type, v._group);
+
+    bookNode(v.node);
+  }
+
+  onEnable() {
+    this.setType(this._com.type);
+    this.setMass(this._com.mass);
+    this.setAllowSleep(this._com.allowSleep);
+    this.setLinearDamping(this._com.linearDamping);
+    this.setAngularDamping(this._com.angularDamping);
+    this.setLinearFactor(this._com.linearFactor);
+    this.setAngularFactor(this._com.angularFactor);
+    this.useGravity(this._com.useGravity);
+
+    this._impl.onEnable();
+  }
+
+  onDisable() {
+    this._impl.onDisable();
+  }
+
+  onDestroy() {
+    unBookNode(this._com.node);
+
+    this._impl.onDestroy();
+  }
+
+  setGroup(v) {
+    this._impl.setGroup(v);
+  }
+
+  getGroup() {
+    return this._impl.getGroup();
+  }
+
+  addGroup(v) {
+    this.setGroup(this.getGroup() | v);
+  }
+
+  removeGroup(v) {
+    this.setGroup(this.getGroup() & ~v);
+  }
+
+  setMask(v) {
+    this._impl.setMask(v >>> 0);
+  }
+
+  getMask() {
+    return this._impl.getMask();
+  }
+
+  addMask(v) {
+    this.setMask(this.getMask() | v);
+  }
+
+  removeMask(v) {
+    this.setMask(this.getMask() & ~v);
+  }
+
+  setType(v) {
+    this._impl.setType(v);
+  }
+
+  setMass(v) {
+    this._impl.setMass(v);
+  }
+
+  setAllowSleep(v) {
+    this._impl.setAllowSleep(v);
+  }
+
+  setLinearDamping(v) {
+    const dt = cc.PhysicsSystem.instance.fixedTimeStep;
+
+    this._impl.setLinearDamping((1 - (1 - v) ** dt) / dt);
+  }
+
+  setAngularDamping(v) {
+    const dt = cc.PhysicsSystem.instance.fixedTimeStep;
+
+    this._impl.setAngularDamping((1 - (1 - v) ** dt) / dt);
+  }
+
+  isUsingCCD() {
+    return this._isUsingCCD;
+  }
+
+  useCCD(v) {
+    this._isUsingCCD = v;
+    return this._impl.useCCD(v);
+  }
+
+  useGravity(v) {
+    this._impl.useGravity(v);
+  }
+
+  setLinearFactor(v) {
+    this._impl.setLinearFactor(v.x, v.y, v.z);
+  }
+
+  setAngularFactor(v) {
+    this._impl.setAngularFactor(v.x, v.y, v.z);
+  }
+
+  wakeUp() {
+    this._impl.wakeUp();
+  }
+
+  sleep() {
+    this._impl.sleep();
+  }
+
+  clearState() {
+    this._impl.clearState();
+  }
+
+  clearForces() {
+    this._impl.clearForces();
+  }
+
+  clearVelocity() {
+    this._impl.clearVelocity();
+  }
+
+  setSleepThreshold(v) {
+    this._impl.setSleepThreshold(v);
+  }
+
+  getSleepThreshold() {
+    return this._impl.getSleepThreshold();
+  }
+
+  getLinearVelocity(o) {
+    o.set(this._impl.getLinearVelocity());
+  }
+
+  setLinearVelocity(v) {
+    this._impl.setLinearVelocity(v.x, v.y, v.z);
+  }
+
+  getAngularVelocity(o) {
+    o.set(this._impl.getAngularVelocity());
+  }
+
+  setAngularVelocity(v) {
+    this._impl.setAngularVelocity(v.x, v.y, v.z);
+  }
+
+  applyForce(f, p) {
+    if (p == null) {
+      p = cc.Vec3.ZERO;
     }
 
-  });
-})();
+    this._impl.applyForce(f.x, f.y, f.z, p.x, p.y, p.z);
+  }
 
-},{}],13:[function(require,module,exports){
+  applyLocalForce(f, p) {
+    if (p == null) {
+      p = cc.Vec3.ZERO;
+    }
+
+    this._impl.applyLocalForce(f.x, f.y, f.z, p.x, p.y, p.z);
+  }
+
+  applyImpulse(f, p) {
+    if (p == null) {
+      p = cc.Vec3.ZERO;
+    }
+
+    this._impl.applyImpulse(f.x, f.y, f.z, p.x, p.y, p.z);
+  }
+
+  applyLocalImpulse(f, p) {
+    if (p == null) {
+      p = cc.Vec3.ZERO;
+    }
+
+    this._impl.applyLocalImpulse(f.x, f.y, f.z, p.x, p.y, p.z);
+  }
+
+  applyTorque(t) {
+    this._impl.applyTorque(t.x, t.y, t.z);
+  }
+
+  applyLocalTorque(t) {
+    this._impl.applyLocalTorque(t.x, t.y, t.z);
+  }
+
+}
+
+const ESHAPE_FLAG = {
+  NONE: 0,
+  QUERY_FILTER: 1 << 0,
+  QUERY_SINGLE_HIT: 1 << 2,
+  DETECT_TRIGGER_EVENT: 1 << 3,
+  DETECT_CONTACT_EVENT: 1 << 4,
+  DETECT_CONTACT_POINT: 1 << 5,
+  DETECT_CONTACT_CCD: 1 << 6
+};
+
+class Shape {
+  get impl() {
+    return this._impl;
+  }
+
+  get collider() {
+    return this._com;
+  }
+
+  get attachedRigidBody() {
+    return this._attachedRigidBody;
+  }
+
+  constructor() {
+    updateCollisionMatrix();
+  }
+
+  initialize(v) {
+    v.node.updateWorldTransform();
+    this._com = v;
+
+    this._impl.initialize(v.node.native);
+
+    ptrToObj[this._impl.getImpl()] = this;
+    bookNode(v.node);
+  }
+
+  onLoad() {
+    this.setMaterial(this._com.sharedMaterial);
+    this.setCenter(this._com.center);
+    this.setAsTrigger(this._com.isTrigger);
+  }
+
+  onEnable() {
+    this._impl.onEnable();
+  }
+
+  onDisable() {
+    this._impl.onDisable();
+  }
+
+  onDestroy() {
+    unBookNode(this._com.node);
+    ptrToObj[this._impl.getImpl()] = null;
+    delete ptrToObj[this._impl.getImpl()];
+
+    this._impl.onDestroy();
+  }
+
+  setMaterial(v) {
+    const ins = cc.PhysicsSystem.instance;
+    if (!v) v = ins.defaultMaterial;
+
+    if (!jsbPhy['CACHE'].material[v.id]) {
+      jsbPhy['CACHE'].material[v.id] = ins.physicsWorld.impl.createMaterial(v.id, v.friction, v.friction, v.restitution, 2, 2);
+    }
+
+    this._impl.setMaterial(v.id, v.friction, v.friction, v.restitution, 2, 2);
+  }
+
+  setAsTrigger(v) {
+    this._impl.setAsTrigger(v);
+  }
+
+  setCenter(v) {
+    this._impl.setCenter(v.x, v.y, v.z);
+  }
+
+  getAABB(v) {
+    v.copy(this._impl.getAABB());
+  }
+
+  getBoundingSphere(v) {
+    v.copy(this._impl.getBoundingSphere());
+  }
+
+  updateEventListener() {
+    var flag = 0;
+    flag |= ESHAPE_FLAG.DETECT_CONTACT_CCD;
+    if (this._com.isTrigger) flag |= ESHAPE_FLAG.IS_TRIGGER;
+    if (this._com.needTriggerEvent || this._com.needCollisionEvent) flag |= ESHAPE_FLAG.NEED_EVENT;
+
+    this._impl.updateEventListener(flag);
+  }
+
+  setGroup(v) {
+    this._impl.setGroup(v);
+  }
+
+  getGroup() {
+    return this._impl.getGroup();
+  }
+
+  addGroup(v) {
+    this.setGroup(this.getGroup() | v);
+  }
+
+  removeGroup(v) {
+    this.setGroup(this.getGroup() & ~v);
+  }
+
+  setMask(v) {
+    this._impl.setMask(v >>> 0);
+  }
+
+  getMask() {
+    return this._impl.getMask();
+  }
+
+  addMask(v) {
+    this.setMask(this.getMask() | v);
+  }
+
+  removeMask(v) {
+    this.setMask(this.getMask() & ~v);
+  }
+
+}
+
+class SphereShape extends Shape {
+  constructor() {
+    super();
+    this._impl = new jsbPhy.SphereShape();
+  }
+
+  updateRadius() {
+    this._impl.setRadius(this.collider.radius);
+  }
+
+  onLoad() {
+    super.onLoad();
+    this.updateRadius();
+  }
+
+}
+
+class BoxShape extends Shape {
+  constructor() {
+    super();
+    this._impl = new jsbPhy.BoxShape();
+  }
+
+  updateSize() {
+    const v = this.collider.size;
+
+    this._impl.setSize(v.x, v.y, v.z);
+  }
+
+  onLoad() {
+    super.onLoad();
+    this.updateSize();
+  }
+
+}
+
+class CapsuleShape extends Shape {
+  constructor() {
+    super();
+    this._impl = new jsbPhy.CapsuleShape();
+  }
+
+  setRadius(v) {
+    this._impl.setRadius(v);
+  }
+
+  setDirection(v) {
+    this._impl.setDirection(v);
+  }
+
+  setCylinderHeight(v) {
+    this._impl.setCylinderHeight(v);
+  }
+
+  onLoad() {
+    super.onLoad();
+    this.setRadius(this._com.radius);
+    this.setDirection(this._com.direction);
+    this.setCylinderHeight(this._com.cylinderHeight);
+  }
+
+}
+
+class PlaneShape extends Shape {
+  constructor() {
+    super();
+    this._impl = new jsbPhy.PlaneShape();
+  }
+
+  setConstant(v) {
+    this._impl.setConstant(v);
+  }
+
+  setNormal(v) {
+    this._impl.setNormal(v.x, v.y, v.z);
+  }
+
+  onLoad() {
+    super.onLoad();
+    this.setNormal(this._com.normal);
+    this.setConstant(this._com.constant);
+  }
+
+}
+
+function getConvexMesh(v) {
+  if (!jsbPhy.CACHE.convex[v._uuid]) {
+    const posArr = cc.physics.utils.shrinkPositions(v.readAttribute(0, 'a_position'));
+    const world = cc.PhysicsSystem.instance.physicsWorld.impl;
+    const convex = {
+      positions: new Float32Array(posArr),
+      positionLength: posArr.length / 3
+    };
+    jsbPhy.CACHE.convex[v._uuid] = world.createConvex(convex);
+  }
+
+  return jsbPhy.CACHE.convex[v._uuid];
+}
+
+function getTriangleMesh(v) {
+  if (!jsbPhy.CACHE.trimesh[v._uuid]) {
+    const indArr = v.readIndices(0); // const posArr = cc.physics.utils.shrinkPositions(v.readAttribute(0, 'a_position'));
+
+    const posArr = v.readAttribute(0, 'a_position');
+    const world = cc.PhysicsSystem.instance.physicsWorld.impl;
+    const trimesh = {
+      positions: new Float32Array(posArr),
+      positionLength: posArr.length / 3,
+      triangles: new Uint16Array(indArr),
+      triangleLength: indArr.length / 3,
+      isU16: true
+    };
+    jsbPhy.CACHE.trimesh[v._uuid] = world.createTrimesh(trimesh);
+  }
+
+  return jsbPhy.CACHE.trimesh[v._uuid];
+}
+
+function getHeightField(v) {
+  if (!jsbPhy.CACHE.height[v._uuid]) {
+    const rows = v.getVertexCountI();
+    const columns = v.getVertexCountJ();
+    const samples = new Int16Array(rows * columns);
+    const heightScale = jsbPhy['CONFIG'].heightScale;
+
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < columns; j++) {
+        samples[j + i * columns] = v.getHeight(i, j) / heightScale;
+      }
+    }
+
+    const height = {
+      rows,
+      columns,
+      samples
+    };
+    const world = cc.PhysicsSystem.instance.physicsWorld.impl;
+    jsbPhy.CACHE.height[v._uuid] = world.createHeightField(height);
+  }
+
+  return jsbPhy.CACHE.height[v._uuid];
+}
+
+class CylinderShape extends Shape {
+  constructor() {
+    super();
+    this._impl = new jsbPhy.CylinderShape();
+  }
+
+  setRadius(v) {
+    this.updateGeometry();
+  }
+
+  setDirection(v) {
+    this.updateGeometry();
+  }
+
+  setHeight(v) {
+    this.updateGeometry();
+  }
+
+  updateGeometry() {
+    this._impl.setCylinder(this._com.radius, this._com.height, this._com.direction);
+  }
+
+  initialize(v) {
+    if (!jsbPhy.CACHE.convex["CYLINDER"]) {
+      const primitive = cc.physics.utils.cylinder(0.5, 0.5, 2, {
+        radialSegments: 32,
+        heightSegments: 1
+      });
+      const posArr = cc.physics.utils.shrinkPositions(primitive.positions);
+      const convex = {
+        positions: new Float32Array(posArr),
+        positionLength: posArr.length / 3
+      };
+      const handle = cc.PhysicsSystem.instance.physicsWorld.impl.createConvex(convex);
+      jsbPhy.CACHE.convex["CYLINDER"] = handle;
+    }
+
+    this._com = v;
+
+    this._impl.setCylinder(v.radius, v.height, v.direction);
+
+    this._impl.setConvex(jsbPhy.CACHE.convex["CYLINDER"]);
+
+    super.initialize(v);
+  }
+
+}
+
+class ConeShape extends Shape {
+  constructor() {
+    super();
+    this._impl = new jsbPhy.ConeShape();
+  }
+
+  setRadius(v) {
+    this.updateGeometry();
+  }
+
+  setDirection(v) {
+    this.updateGeometry();
+  }
+
+  setHeight(v) {
+    this.updateGeometry();
+  }
+
+  updateGeometry() {
+    this._impl.setCone(this._com.radius, this._com.height, this._com.direction);
+  }
+
+  initialize(v) {
+    if (!jsbPhy.CACHE.convex["CONE"]) {
+      const primitive = cc.physics.utils.cylinder(0, 0.5, 1, {
+        radialSegments: 32,
+        heightSegments: 1
+      });
+      const posArr = cc.physics.utils.shrinkPositions(primitive.positions);
+      const convex = {
+        positions: new Float32Array(posArr),
+        positionLength: posArr.length / 3
+      };
+      const handle = cc.PhysicsSystem.instance.physicsWorld.impl.createConvex(convex);
+      jsbPhy.CACHE.convex["CONE"] = handle;
+    }
+
+    this._com = v;
+
+    this._impl.setCone(v.radius, v.height, v.direction);
+
+    this._impl.setConvex(jsbPhy.CACHE.convex["CONE"]);
+
+    super.initialize(v);
+  }
+
+}
+
+class TrimeshShape extends Shape {
+  constructor() {
+    super();
+    this._impl = new jsbPhy.TrimeshShape();
+  }
+
+  setConvex(v) {
+    this._impl.useConvex(v);
+  }
+
+  setMesh(v) {
+    if (!v) return;
+    const isConvex = this._com.convex;
+
+    this._impl.useConvex(isConvex);
+
+    const handle = isConvex ? getConvexMesh(v) : getTriangleMesh(v);
+
+    this._impl.setMesh(handle);
+  }
+
+  initialize(v) {
+    this._com = v;
+    this.setConvex(v.convex);
+    this.setMesh(v.mesh);
+    super.initialize(v);
+  }
+
+}
+
+class TerrainShape extends Shape {
+  constructor() {
+    super();
+    this._impl = new jsbPhy.TerrainShape();
+  }
+
+  setTerrain(v) {
+    if (!v) return;
+    const handle = getHeightField(v);
+
+    this._impl.setTerrain(handle, v.tileSize, v.tileSize, jsbPhy['CONFIG'].heightScale);
+  }
+
+  initialize(v) {
+    this._com = v;
+    this.setTerrain(v.terrain);
+    super.initialize(v);
+  }
+
+}
+
+class Joint {
+  get impl() {
+    return this._impl;
+  }
+
+  get joint() {
+    return this._com;
+  }
+
+  setEnableCollision(v) {
+    this._impl.setEnableCollision(v);
+  }
+
+  setConnectedBody(v) {
+    this._impl.setConnectedBody(v ? v.body.impl.getNodeHandle() : 0);
+  }
+
+  initialize(v) {
+    this._com = v;
+
+    this._impl.initialize(v.node.native);
+
+    ptrToObj[this._impl.getImpl()] = this;
+    this.onLoad();
+  }
+
+  onLoad() {
+    this.setConnectedBody(this._com.connectedBody);
+    this.setEnableCollision(this._com.enableCollision);
+  }
+
+  onEnable() {
+    this._impl.onEnable();
+  }
+
+  onDisable() {
+    this._impl.onDisable();
+  }
+
+  onDestroy() {
+    ptrToObj[this._impl.getImpl()] = null;
+    delete ptrToObj[this._impl.getImpl()];
+
+    this._impl.onDestroy();
+  }
+
+}
+
+class DistanceJoint extends Joint {
+  constructor() {
+    super();
+    this._impl = new jsbPhy.DistanceJoint();
+  }
+
+  setPivotA(v) {
+    this._impl.setPivotA(v.x, v.y, v.z);
+  }
+
+  setPivotB(v) {
+    this._impl.setPivotB(v.x, v.y, v.z);
+  }
+
+  onLoad() {
+    super.onLoad();
+    this.setPivotA(this._com.pivotA);
+    this.setPivotB(this._com.pivotB);
+  }
+
+}
+
+class RevoluteJoint extends Joint {
+  constructor() {
+    super();
+    this._impl = new jsbPhy.RevoluteJoint();
+  }
+
+  setAxis(v) {
+    this._impl.setAxis(v.x, v.y, v.z);
+  }
+
+  setPivotA(v) {
+    this._impl.setPivotA(v.x, v.y, v.z);
+  }
+
+  setPivotB(v) {
+    this._impl.setPivotB(v.x, v.y, v.z);
+  }
+
+  onLoad() {
+    super.onLoad();
+    this.setAxis(this._com.axis);
+    this.setPivotA(this._com.pivotA);
+    this.setPivotB(this._com.pivotB);
+  }
+
+}
+
+cc.physics.selector.register("physx", {
+  PhysicsWorld: PhysicsWorld,
+  RigidBody: RigidBody,
+  SphereShape: SphereShape,
+  BoxShape: BoxShape,
+  PlaneShape: PlaneShape,
+  CapsuleShape: CapsuleShape,
+  ConeShape: ConeShape,
+  CylinderShape: CylinderShape,
+  TrimeshShape: TrimeshShape,
+  TerrainShape: TerrainShape,
+  PointToPointConstraint: DistanceJoint,
+  HingeConstraint: RevoluteJoint
+});
+
+},{}],12:[function(require,module,exports){
 "use strict";
 
 /****************************************************************************
@@ -3009,9 +3705,9 @@ Object.defineProperty(jsb, "reflection", {
   get: function () {
     if (jsb.__bridge !== undefined) return jsb.__bridge;
 
-    if (window.JavascriptJavaBridge && cc.sys.os === cc.sys.OS_ANDROID) {
+    if (window.JavascriptJavaBridge && cc.sys.os === cc.sys.OS.ANDROID) {
       jsb.__bridge = new JavascriptJavaBridge();
-    } else if (window.JavaScriptObjCBridge && (cc.sys.os === cc.sys.OS_IOS || cc.sys.os === cc.sys.OS_OSX)) {
+    } else if (window.JavaScriptObjCBridge && (cc.sys.os === cc.sys.OS.IOS || cc.sys.os === cc.sys.OS.OSX)) {
       jsb.__bridge = new JavaScriptObjCBridge();
     } else {
       jsb.__bridge = null;
@@ -3026,43 +3722,203 @@ Object.defineProperty(jsb, "reflection", {
   }
 });
 
-},{}],14:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
-let SafeArea = cc.SafeArea;
+/****************************************************************************
+ Copyright (c) 2021 Xiamen Yaji Software Co., Ltd.
 
-if (SafeArea) {
-  let _onEnable = SafeArea.prototype.onEnable;
-  let _onDisable = SafeArea.prototype.onDisable;
-  Object.assign(SafeArea.prototype, {
-    onEnable() {
-      _onEnable.call(this);
+ https://www.cocos.com/
 
-      this._adaptSafeAreaChangeWithThis = this.adaptSafeAreaChange.bind(this);
-      this._updateAreaWithThis = this.adaptSafeAreaChange.bind(this);
-      window.addEventListener('orientationchange', this._adaptSafeAreaChangeWithThis);
-      window.addEventListener('safearea-change', this._updateAreaWithThis);
-    },
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated engine source code (the "Software"), a limited,
+  worldwide, royalty-free, non-assignable, revocable and non-exclusive license
+ to use Cocos Creator solely to develop games on your target platforms. You shall
+  not use Cocos Creator software for developing other software or tools that's
+  used for developing games. You are not granted to publish, distribute,
+  sublicense, and/or sell copies of Cocos Creator.
 
-    onDisable() {
-      _onDisable.call(this);
+ The software or tools in this License Agreement are licensed, not sold.
+ Xiamen Yaji Software Co., Ltd. reserves all rights not expressly granted to you.
 
-      window.removeEventListener('orientationchange', this._adaptSafeAreaChangeWithThis);
-      window.removeEventListener('safearea-change', this._updateAreaWithThis);
-    },
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+ ****************************************************************************/
+// __fastMQ__, __fastMQInfo__ are created in engine-native\cocos\bindings\manual\jsb_scene_manual_ext.cpp
+const NULL_PTR = BigInt(0); // @ts-check
 
-    adaptSafeAreaChange() {
-      if (JSB && (cc.sys.os === cc.sys.OS_IOS || cc.sys.os === cc.sys.OS_ANDROID)) {
-        setTimeout(() => {
-          this.updateArea();
-        }, 200);
+let isLittleEndian = new Uint8Array(new Uint32Array([0x12345678]).buffer)[0] === 0x78;
+let dataViews = [];
+
+function getDataView(idx) {
+  if (!dataViews[idx]) {
+    dataViews[idx] = new DataView(__fastMQ__[idx]);
+  }
+
+  return dataViews[idx];
+}
+
+function beginTrans(fn, minBytes) {
+  let dataView = getDataView(__fastMQInfo__[0]);
+  let startPos = dataView.getUint32(0, isLittleEndian);
+  let commands = dataView.getUint32(4, isLittleEndian);
+
+  if (dataView.byteLength <= startPos + minBytes + 12) {
+    // allocation new ArrayBuffer, same size as __fastMQ__[0]
+    if (!__fastMQ__[__fastMQInfo__[0] + 1]) {
+      const buffer = new ArrayBuffer(dataView.byteLength);
+
+      __fastMQ__.push(buffer);
+
+      if (__fastMQInfo__[0] + 1 > 5) {
+        console.warn(`Too many pending commands in __fastMQ__, forget to flush?`);
       }
     }
 
-  });
-}
+    __fastMQInfo__[0] += 1;
+    dataView = getDataView(__fastMQInfo__[0]);
+    startPos = 8;
+    commands = 0;
+  }
 
-},{}],15:[function(require,module,exports){
+  let offset = 4; // reserved for block total length
+
+  dataView.setBigUint64(startPos + offset, fn, isLittleEndian);
+  offset += 8;
+  return {
+    writeUint32: value => {
+      dataView.setUint32(startPos + offset, value, isLittleEndian);
+      offset += 4;
+    },
+    writeBigUint64: value => {
+      dataView.setBigUint64(startPos + offset, value, isLittleEndian);
+      offset += 8;
+    },
+    commit: () => {
+      dataView.setUint32(startPos + 0, offset, isLittleEndian); // fn length
+
+      dataView.setUint32(0, startPos + offset, isLittleEndian); // update offset
+
+      dataView.setUint32(4, commands + 1, isLittleEndian); // update cnt
+
+      __fastMQInfo__[1] += 1;
+    }
+  };
+} // DrawBatch2D
+
+
+const DRAW_BATCH_FN_TABLE = ns.DrawBatch2D.fnTable;
+Object.defineProperty(ns.DrawBatch2D.prototype, "visFlags", {
+  set: function (v) {
+    let trans = beginTrans(DRAW_BATCH_FN_TABLE['visFlags'], 12);
+    trans.writeBigUint64(this.__native_ptr__);
+    trans.writeUint32(v);
+    trans.commit();
+  },
+  enumerable: true,
+  configurable: true
+});
+Object.defineProperty(ns.DrawBatch2D.prototype, "descriptorSet", {
+  set: function (v) {
+    let trans = beginTrans(DRAW_BATCH_FN_TABLE['descriptorSet'], 16);
+    trans.writeBigUint64(this.__native_ptr__);
+    trans.writeBigUint64(v ? v.__native_ptr__ : NULL_PTR);
+    trans.commit();
+  },
+  enumerable: true,
+  configurable: true
+});
+Object.defineProperty(ns.DrawBatch2D.prototype, "inputAssembler", {
+  set: function (v) {
+    let trans = beginTrans(DRAW_BATCH_FN_TABLE['inputAssembler'], 16);
+    trans.writeBigUint64(this.__native_ptr__);
+    trans.writeBigUint64(v ? v.__native_ptr__ : NULL_PTR);
+    trans.commit();
+  },
+  enumerable: true,
+  configurable: true
+});
+Object.defineProperty(ns.DrawBatch2D.prototype, "passes", {
+  set: function (passes) {
+    if (!passes) return;
+    let trans = beginTrans(DRAW_BATCH_FN_TABLE['passes'], 8 + 4 + passes.length * 8);
+    trans.writeBigUint64(this.__native_ptr__);
+    trans.writeUint32(passes.length); // arg
+
+    for (let p of passes) {
+      trans.writeBigUint64(p ? p.__native_ptr__ : NULL_PTR);
+    }
+
+    trans.commit();
+  },
+  enumerable: true,
+  configurable: true
+});
+Object.defineProperty(ns.DrawBatch2D.prototype, "shaders", {
+  set: function (shaders) {
+    if (!shaders) return;
+    let trans = beginTrans(DRAW_BATCH_FN_TABLE['shaders'], 8 + 4 + shaders.length * 8);
+    trans.writeBigUint64(this.__native_ptr__);
+    trans.writeUint32(shaders.length); // arg
+
+    for (let p of shaders) {
+      trans.writeBigUint64(p ? p.__native_ptr__ : NULL_PTR);
+    }
+
+    trans.commit();
+  },
+  enumerable: true,
+  configurable: true
+}); // Pass
+
+const PASS_FN_TABLE = ns.Pass.fnTable;
+Object.defineProperty(ns.Pass.prototype, "blendState", {
+  set: function (v) {
+    let trans = beginTrans(PASS_FN_TABLE['blendState'], 16);
+    trans.writeBigUint64(this.__native_ptr__);
+    trans.writeBigUint64(v ? v.__native_ptr__ : NULL_PTR);
+    trans.commit();
+  },
+  enumerable: true,
+  configurable: true
+});
+Object.defineProperty(ns.Pass.prototype, "depthStencilState", {
+  set: function (v) {
+    let trans = beginTrans(PASS_FN_TABLE['depthStencilState'], 16);
+    trans.writeBigUint64(this.__native_ptr__);
+    trans.writeBigUint64(v ? v.__native_ptr__ : NULL_PTR);
+    trans.commit();
+  },
+  enumerable: true,
+  configurable: true
+});
+Object.defineProperty(ns.Pass.prototype, "rasterizerState", {
+  set: function (v) {
+    let trans = beginTrans(PASS_FN_TABLE['rasterizerState'], 16);
+    trans.writeBigUint64(this.__native_ptr__);
+    trans.writeBigUint64(v ? v.__native_ptr__ : NULL_PTR);
+    trans.commit();
+  },
+  enumerable: true,
+  configurable: true
+});
+Object.defineProperty(ns.Pass.prototype, "descriptorSet", {
+  set: function (v) {
+    let trans = beginTrans(PASS_FN_TABLE['descriptorSet'], 16);
+    trans.writeBigUint64(this.__native_ptr__);
+    trans.writeBigUint64(v ? v.__native_ptr__ : NULL_PTR);
+    trans.commit();
+  },
+  enumerable: true,
+  configurable: true
+});
+
+},{}],14:[function(require,module,exports){
 "use strict";
 
 /****************************************************************************
@@ -3167,15 +4023,6 @@ const cacheManager = require('./jsb-cache-manager');
 
     if (!uuid) {
       cc.errorID(7504);
-      return;
-    }
-
-    let skeletonCache = spine.retainSkeletonData(uuid);
-
-    if (skeletonCache) {
-      this._skeletonCache = skeletonCache;
-      this.width = this._skeletonCache.getWidth();
-      this.height = this._skeletonCache.getHeight();
       return;
     }
 
@@ -3472,25 +4319,24 @@ const cacheManager = require('./jsb-cache-manager');
   let _onEnable = skeleton.onEnable;
 
   skeleton.onEnable = function () {
-    _onEnable.call(this);
-
-    this._onSyncTransform();
-
-    this.syncTransform(true);
+    if (_onEnable) {
+      _onEnable.call(this);
+    }
 
     if (this._nativeSkeleton) {
       this._nativeSkeleton.onEnable();
     }
 
+    this.syncTransform(true);
     middleware.retain();
   };
 
   let _onDisable = skeleton.onDisable;
 
   skeleton.onDisable = function () {
-    _onDisable.call(this);
-
-    this._offSyncTransform();
+    if (_onDisable) {
+      _onDisable.call(this);
+    }
 
     if (this._nativeSkeleton) {
       this._nativeSkeleton.onDisable();
@@ -3509,29 +4355,32 @@ const cacheManager = require('./jsb-cache-manager');
     let node = this.node;
     if (!node) return;
     let paramsBuffer = this._paramsBuffer;
-    if (!paramsBuffer) return; // sync node world matrix to native
+    if (!paramsBuffer) return;
 
-    node.updateWorldTransform();
-    let worldMat = node._mat;
-    paramsBuffer[1] = worldMat.m00;
-    paramsBuffer[2] = worldMat.m01;
-    paramsBuffer[3] = worldMat.m02;
-    paramsBuffer[4] = worldMat.m03;
-    paramsBuffer[5] = worldMat.m04;
-    paramsBuffer[6] = worldMat.m05;
-    paramsBuffer[7] = worldMat.m06;
-    paramsBuffer[8] = worldMat.m07;
-    paramsBuffer[9] = worldMat.m08;
-    paramsBuffer[10] = worldMat.m09;
-    paramsBuffer[11] = worldMat.m10;
-    paramsBuffer[12] = worldMat.m11;
-    paramsBuffer[13] = worldMat.m12;
-    paramsBuffer[14] = worldMat.m13;
-    paramsBuffer[15] = worldMat.m14;
-    paramsBuffer[16] = worldMat.m15;
+    if (force || node.hasChangedFlags || node._dirtyFlags) {
+      // sync node world matrix to native
+      node.updateWorldTransform();
+      let worldMat = node._mat;
+      paramsBuffer[1] = worldMat.m00;
+      paramsBuffer[2] = worldMat.m01;
+      paramsBuffer[3] = worldMat.m02;
+      paramsBuffer[4] = worldMat.m03;
+      paramsBuffer[5] = worldMat.m04;
+      paramsBuffer[6] = worldMat.m05;
+      paramsBuffer[7] = worldMat.m06;
+      paramsBuffer[8] = worldMat.m07;
+      paramsBuffer[9] = worldMat.m08;
+      paramsBuffer[10] = worldMat.m09;
+      paramsBuffer[11] = worldMat.m10;
+      paramsBuffer[12] = worldMat.m11;
+      paramsBuffer[13] = worldMat.m12;
+      paramsBuffer[14] = worldMat.m13;
+      paramsBuffer[15] = worldMat.m14;
+      paramsBuffer[16] = worldMat.m15;
+    }
   };
 
-  skeleton.update = function () {
+  skeleton.updateAnimation = function (dt) {
     let nativeSkeleton = this._nativeSkeleton;
     if (!nativeSkeleton) return;
     let node = this.node;
@@ -3543,6 +4392,8 @@ const cacheManager = require('./jsb-cache-manager');
       this._renderOrder = middleware.renderOrder;
       middleware.renderOrder++;
     }
+
+    this.syncTransform();
 
     if (this.__preColor__ === undefined || !this.color.equals(this.__preColor__)) {
       let compColor = this.color;
@@ -3720,11 +4571,13 @@ const cacheManager = require('./jsb-cache-manager');
   };
 
   skeleton.setAnimation = function (trackIndex, name, loop) {
+    let strName = name.toString();
+
     if (this._nativeSkeleton) {
       if (this.isAnimationCached()) {
-        return this._nativeSkeleton.setAnimation(name, loop);
+        return this._nativeSkeleton.setAnimation(strName, loop);
       } else {
-        return this._nativeSkeleton.setAnimation(trackIndex, name, loop);
+        return this._nativeSkeleton.setAnimation(trackIndex, strName, loop);
       }
     }
 
@@ -3982,11 +4835,13 @@ const cacheManager = require('./jsb-cache-manager');
     for (let index = 0; index < matLen; index++) {
       realTextureIndex = renderInfo[renderInfoOffset + materialIdx++];
       realTexture = this.skeletonData.getTextureByIndex(realTextureIndex);
-      if (!realTexture) return; // SpineMaterialType.TWO_COLORED 2
+      if (!realTexture) return; // SpineMaterialType.TWO_COLORED 1
       // SpineMaterialType.COLORED_TEXTURED 0
-      // cache material
+      //HACK
 
-      this.material = this.getMaterialForBlendAndTint(renderInfo[renderInfoOffset + materialIdx++], renderInfo[renderInfoOffset + materialIdx++], useTint ? 2 : 0);
+      const mat = this.material; // cache material
+
+      this.material = this.getMaterialForBlendAndTint(renderInfo[renderInfoOffset + materialIdx++], renderInfo[renderInfoOffset + materialIdx++], useTint ? 1 : 0);
       _tempBufferIndex = renderInfo[renderInfoOffset + materialIdx++];
       _tempIndicesOffset = renderInfo[renderInfoOffset + materialIdx++];
       _tempIndicesCount = renderInfo[renderInfoOffset + materialIdx++];
@@ -3998,7 +4853,8 @@ const cacheManager = require('./jsb-cache-manager');
         middleware.resetIndicesStart = false;
       }
 
-      ui.commitComp(this, realTexture._texture, this._assembler, null);
+      ui.commitComp(this, realTexture, this._assembler, null);
+      this.material = mat;
     }
   }; //////////////////////////////////////////
   // assembler
@@ -4029,120 +4885,7 @@ const cacheManager = require('./jsb-cache-manager');
   };
 })();
 
-},{"./jsb-cache-manager":4}],16:[function(require,module,exports){
-/****************************************************************************
- Copyright (c) 2013-2016 Chukong Technologies Inc.
- Copyright (c) 2017-2020 Xiamen Yaji Software Co., Ltd.
-
- https://www.cocos.com/
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated engine source code (the "Software"), a limited,
-  worldwide, royalty-free, non-assignable, revocable and  non-exclusive license
- to use Cocos Creator solely to develop games on your target platforms. You shall
-  not use Cocos Creator software for developing other software or tools that's
-  used for developing games. You are not granted to publish, distribute,
-  sublicense, and/or sell copies of Cocos Creator.
-
- The software or tools in this License Agreement are licensed, not sold.
- Xiamen Yaji Software Co., Ltd. reserves all rights not expressly granted to you.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- THE SOFTWARE.
- ****************************************************************************/
-'use strict';
-
-const sys = cc.sys;
-Object.assign(sys, {
-  __init() {
-    let platform = __getPlatform();
-
-    this.isNative = true;
-    this.isBrowser = false;
-    this.platform = platform;
-    this.isMobile = platform === this.ANDROID || platform === this.IPAD || platform === this.IPHONE || platform === this.WP8 || platform === this.TIZEN || platform === this.BLACKBERRY || platform === this.XIAOMI_QUICK_GAME || platform === this.VIVO_MINI_GAME || platform === this.OPPO_MINI_GAME || platform === this.HUAWEI_QUICK_GAME || platform === this.COCOSPLAY;
-    this.os = __getOS();
-    this.language = __getCurrentLanguage();
-
-    const languageCode = __getCurrentLanguageCode();
-
-    this.languageCode = languageCode ? languageCode.toLowerCase() : 'unknown';
-    this.osVersion = __getOSVersion();
-    this.osMainVersion = parseInt(this.osVersion);
-    this.browserType = null;
-    this.browserVersion = '';
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const ratio = window.devicePixelRatio || 1;
-    this.windowPixelResolution = {
-      width: window.nativeWidth || ratio * w,
-      height: window.nativeHeight || ratio * h
-    };
-    this.localStorage = window.localStorage;
-    let capabilities;
-    capabilities = this.capabilities = {
-      canvas: false,
-      opengl: true,
-      webp: true,
-      imageBitmap: false,
-      touches: this.isMobile,
-      mouse: !this.isMobile,
-      keyboard: !this.isMobile || window.JavascriptJavaBridge && cc.sys.os === cc.sys.OS_ANDROID,
-      accelerometer: this.isMobile
-    };
-    this.__audioSupport = {
-      ONLY_ONE: false,
-      WEB_AUDIO: false,
-      DELAY_CREATE_CTX: false,
-      format: ['.mp3']
-    };
-    this.__videoSupport = {
-      format: ['.mp4']
-    };
-  },
-
-  getNetworkType: jsb.Device.getNetworkType,
-  getBatteryLevel: jsb.Device.getBatteryLevel,
-  garbageCollect: jsb.garbageCollect,
-  restartVM: __restartVM,
-  isObjectValid: __isObjectValid,
-
-  openURL(url) {
-    jsb.openURL(url);
-  },
-
-  getSafeAreaRect() {
-    // x(top), y(left), z(bottom), w(right)
-    var edge = jsb.Device.getSafeAreaEdge();
-    var screenSize = cc.view.getFrameSize(); // Get leftBottom and rightTop point in UI coordinates
-
-    var leftBottom = new cc.Vec2(edge.y, screenSize.height - edge.z);
-    var rightTop = new cc.Vec2(screenSize.width - edge.w, edge.x); // Returns the real location in view.
-
-    var relatedPos = {
-      left: 0,
-      top: 0,
-      width: screenSize.width,
-      height: screenSize.height
-    };
-    cc.view.convertToLocationInView(leftBottom.x, leftBottom.y, relatedPos, leftBottom);
-    cc.view.convertToLocationInView(rightTop.x, rightTop.y, relatedPos, rightTop); // convert view point to design resolution size
-
-    cc.view._convertPointWithScale(leftBottom);
-
-    cc.view._convertPointWithScale(rightTop);
-
-    return cc.rect(leftBottom.x, leftBottom.y, rightTop.x - leftBottom.x, rightTop.y - leftBottom.y);
-  }
-
-});
-
-},{}],17:[function(require,module,exports){
+},{"./jsb-cache-manager":3}],15:[function(require,module,exports){
 /****************************************************************************
  Copyright (c) 2018 Xiamen Yaji Software Co., Ltd.
 
@@ -4432,7 +5175,7 @@ if (cc.internal.VideoPlayer) {
   }
 }
 
-},{}],18:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /****************************************************************************
  Copyright (c) 2017-2020 Xiamen Yaji Software Co., Ltd.
 

@@ -39,10 +39,17 @@ System.register([], function (_export, _context) {
       }).then(() => {
         settings = window._CCSettings;
         return initializeGame(cc, settings, findCanvas).then(() => {
+          if (!settings.renderPipeline) return cc.game.run();
+        }).then(() => {
           if (settings.scriptPackages) {
             return loadModulePacks(settings.scriptPackages);
           }
-        }).then(() => loadJsList(settings.jsList)).then(() => loadAssetBundle(settings.hasResourcesBundle, settings.hasStartSceneBundle)).then(() => cc.game.run(() => onGameStarted(cc, settings)));
+        }).then(() => loadJsList(settings.jsList)).then(() => loadAssetBundle(settings.hasResourcesBundle, settings.hasStartSceneBundle)).then(() => {
+          if (settings.renderPipeline) return cc.game.run();
+        }).then(() => {
+          cc.game.onStart = onGameStarted.bind(null, cc, settings);
+          onGameStarted(cc, settings);
+        });
       });
     }
 
@@ -143,7 +150,7 @@ System.register([], function (_export, _context) {
       }
     }
 
-    const gameOptions = getGameOptions(settings, findCanvas);
+    const gameOptions = getGameOptions(cc, settings, findCanvas);
     return Promise.resolve(cc.game.init(gameOptions));
   }
 
@@ -159,7 +166,7 @@ System.register([], function (_export, _context) {
     });
   }
 
-  function getGameOptions(settings, findCanvas) {
+  function getGameOptions(cc, settings, findCanvas) {
     // asset library options
     const assetOptions = {
       bundleVers: settings.bundleVers,
@@ -168,8 +175,7 @@ System.register([], function (_export, _context) {
       subpackages: settings.subpackages
     };
     const options = {
-      debugMode: settings.debug ? 1 : 3,
-      // cc.debug.DebugMode.INFO : cc.debug.DebugMode.ERROR,
+      debugMode: settings.debug ? cc.DebugMode.INFO : cc.DebugMode.ERROR,
       showFPS: !false && settings.debug,
       frameRate: 60,
       groupList: settings.groupList,

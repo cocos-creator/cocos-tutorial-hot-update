@@ -5,6 +5,7 @@
     "includeModules": [
       "base",
       "gfx-webgl",
+      "gfx-webgl2",
       "3d",
       "2d",
       "ui",

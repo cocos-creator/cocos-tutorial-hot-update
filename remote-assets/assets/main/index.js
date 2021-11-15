@@ -1,8 +1,592 @@
-System.register("chunks:///_virtual/HotUpdate.ts",["cc","./UpdatePanel.ts"],(function(e){"use strict";var t,a,s,i,n,r,l;return{setters:[function(e){t=e.cclegacy,a=e.Asset,s=e.Node,i=e._decorator,n=e.Component,r=e.game},function(e){l=e.UpdatePanel}],execute:function(){var o,d,c,f,b,h,p,g,m;function u(e,t,a,s){a&&Object.defineProperty(e,t,{enumerable:a.enumerable,configurable:a.configurable,writable:a.writable,value:a.initializer?a.initializer.call(s):void 0})}function _(e,t,a){return t in e?Object.defineProperty(e,t,{value:a,enumerable:!0,configurable:!0,writable:!0}):e[t]=a,e}function v(e,t,a,s,i){var n={};return Object.keys(s).forEach((function(e){n[e]=s[e]})),n.enumerable=!!n.enumerable,n.configurable=!!n.configurable,("value"in n||n.initializer)&&(n.writable=!0),n=a.slice().reverse().reduce((function(a,s){return s(e,t,a)||a}),n),i&&void 0!==n.initializer&&(n.value=n.initializer?n.initializer.call(i):void 0,n.initializer=void 0),void 0===n.initializer&&(Object.defineProperty(e,t,n),n=null),n}t._RF.push({},"8ee7ate7OVDEph2ruFCYLQZ","HotUpdate",void 0);const E=window.jsb;var A=JSON.stringify({packageUrl:"http://127.0.0.1:5500/remote-assets/",remoteManifestUrl:"http://127.0.0.1:5500/remote-assets/project.manifest",remoteVersionUrl:"http://127.0.0.1:5500/remote-assets/version.manifest",version:"1.0.1",assets:{"src/application.js":{size:5106,md5:"02ab1ca7d9a0d06d3d7d8ab279881b8d"},"src/chunks/bundle.js":{size:1935,md5:"783e7dfdcd833123e46754ad439553af"},"src/cocos-js/cc.js":{size:5787090,md5:"4ee4ca556b790be41e8b10e55e8c8102"},"src/cocos-js/glsl1-ad847f02.js":{size:129117,md5:"768e74b5b88b232b5587d8f8d9517792"},"src/cocos-js/glsl3-9896e095.js":{size:144213,md5:"bb81211de1723253e210ee5ca1057702"},"src/cocos-js/glsl4-fe9122f5.js":{size:151634,md5:"c8b174876db8c60db7f80e8e7bad9b2f"},"src/import-map.json":{size:51,md5:"0a4b903dc20b74fe4a5a977a98b9d094"},"src/settings.json":{size:32156,md5:"bf277e8a18555d638c3746fbf2f01a8b"},"src/system.bundle.js":{size:19628,md5:"61644e34333c0b0ac77bd7f3085ccf2b"},"assets/main/config.json":{size:2243,md5:"57c06265bde1288eb6d4ab0da3e2f187"},"assets/main/import/08/0897a7610.json":{size:318,md5:"31d47437140f3bb8e5fab4936a9725f0"},"assets/main/import/0f/0f4f09600.json":{size:7842,md5:"e544000e4d8a737575f704f049072b11"},"assets/main/import/70/700faa17-11a6-46cd-aeb5-d6900bc264f8.json":{size:69,md5:"1f9cadcf049e884e057ca8cf797d73a1"},"assets/main/import/9e/9e71ecbc-8d63-45dd-b0e3-26cefa3d07b1.json":{size:69,md5:"1f9cadcf049e884e057ca8cf797d73a1"},"assets/main/import/ae/ae4e2188-2b7b-42a9-85e1-8fb987600b04.json":{size:69,md5:"1f9cadcf049e884e057ca8cf797d73a1"},"assets/main/import/c1/c1e757ac-f5bb-46ed-b86a-fdabff7aeb55.json":{size:69,md5:"1f9cadcf049e884e057ca8cf797d73a1"},"assets/main/import/ed/edd97988-52a3-4312-8671-90a51bb563ae.json":{size:69,md5:"1f9cadcf049e884e057ca8cf797d73a1"},"assets/main/import/fd/fd8ec536-a354-4a17-9c74-4f3883c378c8.json":{size:675,md5:"de4c2079ad4142452051aced1cc11fba"},"assets/main/index.js":{size:24117,md5:"a754392fea5b84716cda88fb617ece87"},"assets/main/native/70/700faa17-11a6-46cd-aeb5-d6900bc264f8.png":{size:3765,md5:"878e89a0a3e02b13beee9f3274f2ca39"},"assets/main/native/80/800f94fd-7424-4202-9629-d3ca77f3b72d.manifest":{size:2941,md5:"10e6dfa38ddbd0932ab036826db3df2b"},"assets/main/native/9e/9e71ecbc-8d63-45dd-b0e3-26cefa3d07b1.png":{size:2548,md5:"ae7a04af25e238a5478170759b55a7ba"},"assets/main/native/ae/ae4e2188-2b7b-42a9-85e1-8fb987600b04.png":{size:634171,md5:"07b03f7145b75579708ae05ea2a2c029"},"assets/main/native/c1/c1e757ac-f5bb-46ed-b86a-fdabff7aeb55.png":{size:18969,md5:"8eaaf03d4497b39525214bf039a11a7d"},"assets/main/native/ed/edd97988-52a3-4312-8671-90a51bb563ae.png":{size:1829,md5:"94d761c4626df88053787f17fa09914d"},"jsb-adapter/jsb-builtin.js":{size:170818,md5:"15b9314f7a08f365d2fe6651d0c3bf5e"},"jsb-adapter/jsb-engine.js":{size:75321,md5:"c1b82d5d33554752739440fe1514e209"}},searchPaths:[]});const{ccclass:y,property:U}=i;e("HotUpdate",(o=y("HotUpdate"),d=U(l),c=U(a),f=U(s),o((p=v((h=class extends n{constructor(...e){super(...e),u(this,"panel",p,this),u(this,"manifestUrl",g,this),u(this,"updateUI",m,this),_(this,"_updating",!1),_(this,"_canRetry",!1),_(this,"_storagePath",""),_(this,"_am",null),_(this,"_checkListener",null),_(this,"_updateListener",null),_(this,"_failCount",0),_(this,"versionCompareHandle",null)}checkCb(e){switch(console.log("Code: "+e.getEventCode()),e.getEventCode()){case E.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:this.panel.info.string="No local manifest file found, hot update skipped.";break;case E.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:case E.EventAssetsManager.ERROR_PARSE_MANIFEST:this.panel.info.string="Fail to download manifest file, hot update skipped.";break;case E.EventAssetsManager.ALREADY_UP_TO_DATE:this.panel.info.string="Already up to date with the latest remote version.";break;case E.EventAssetsManager.NEW_VERSION_FOUND:this.panel.info.string="New version found, please try to update. ("+Math.ceil(this._am.getTotalBytes()/1024)+"kb)",this.panel.checkBtn.active=!1,this.panel.fileProgress.progress=0,this.panel.byteProgress.progress=0;break;default:return}this._am.setEventCallback(null),this._checkListener=null,this._updating=!1}updateCb(e){var t=!1,a=!1;switch(e.getEventCode()){case E.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:this.panel.info.string="No local manifest file found, hot update skipped.",a=!0;break;case E.EventAssetsManager.UPDATE_PROGRESSION:this.panel.byteProgress.progress=e.getPercent(),this.panel.fileProgress.progress=e.getPercentByFile(),this.panel.fileLabel.string=e.getDownloadedFiles()+" / "+e.getTotalFiles(),this.panel.byteLabel.string=e.getDownloadedBytes()+" / "+e.getTotalBytes(),console.log(this.panel.fileLabel.string,this.panel.byteLabel.string);var s=e.getMessage();s&&(this.panel.info.string="Updated file: "+s);break;case E.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:case E.EventAssetsManager.ERROR_PARSE_MANIFEST:this.panel.info.string="Fail to download manifest file, hot update skipped.",a=!0;break;case E.EventAssetsManager.ALREADY_UP_TO_DATE:this.panel.info.string="Already up to date with the latest remote version.",a=!0;break;case E.EventAssetsManager.UPDATE_FINISHED:this.panel.info.string="Update finished. "+e.getMessage(),t=!0;break;case E.EventAssetsManager.UPDATE_FAILED:this.panel.info.string="Update failed. "+e.getMessage(),this.panel.retryBtn.active=!0,this._updating=!1,this._canRetry=!0;break;case E.EventAssetsManager.ERROR_UPDATING:this.panel.info.string="Asset update error: "+e.getAssetId()+", "+e.getMessage();break;case E.EventAssetsManager.ERROR_DECOMPRESS:this.panel.info.string=e.getMessage()}if(a&&(this._am.setEventCallback(null),this._updateListener=null,this._updating=!1),t){this._am.setEventCallback(null),this._updateListener=null;var i=E.fileUtils.getSearchPaths(),n=this._am.getLocalManifest().getSearchPaths();console.log(JSON.stringify(n)),Array.prototype.unshift.apply(i,n),localStorage.setItem("HotUpdateSearchPaths",JSON.stringify(i)),E.fileUtils.setSearchPaths(i),setTimeout((()=>{r.restart()}),1e3)}}loadCustomManifest(){if(this._am.getState()===E.AssetsManager.State.UNINITED){var e=new E.Manifest(A,this._storagePath);this._am.loadLocalManifest(e,this._storagePath),this.panel.info.string="Using custom manifest"}}retry(){!this._updating&&this._canRetry&&(this.panel.retryBtn.active=!1,this._canRetry=!1,this.panel.info.string="Retry failed Assets...",this._am.downloadFailedAssets())}checkUpdate(){if(this._updating)this.panel.info.string="Checking or updating ...";else{if(this._am.getState()===E.AssetsManager.State.UNINITED){var e=this.manifestUrl.nativeUrl;this._am.loadLocalManifest(e)}this._am.getLocalManifest()&&this._am.getLocalManifest().isLoaded()?(this._am.setEventCallback(this.checkCb.bind(this)),this._am.checkUpdate(),this._updating=!0):this.panel.info.string="Failed to load local manifest ..."}}hotUpdate(){if(this._am&&!this._updating){if(this._am.setEventCallback(this.updateCb.bind(this)),this._am.getState()===E.AssetsManager.State.UNINITED){var e=this.manifestUrl.nativeUrl;this._am.loadLocalManifest(e)}this._failCount=0,this._am.update(),this.panel.updateBtn.active=!1,this._updating=!0}}show(){!1===this.updateUI.active&&(this.updateUI.active=!0)}onLoad(){if(E){this._storagePath=(E.fileUtils?E.fileUtils.getWritablePath():"/")+"blackjack-remote-asset",console.log("Storage path for remote asset : "+this._storagePath),this.versionCompareHandle=function(e,t){console.log("JS Custom Version Compare: version A is "+e+", version B is "+t);for(var a=e.split("."),s=t.split("."),i=0;i<a.length;++i){var n=parseInt(a[i]),r=parseInt(s[i]||"0");if(n!==r)return n-r}return s.length>a.length?-1:0},this._am=new E.AssetsManager("",this._storagePath,this.versionCompareHandle);var e=this.panel;this._am.setVerifyCallback((function(t,a){var s=a.compressed,i=a.md5,n=a.path;a.size;return s?(e.info.string="Verification passed : "+n,!0):(e.info.string="Verification passed : "+n+" ("+i+")",!0)})),this.panel.info.string="Hot update is ready, please check or directly update.",this.panel.fileProgress.progress=0,this.panel.byteProgress.progress=0}}onDestroy(){this._updateListener&&(this._am.setEventCallback(null),this._updateListener=null)}}).prototype,"panel",[d],{configurable:!0,enumerable:!0,writable:!0,initializer:function(){return null}}),g=v(h.prototype,"manifestUrl",[c],{configurable:!0,enumerable:!0,writable:!0,initializer:function(){return null}}),m=v(h.prototype,"updateUI",[f],{configurable:!0,enumerable:!0,writable:!0,initializer:function(){return null}}),b=h))||b));t._RF.pop()}}}));
+System.register("chunks:///_virtual/HotUpdate.ts", ['./_rollupPluginModLoBabelHelpers.js', 'cc', './UpdatePanel.ts'], function (exports) {
+  'use strict';
 
-System.register("chunks:///_virtual/UpdatePanel.ts",["cc"],(function(e){"use strict";var i,t,r,n,l,a;return{setters:[function(e){i=e.cclegacy,t=e.Label,r=e.ProgressBar,n=e.Node,l=e._decorator,a=e.Component}],execute:function(){var o,u,c,b,s,f,p,h,g,y,d,z,m,v,w,P,B,L,k,j,U;function _(e,i,t,r){t&&Object.defineProperty(e,i,{enumerable:t.enumerable,configurable:t.configurable,writable:t.writable,value:t.initializer?t.initializer.call(r):void 0})}function F(e,i,t,r,n){var l={};return Object.keys(r).forEach((function(e){l[e]=r[e]})),l.enumerable=!!l.enumerable,l.configurable=!!l.configurable,("value"in l||l.initializer)&&(l.writable=!0),l=t.slice().reverse().reduce((function(t,r){return r(e,i,t)||t}),l),n&&void 0!==l.initializer&&(l.value=l.initializer?l.initializer.call(n):void 0,l.initializer=void 0),void 0===l.initializer&&(Object.defineProperty(e,i,l),l=null),l}i._RF.push({},"d896fFhBk9A57gLMvEj3KZ7","UpdatePanel",void 0);const{ccclass:O,property:x}=l;e("UpdatePanel",(o=O("UpdatePanel"),u=x(t),c=x(r),b=x(t),s=x(r),f=x(t),p=x(n),h=x(n),g=x(n),y=x(n),o((m=F((z=class extends a{constructor(...e){super(...e),_(this,"info",m,this),_(this,"fileProgress",v,this),_(this,"fileLabel",w,this),_(this,"byteProgress",P,this),_(this,"byteLabel",B,this),_(this,"close",L,this),_(this,"checkBtn",k,this),_(this,"retryBtn",j,this),_(this,"updateBtn",U,this)}onLoad(){}}).prototype,"info",[u],{configurable:!0,enumerable:!0,writable:!0,initializer:function(){return null}}),v=F(z.prototype,"fileProgress",[c],{configurable:!0,enumerable:!0,writable:!0,initializer:function(){return null}}),w=F(z.prototype,"fileLabel",[b],{configurable:!0,enumerable:!0,writable:!0,initializer:function(){return null}}),P=F(z.prototype,"byteProgress",[s],{configurable:!0,enumerable:!0,writable:!0,initializer:function(){return null}}),B=F(z.prototype,"byteLabel",[f],{configurable:!0,enumerable:!0,writable:!0,initializer:function(){return null}}),L=F(z.prototype,"close",[p],{configurable:!0,enumerable:!0,writable:!0,initializer:function(){return null}}),k=F(z.prototype,"checkBtn",[h],{configurable:!0,enumerable:!0,writable:!0,initializer:function(){return null}}),j=F(z.prototype,"retryBtn",[g],{configurable:!0,enumerable:!0,writable:!0,initializer:function(){return null}}),U=F(z.prototype,"updateBtn",[y],{configurable:!0,enumerable:!0,writable:!0,initializer:function(){return null}}),d=z))||d));i._RF.pop()}}}));
+  var _applyDecoratedDescriptor, _initializerDefineProperty, _defineProperty, cclegacy, Asset, Node, _decorator, Component, game, UpdatePanel;
 
-System.register("chunks:///_virtual/main",["./UpdatePanel.ts","./HotUpdate.ts"],(function(){"use strict";return{setters:[function(){},function(){}],execute:function(){}}}));
+  return {
+    setters: [function (module) {
+      _applyDecoratedDescriptor = module.applyDecoratedDescriptor;
+      _initializerDefineProperty = module.initializerDefineProperty;
+      _defineProperty = module.defineProperty;
+    }, function (module) {
+      cclegacy = module.cclegacy;
+      Asset = module.Asset;
+      Node = module.Node;
+      _decorator = module._decorator;
+      Component = module.Component;
+      game = module.game;
+    }, function (module) {
+      UpdatePanel = module.UpdatePanel;
+    }],
+    execute: function () {
+      var _dec, _dec2, _dec3, _dec4, _class, _class2, _descriptor, _descriptor2, _descriptor3, _temp;
+
+      cclegacy._RF.push({}, "8ee7ate7OVDEph2ruFCYLQZ", "HotUpdate", undefined);
+
+      const jsb = window.jsb; // Custom manifest removed the following assets:
+      // 1. res/raw-assets/2a/2a40e5e7-4c4a-4350-9e5d-76757755cdd2.png
+      // 2. res/raw-assets/2d/2d86a854-63c4-4b90-8b88-a4328b8526c2.png
+      // So when custom manifest used, you should be able to find them in downloaded remote assets
+
+      var customManifestStr = JSON.stringify({
+        "packageUrl": "http://192.168.55.13:5502/remote-assets/",
+        "remoteManifestUrl": "http://192.168.55.13:5502/remote-assets/project.manifest",
+        "remoteVersionUrl": "http://192.168.55.13:5502/remote-assets/version.manifest",
+        "version": "1.0.0",
+        "assets": {
+          "src/application.js": {
+            "size": 5514,
+            "md5": "d09753aaed7c55c4566cecf766cbc5c3"
+          },
+          "src/cocos-js/ammo-instantiated-45eaa448.js": {
+            "size": 2318381,
+            "md5": "081a863c98742000893bca3bb87c1775"
+          },
+          "src/cocos-js/cc.js": {
+            "size": 1774495,
+            "md5": "c4ba032d442580df30778c0369917917"
+          },
+          "src/cocos-js/wait-for-ammo-instantiation.js": {
+            "size": 625,
+            "md5": "c9c1bf74589762eca08ae868d216f243"
+          },
+          "src/import-map.json": {
+            "size": 111,
+            "md5": "498f3926fc713deab3e0ac6fcbb3d549"
+          },
+          "src/settings.json": {
+            "size": 31619,
+            "md5": "f54273c3c1c29dc9040f129ee11db461"
+          },
+          "src/system.bundle.js": {
+            "size": 6275,
+            "md5": "3f3f2b5f3725599ff2c8b9801195ee37"
+          },
+          "assets/main/config.json": {
+            "size": 918,
+            "md5": "757c93f3908a069aaaa062541715edcf"
+          },
+          "assets/main/import/08/0897a7610.json": {
+            "size": 248,
+            "md5": "12b2792f517c08d878378119a80a09cc"
+          },
+          "assets/main/import/0f/0f4f09600.json": {
+            "size": 8090,
+            "md5": "755c01fe8bae77adb19e3b21f11e95d7"
+          },
+          "assets/main/import/70/700faa17-11a6-46cd-aeb5-d6900bc264f8.json": {
+            "size": 69,
+            "md5": "1f9cadcf049e884e057ca8cf797d73a1"
+          },
+          "assets/main/import/9e/9e71ecbc-8d63-45dd-b0e3-26cefa3d07b1.json": {
+            "size": 69,
+            "md5": "1f9cadcf049e884e057ca8cf797d73a1"
+          },
+          "assets/main/import/ae/ae4e2188-2b7b-42a9-85e1-8fb987600b04.json": {
+            "size": 69,
+            "md5": "1f9cadcf049e884e057ca8cf797d73a1"
+          },
+          "assets/main/import/c1/c1e757ac-f5bb-46ed-b86a-fdabff7aeb55.json": {
+            "size": 69,
+            "md5": "1f9cadcf049e884e057ca8cf797d73a1"
+          },
+          "assets/main/import/ed/edd97988-52a3-4312-8671-90a51bb563ae.json": {
+            "size": 69,
+            "md5": "1f9cadcf049e884e057ca8cf797d73a1"
+          },
+          "assets/main/import/fd/fd8ec536-a354-4a17-9c74-4f3883c378c8.json": {
+            "size": 480,
+            "md5": "731f44a39ce9377ee6de8ba34edaf039"
+          },
+          "assets/main/index.js": {
+            "size": 12682,
+            "md5": "e2fd04611b129a14138444b6207c1ab7"
+          },
+          "assets/main/native/70/700faa17-11a6-46cd-aeb5-d6900bc264f8.png": {
+            "size": 3765,
+            "md5": "878e89a0a3e02b13beee9f3274f2ca39"
+          },
+          "assets/main/native/80/800f94fd-7424-4202-9629-d3ca77f3b72d.manifest": {
+            "size": 2808,
+            "md5": "507a24062f30709e41e0891ae6a53c7f"
+          },
+          "assets/main/native/9e/9e71ecbc-8d63-45dd-b0e3-26cefa3d07b1.png": {
+            "size": 2548,
+            "md5": "ae7a04af25e238a5478170759b55a7ba"
+          },
+          "assets/main/native/ae/ae4e2188-2b7b-42a9-85e1-8fb987600b04.png": {
+            "size": 634171,
+            "md5": "07b03f7145b75579708ae05ea2a2c029"
+          },
+          "assets/main/native/c1/c1e757ac-f5bb-46ed-b86a-fdabff7aeb55.png": {
+            "size": 18969,
+            "md5": "8eaaf03d4497b39525214bf039a11a7d"
+          },
+          "assets/main/native/ed/edd97988-52a3-4312-8671-90a51bb563ae.png": {
+            "size": 1829,
+            "md5": "94d761c4626df88053787f17fa09914d"
+          },
+          "jsb-adapter/jsb-builtin.js": {
+            "size": 170485,
+            "md5": "f7f79bebbd40822e195af8f099332b0e"
+          },
+          "jsb-adapter/jsb-engine.js": {
+            "size": 140954,
+            "md5": "2846deccc21c73b49e8bae51e3d5387a"
+          }
+        },
+        "searchPaths": []
+      });
+      const {
+        ccclass,
+        property
+      } = _decorator;
+      let HotUpdate = exports('HotUpdate', (_dec = ccclass('HotUpdate'), _dec2 = property(UpdatePanel), _dec3 = property(Asset), _dec4 = property(Node), _dec(_class = (_class2 = (_temp = class HotUpdate extends Component {
+        constructor(...args) {
+          super(...args);
+
+          _initializerDefineProperty(this, "panel", _descriptor, this);
+
+          _initializerDefineProperty(this, "manifestUrl", _descriptor2, this);
+
+          _initializerDefineProperty(this, "updateUI", _descriptor3, this);
+
+          _defineProperty(this, "_updating", false);
+
+          _defineProperty(this, "_canRetry", false);
+
+          _defineProperty(this, "_storagePath", '');
+
+          _defineProperty(this, "_am", null);
+
+          _defineProperty(this, "_checkListener", null);
+
+          _defineProperty(this, "_updateListener", null);
+
+          _defineProperty(this, "_failCount", 0);
+
+          _defineProperty(this, "versionCompareHandle", null);
+        }
+
+        checkCb(event) {
+          console.log('Code: ' + event.getEventCode());
+
+          switch (event.getEventCode()) {
+            case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:
+              this.panel.info.string = "No local manifest file found, hot update skipped.";
+              break;
+
+            case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:
+            case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST:
+              this.panel.info.string = "Fail to download manifest file, hot update skipped.";
+              break;
+
+            case jsb.EventAssetsManager.ALREADY_UP_TO_DATE:
+              this.panel.info.string = "Already up to date with the latest remote version.";
+              break;
+
+            case jsb.EventAssetsManager.NEW_VERSION_FOUND:
+              this.panel.info.string = 'New version found, please try to update. (' + Math.ceil(this._am.getTotalBytes() / 1024) + 'kb)';
+              this.panel.checkBtn.active = false;
+              this.panel.fileProgress.progress = 0;
+              this.panel.byteProgress.progress = 0;
+              break;
+
+            default:
+              return;
+          }
+
+          this._am.setEventCallback(null);
+
+          this._checkListener = null;
+          this._updating = false;
+        }
+
+        updateCb(event) {
+          var needRestart = false;
+          var failed = false;
+
+          switch (event.getEventCode()) {
+            case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:
+              this.panel.info.string = 'No local manifest file found, hot update skipped.';
+              failed = true;
+              break;
+
+            case jsb.EventAssetsManager.UPDATE_PROGRESSION:
+              this.panel.byteProgress.progress = event.getPercent();
+              this.panel.fileProgress.progress = event.getPercentByFile();
+              this.panel.fileLabel.string = event.getDownloadedFiles() + ' / ' + event.getTotalFiles();
+              this.panel.byteLabel.string = event.getDownloadedBytes() + ' / ' + event.getTotalBytes();
+              console.log(this.panel.fileLabel.string, this.panel.byteLabel.string);
+              var msg = event.getMessage();
+
+              if (msg) {
+                this.panel.info.string = 'Updated file: ' + msg; // cc.log(event.getPercent()/100 + '% : ' + msg);
+              }
+
+              break;
+
+            case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:
+            case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST:
+              this.panel.info.string = 'Fail to download manifest file, hot update skipped.';
+              failed = true;
+              break;
+
+            case jsb.EventAssetsManager.ALREADY_UP_TO_DATE:
+              this.panel.info.string = 'Already up to date with the latest remote version.';
+              failed = true;
+              break;
+
+            case jsb.EventAssetsManager.UPDATE_FINISHED:
+              this.panel.info.string = 'Update finished. ' + event.getMessage();
+              needRestart = true;
+              break;
+
+            case jsb.EventAssetsManager.UPDATE_FAILED:
+              this.panel.info.string = 'Update failed. ' + event.getMessage();
+              this.panel.retryBtn.active = true;
+              this._updating = false;
+              this._canRetry = true;
+              break;
+
+            case jsb.EventAssetsManager.ERROR_UPDATING:
+              this.panel.info.string = 'Asset update error: ' + event.getAssetId() + ', ' + event.getMessage();
+              break;
+
+            case jsb.EventAssetsManager.ERROR_DECOMPRESS:
+              this.panel.info.string = event.getMessage();
+              break;
+          }
+
+          if (failed) {
+            this._am.setEventCallback(null);
+
+            this._updateListener = null;
+            this._updating = false;
+          }
+
+          if (needRestart) {
+            this._am.setEventCallback(null);
+
+            this._updateListener = null; // Prepend the manifest's search path
+
+            var searchPaths = jsb.fileUtils.getSearchPaths();
+
+            var newPaths = this._am.getLocalManifest().getSearchPaths();
+
+            console.log(JSON.stringify(newPaths));
+            Array.prototype.unshift.apply(searchPaths, newPaths); // This value will be retrieved and appended to the default search path during game startup,
+            // please refer to samples/js-tests/main.js for detailed usage.
+            // !!! Re-add the search paths in main.js is very important, otherwise, new scripts won't take effect.
+
+            localStorage.setItem('HotUpdateSearchPaths', JSON.stringify(searchPaths));
+            jsb.fileUtils.setSearchPaths(searchPaths); // restart game.
+
+            setTimeout(() => {
+              game.restart();
+            }, 1000);
+          }
+        }
+
+        loadCustomManifest() {
+          if (this._am.getState() === jsb.AssetsManager.State.UNINITED) {
+            var manifest = new jsb.Manifest(customManifestStr, this._storagePath);
+
+            this._am.loadLocalManifest(manifest, this._storagePath);
+
+            this.panel.info.string = 'Using custom manifest';
+          }
+        }
+
+        retry() {
+          if (!this._updating && this._canRetry) {
+            this.panel.retryBtn.active = false;
+            this._canRetry = false;
+            this.panel.info.string = 'Retry failed Assets...';
+
+            this._am.downloadFailedAssets();
+          }
+        }
+
+        checkUpdate() {
+          if (this._updating) {
+            this.panel.info.string = 'Checking or updating ...';
+            return;
+          }
+
+          if (this._am.getState() === jsb.AssetsManager.State.UNINITED) {
+            var url = this.manifestUrl.nativeUrl;
+
+            this._am.loadLocalManifest(url);
+          }
+
+          if (!this._am.getLocalManifest() || !this._am.getLocalManifest().isLoaded()) {
+            this.panel.info.string = 'Failed to load local manifest ...';
+            return;
+          }
+
+          this._am.setEventCallback(this.checkCb.bind(this));
+
+          this._am.checkUpdate();
+
+          this._updating = true;
+        }
+
+        hotUpdate() {
+          if (this._am && !this._updating) {
+            this._am.setEventCallback(this.updateCb.bind(this));
+
+            if (this._am.getState() === jsb.AssetsManager.State.UNINITED) {
+              var url = this.manifestUrl.nativeUrl;
+
+              this._am.loadLocalManifest(url);
+            }
+
+            this._failCount = 0;
+
+            this._am.update();
+
+            this.panel.updateBtn.active = false;
+            this._updating = true;
+          }
+        }
+
+        show() {
+          if (this.updateUI.active === false) {
+            this.updateUI.active = true;
+          }
+        } // use this for initialization
+
+
+        onLoad() {
+          // Hot update is only available in Native build
+          if (!jsb) {
+            return;
+          }
+
+          this._storagePath = (jsb.fileUtils ? jsb.fileUtils.getWritablePath() : '/') + 'blackjack-remote-asset';
+          console.log('Storage path for remote asset : ' + this._storagePath); // Setup your own version compare handler, versionA and B is versions in string
+          // if the return value greater than 0, versionA is greater than B,
+          // if the return value equals 0, versionA equals to B,
+          // if the return value smaller than 0, versionA is smaller than B.
+
+          this.versionCompareHandle = function (versionA, versionB) {
+            console.log("JS Custom Version Compare: version A is " + versionA + ', version B is ' + versionB);
+            var vA = versionA.split('.');
+            var vB = versionB.split('.');
+
+            for (var i = 0; i < vA.length; ++i) {
+              var a = parseInt(vA[i]);
+              var b = parseInt(vB[i] || '0');
+
+              if (a === b) {
+                continue;
+              } else {
+                return a - b;
+              }
+            }
+
+            if (vB.length > vA.length) {
+              return -1;
+            } else {
+              return 0;
+            }
+          }; // Init with empty manifest url for testing custom manifest
+
+
+          this._am = new jsb.AssetsManager('', this._storagePath, this.versionCompareHandle);
+          var panel = this.panel; // Setup the verification callback, but we don't have md5 check function yet, so only print some message
+          // Return true if the verification passed, otherwise return false
+
+          this._am.setVerifyCallback(function (path, asset) {
+            // When asset is compressed, we don't need to check its md5, because zip file have been deleted.
+            var compressed = asset.compressed; // Retrieve the correct md5 value.
+
+            var expectedMD5 = asset.md5; // asset.path is relative path and path is absolute.
+
+            var relativePath = asset.path; // The size of asset file, but this value could be absent.
+
+            var size = asset.size;
+
+            if (compressed) {
+              panel.info.string = "Verification passed : " + relativePath;
+              return true;
+            } else {
+              panel.info.string = "Verification passed : " + relativePath + ' (' + expectedMD5 + ')';
+              return true;
+            }
+          });
+
+          this.panel.info.string = 'Hot update is ready, please check or directly update.';
+          this.panel.fileProgress.progress = 0;
+          this.panel.byteProgress.progress = 0;
+        }
+
+        onDestroy() {
+          if (this._updateListener) {
+            this._am.setEventCallback(null);
+
+            this._updateListener = null;
+          }
+        }
+
+      }, _temp), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, "panel", [_dec2], {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        initializer: function () {
+          return null;
+        }
+      }), _descriptor2 = _applyDecoratedDescriptor(_class2.prototype, "manifestUrl", [_dec3], {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        initializer: function () {
+          return null;
+        }
+      }), _descriptor3 = _applyDecoratedDescriptor(_class2.prototype, "updateUI", [_dec4], {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        initializer: function () {
+          return null;
+        }
+      })), _class2)) || _class));
+
+      cclegacy._RF.pop();
+    }
+  };
+});
+
+System.register("chunks:///_virtual/UpdatePanel.ts", ['./_rollupPluginModLoBabelHelpers.js', 'cc'], function (exports) {
+  'use strict';
+
+  var _applyDecoratedDescriptor, _initializerDefineProperty, cclegacy, Label, ProgressBar, Node, _decorator, Component;
+
+  return {
+    setters: [function (module) {
+      _applyDecoratedDescriptor = module.applyDecoratedDescriptor;
+      _initializerDefineProperty = module.initializerDefineProperty;
+    }, function (module) {
+      cclegacy = module.cclegacy;
+      Label = module.Label;
+      ProgressBar = module.ProgressBar;
+      Node = module.Node;
+      _decorator = module._decorator;
+      Component = module.Component;
+    }],
+    execute: function () {
+      var _dec, _dec2, _dec3, _dec4, _dec5, _dec6, _dec7, _dec8, _dec9, _dec10, _class, _class2, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _descriptor6, _descriptor7, _descriptor8, _descriptor9, _temp;
+
+      cclegacy._RF.push({}, "d896fFhBk9A57gLMvEj3KZ7", "UpdatePanel", undefined);
+
+      const {
+        ccclass,
+        property
+      } = _decorator;
+      let UpdatePanel = exports('UpdatePanel', (_dec = ccclass('UpdatePanel'), _dec2 = property(Label), _dec3 = property(ProgressBar), _dec4 = property(Label), _dec5 = property(ProgressBar), _dec6 = property(Label), _dec7 = property(Node), _dec8 = property(Node), _dec9 = property(Node), _dec10 = property(Node), _dec(_class = (_class2 = (_temp = class UpdatePanel extends Component {
+        constructor(...args) {
+          super(...args);
+
+          _initializerDefineProperty(this, "info", _descriptor, this);
+
+          _initializerDefineProperty(this, "fileProgress", _descriptor2, this);
+
+          _initializerDefineProperty(this, "fileLabel", _descriptor3, this);
+
+          _initializerDefineProperty(this, "byteProgress", _descriptor4, this);
+
+          _initializerDefineProperty(this, "byteLabel", _descriptor5, this);
+
+          _initializerDefineProperty(this, "close", _descriptor6, this);
+
+          _initializerDefineProperty(this, "checkBtn", _descriptor7, this);
+
+          _initializerDefineProperty(this, "retryBtn", _descriptor8, this);
+
+          _initializerDefineProperty(this, "updateBtn", _descriptor9, this);
+        }
+
+        onLoad() {}
+
+      }, _temp), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, "info", [_dec2], {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        initializer: function () {
+          return null;
+        }
+      }), _descriptor2 = _applyDecoratedDescriptor(_class2.prototype, "fileProgress", [_dec3], {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        initializer: function () {
+          return null;
+        }
+      }), _descriptor3 = _applyDecoratedDescriptor(_class2.prototype, "fileLabel", [_dec4], {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        initializer: function () {
+          return null;
+        }
+      }), _descriptor4 = _applyDecoratedDescriptor(_class2.prototype, "byteProgress", [_dec5], {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        initializer: function () {
+          return null;
+        }
+      }), _descriptor5 = _applyDecoratedDescriptor(_class2.prototype, "byteLabel", [_dec6], {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        initializer: function () {
+          return null;
+        }
+      }), _descriptor6 = _applyDecoratedDescriptor(_class2.prototype, "close", [_dec7], {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        initializer: function () {
+          return null;
+        }
+      }), _descriptor7 = _applyDecoratedDescriptor(_class2.prototype, "checkBtn", [_dec8], {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        initializer: function () {
+          return null;
+        }
+      }), _descriptor8 = _applyDecoratedDescriptor(_class2.prototype, "retryBtn", [_dec9], {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        initializer: function () {
+          return null;
+        }
+      }), _descriptor9 = _applyDecoratedDescriptor(_class2.prototype, "updateBtn", [_dec10], {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        initializer: function () {
+          return null;
+        }
+      })), _class2)) || _class));
+
+      cclegacy._RF.pop();
+    }
+  };
+});
+
+System.register("chunks:///_virtual/main", ['./UpdatePanel.ts', './HotUpdate.ts'], function () {
+  'use strict';
+
+  return {
+    setters: [null, null],
+    execute: function () {}
+  };
+});
 
 (function(r) {
   r('virtual:///prerequisite-imports/main', 'chunks:///_virtual/main'); 

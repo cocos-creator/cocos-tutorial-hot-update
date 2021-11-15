@@ -55,7 +55,6 @@ System.import('./src/application.js').then(({ createApplication }) => {
 }).then((application) => {
     return application.import('cc').then((cc) => {
         require('jsb-adapter/jsb-engine.js');
-        cc.sys.__init();
         cc.macro.CLEANUP_IMAGE_CACHE = false;
     }).then(() => {
         return application.start({
