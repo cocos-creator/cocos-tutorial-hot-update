@@ -1,14 +1,21 @@
 {
-  "ver": "2.2.0",
+  "ver": "2.3.7",
   "uuid": "ba5aebd4-e25f-43c0-a0a6-dd8df6a7c997",
+  "importer": "texture",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 250,
+  "height": 250,
+  "platformSettings": {},
   "subMetas": {
     "BLACK JACK_3": {
-      "ver": "1.0.3",
+      "ver": "1.0.6",
       "uuid": "3ecb908c-9c4a-4f02-a2cc-3e2a8838771b",
+      "importer": "sprite-frame",
       "rawTextureUuid": "ba5aebd4-e25f-43c0-a0a6-dd8df6a7c997",
       "trimType": "auto",
       "trimThreshold": 1,

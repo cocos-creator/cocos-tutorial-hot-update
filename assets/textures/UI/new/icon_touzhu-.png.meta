@@ -1,14 +1,21 @@
 {
-  "ver": "2.2.0",
+  "ver": "2.3.7",
   "uuid": "ae12855f-4dca-468b-9e54-9b7f6cd2055d",
+  "importer": "texture",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 230,
+  "height": 218,
+  "platformSettings": {},
   "subMetas": {
     "icon_touzhu-": {
-      "ver": "1.0.3",
+      "ver": "1.0.6",
       "uuid": "e402984e-0e8f-4470-9f8e-d7eaa92544d1",
+      "importer": "sprite-frame",
       "rawTextureUuid": "ae12855f-4dca-468b-9e54-9b7f6cd2055d",
       "trimType": "auto",
       "trimThreshold": 1,

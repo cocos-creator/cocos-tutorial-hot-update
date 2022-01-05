@@ -1,14 +1,21 @@
 {
-  "ver": "2.2.0",
+  "ver": "2.3.7",
   "uuid": "5e6b366b-3c74-4d00-ada9-35b806f50ba5",
+  "importer": "texture",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 91,
+  "height": 30,
+  "platformSettings": {},
   "subMetas": {
     "bg_gold_zhuozi": {
-      "ver": "1.0.3",
+      "ver": "1.0.6",
       "uuid": "db285bfe-a5fd-495c-b8ef-58e38c6133d9",
+      "importer": "sprite-frame",
       "rawTextureUuid": "5e6b366b-3c74-4d00-ada9-35b806f50ba5",
       "trimType": "auto",
       "trimThreshold": 1,

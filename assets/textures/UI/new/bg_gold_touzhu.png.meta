@@ -1,14 +1,21 @@
 {
-  "ver": "2.2.0",
+  "ver": "2.3.7",
   "uuid": "597dbb72-1de4-4e78-9a26-5457d8f5289f",
+  "importer": "texture",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 141,
+  "height": 103,
+  "platformSettings": {},
   "subMetas": {
     "bg_gold_touzhu": {
-      "ver": "1.0.3",
+      "ver": "1.0.6",
       "uuid": "efe38028-6772-4b97-935c-1e941403af02",
+      "importer": "sprite-frame",
       "rawTextureUuid": "597dbb72-1de4-4e78-9a26-5457d8f5289f",
       "trimType": "auto",
       "trimThreshold": 1,

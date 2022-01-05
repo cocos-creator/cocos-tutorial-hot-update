@@ -1,14 +1,21 @@
 {
-  "ver": "2.2.0",
+  "ver": "2.3.7",
   "uuid": "8bf291f1-09c7-41a6-823b-234699f8d0e2",
+  "importer": "texture",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 16,
+  "height": 16,
+  "platformSettings": {},
   "subMetas": {
     "heimei_small": {
-      "ver": "1.0.3",
+      "ver": "1.0.6",
       "uuid": "09d679a4-5ff7-43fb-b35e-6941f6123116",
+      "importer": "sprite-frame",
       "rawTextureUuid": "8bf291f1-09c7-41a6-823b-234699f8d0e2",
       "trimType": "auto",
       "trimThreshold": 1,

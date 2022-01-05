@@ -1,14 +1,21 @@
 {
-  "ver": "2.2.0",
+  "ver": "2.3.7",
   "uuid": "cc243c7f-e13e-4634-8b6f-75bffbdebd50",
+  "importer": "texture",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 667,
+  "height": 750,
+  "platformSettings": {},
   "subMetas": {
     "zhuozi": {
-      "ver": "1.0.3",
+      "ver": "1.0.6",
       "uuid": "b028bac7-dbc0-42f0-8660-eeb3007e6aa6",
+      "importer": "sprite-frame",
       "rawTextureUuid": "cc243c7f-e13e-4634-8b6f-75bffbdebd50",
       "trimType": "auto",
       "trimThreshold": 1,

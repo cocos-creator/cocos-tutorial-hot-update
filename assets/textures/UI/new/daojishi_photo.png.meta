@@ -1,14 +1,21 @@
 {
-  "ver": "2.2.0",
+  "ver": "2.3.7",
   "uuid": "181aa58d-2090-4427-982b-f0a2e5cc19ae",
+  "importer": "texture",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 140,
+  "height": 140,
+  "platformSettings": {},
   "subMetas": {
     "daojishi_photo": {
-      "ver": "1.0.3",
+      "ver": "1.0.6",
       "uuid": "72799fdc-2e41-4289-a0e0-2e13242ca6f7",
+      "importer": "sprite-frame",
       "rawTextureUuid": "181aa58d-2090-4427-982b-f0a2e5cc19ae",
       "trimType": "auto",
       "trimThreshold": 1,

@@ -1,14 +1,21 @@
 {
-  "ver": "2.2.0",
+  "ver": "2.3.7",
   "uuid": "e54242de-428b-45c1-8e63-cb5d0c1e8904",
+  "importer": "texture",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 126,
+  "height": 126,
+  "platformSettings": {},
   "subMetas": {
     "Stroke_photo_tanchuang": {
-      "ver": "1.0.3",
+      "ver": "1.0.6",
       "uuid": "01540c0b-9980-4710-a4fe-ec364ec5d525",
+      "importer": "sprite-frame",
       "rawTextureUuid": "e54242de-428b-45c1-8e63-cb5d0c1e8904",
       "trimType": "auto",
       "trimThreshold": 1,

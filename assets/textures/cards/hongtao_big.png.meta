@@ -1,14 +1,21 @@
 {
-  "ver": "2.2.0",
+  "ver": "2.3.7",
   "uuid": "247f822c-3b67-4de2-abce-d4bb9e4848eb",
+  "importer": "texture",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 55,
+  "height": 53,
+  "platformSettings": {},
   "subMetas": {
     "hongtao_big": {
-      "ver": "1.0.3",
+      "ver": "1.0.6",
       "uuid": "e32b062b-43c9-4f4c-bc55-08d924278886",
+      "importer": "sprite-frame",
       "rawTextureUuid": "247f822c-3b67-4de2-abce-d4bb9e4848eb",
       "trimType": "auto",
       "trimThreshold": 1,
