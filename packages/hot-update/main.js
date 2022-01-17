@@ -13,7 +13,7 @@ var inject_script = `
 
             var fileList = [];
             var storagePath = paths[0] || '';
-            var tempPath = storagePath + '_temp/';
+            var tempPath = storagePath.substr(0,storagePath.length-1) + '_temp/';
             var baseOffset = tempPath.length;
 
             if (jsb.fileUtils.isDirectoryExist(tempPath) && !jsb.fileUtils.isFileExist(tempPath + 'project.manifest.temp')) {
