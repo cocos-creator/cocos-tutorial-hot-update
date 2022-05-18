@@ -41,8 +41,12 @@ var inject_script = `
 `;
 
 exports.onAfterBuild = function (options, result) {
-    var root = Path.join(Editor.Project.path, 'build/', options.outputName, 'assets');    
-    var url = Path.join(root, "main.js");
+    var url = Path.join(Editor.Project.path, 'build/', options.outputName, 'data', 'main.js');
+
+    if (!Fs.existsSync(url)) {
+        url = Path.join(Editor.Project.path, 'build/', options.outputName, 'assets', 'main.js');
+    }
+
     Fs.readFile(url, "utf8", function (err, data) {
         if (err) {
             throw err;
