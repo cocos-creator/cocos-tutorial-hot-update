@@ -6,6 +6,7 @@ library/
 temp/
 local/
 build/
+native/
 
 #/////////////////////////////////////////////////////////////////////////////
 # Logs and databases
@@ -63,3 +64,4 @@ quick_gen_project_*_autogen.sh.meta
 # JSB publish files
 
 jsb/
+profiles

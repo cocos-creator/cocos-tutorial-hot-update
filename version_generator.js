@@ -72,6 +72,7 @@ function readDir (dir, obj) {
             compressed = path.extname(subpath).toLowerCase() === '.zip';
 
             relative = path.relative(src, subpath);
+            relative = relative.replace(/\\/g, '/');
             relative = encodeURI(relative);
             obj[relative] = {
                 'size' : size,
@@ -90,11 +91,12 @@ var mkdirSync = function (path) {
     } catch(e) {
         if ( e.code != 'EEXIST' ) throw e;
     }
-};
+}
 
-// Iterate res and src folder
+// Iterate assets and src folder
 readDir(path.join(src, 'src'), manifest.assets);
-readDir(path.join(src, 'res'), manifest.assets);
+readDir(path.join(src, 'assets'), manifest.assets);
+readDir(path.join(src, 'jsb-adapter'), manifest.assets);
 
 var destManifest = path.join(dest, 'project.manifest');
 var destVersion = path.join(dest, 'version.manifest');

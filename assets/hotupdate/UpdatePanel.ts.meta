@@ -1,0 +1,14 @@
+{
+  "ver": "4.0.22",
+  "importer": "typescript",
+  "imported": true,
+  "uuid": "d896f161-064f-40e7-b80b-32f123dca67b",
+  "files": [],
+  "subMetas": {},
+  "userData": {
+    "importAsPlugin": false,
+    "moduleId": "project:///assets/hotupdate/UpdatePanel.js",
+    "importerSettings": 7,
+    "simulateGlobals": []
+  }
+}
