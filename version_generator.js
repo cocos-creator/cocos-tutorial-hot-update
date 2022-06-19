@@ -51,6 +51,9 @@ while ( i < process.argv.length) {
 
 
 function readDir (dir, obj) {
+    if (!fs.existsSync(dir)) {
+        return;
+    }
     var stat = fs.statSync(dir);
     if (!stat.isDirectory()) {
         return;
@@ -95,6 +98,7 @@ var mkdirSync = function (path) {
 
 // Iterate assets and src folder
 readDir(path.join(src, 'src'), manifest.assets);
+readDir(path.join(src, 'data'), manifest.assets);
 readDir(path.join(src, 'assets'), manifest.assets);
 readDir(path.join(src, 'jsb-adapter'), manifest.assets);
 

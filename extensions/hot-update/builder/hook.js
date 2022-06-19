@@ -57,7 +57,7 @@ exports.onAfterBuild = function (options, result) {
             if (err) {
                 throw err;
             }
-            Editor.log("SearchPath updated in built main.js for hot update");
+            console.warn("SearchPath updated in built main.js for hot update");
         });
     });
 }
