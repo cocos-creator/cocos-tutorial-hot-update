@@ -1,6 +1,5 @@
 import { UpdatePanel } from './UpdatePanel';
-
-const jsb = (<any>window).jsb;
+import {native } from 'cc';
 
 // Custom manifest removed the following assets:
 // 1. res/raw-assets/2a/2a40e5e7-4c4a-4350-9e5d-76757755cdd2.png
@@ -134,7 +133,7 @@ export class HotUpdate extends Component {
     private _updating = false;
     private _canRetry = false;
     private _storagePath = '';
-    private _am: jsb.AssetsManager = null!;
+    private _am: native.AssetsManager = null!;
     private _checkListener = null;
     private _updateListener = null;
     private _failCount = 0;
@@ -143,17 +142,17 @@ export class HotUpdate extends Component {
     checkCb(event: any) {
         console.log('Code: ' + event.getEventCode());
         switch (event.getEventCode()) {
-            case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:
+            case native.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:
                 this.panel.info.string = "No local manifest file found, hot update skipped.";
                 break;
-            case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:
-            case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST:
+            case native.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:
+            case native.EventAssetsManager.ERROR_PARSE_MANIFEST:
                 this.panel.info.string = "Fail to download manifest file, hot update skipped.";
                 break;
-            case jsb.EventAssetsManager.ALREADY_UP_TO_DATE:
+            case native.EventAssetsManager.ALREADY_UP_TO_DATE:
                 this.panel.info.string = "Already up to date with the latest remote version.";
                 break;
-            case jsb.EventAssetsManager.NEW_VERSION_FOUND:
+            case native.EventAssetsManager.NEW_VERSION_FOUND:
                 this.panel.info.string = 'New version found, please try to update. (' + Math.ceil(this._am.getTotalBytes() / 1024) + 'kb)';
                 this.panel.checkBtn.active = false;
                 this.panel.fileProgress.progress = 0;
@@ -173,11 +172,11 @@ export class HotUpdate extends Component {
         var needRestart = false;
         var failed = false;
         switch (event.getEventCode()) {
-            case jsb.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:
+            case native.EventAssetsManager.ERROR_NO_LOCAL_MANIFEST:
                 this.panel.info.string = 'No local manifest file found, hot update skipped.';
                 failed = true;
                 break;
-            case jsb.EventAssetsManager.UPDATE_PROGRESSION:
+            case native.EventAssetsManager.UPDATE_PROGRESSION:
                 this.panel.byteProgress.progress = event.getPercent();
                 this.panel.fileProgress.progress = event.getPercentByFile();
 
@@ -190,29 +189,29 @@ export class HotUpdate extends Component {
                     // cc.log(event.getPercent()/100 + '% : ' + msg);
                 }
                 break;
-            case jsb.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:
-            case jsb.EventAssetsManager.ERROR_PARSE_MANIFEST:
+            case native.EventAssetsManager.ERROR_DOWNLOAD_MANIFEST:
+            case native.EventAssetsManager.ERROR_PARSE_MANIFEST:
                 this.panel.info.string = 'Fail to download manifest file, hot update skipped.';
                 failed = true;
                 break;
-            case jsb.EventAssetsManager.ALREADY_UP_TO_DATE:
+            case native.EventAssetsManager.ALREADY_UP_TO_DATE:
                 this.panel.info.string = 'Already up to date with the latest remote version.';
                 failed = true;
                 break;
-            case jsb.EventAssetsManager.UPDATE_FINISHED:
+            case native.EventAssetsManager.UPDATE_FINISHED:
                 this.panel.info.string = 'Update finished. ' + event.getMessage();
                 needRestart = true;
                 break;
-            case jsb.EventAssetsManager.UPDATE_FAILED:
+            case native.EventAssetsManager.UPDATE_FAILED:
                 this.panel.info.string = 'Update failed. ' + event.getMessage();
                 this.panel.retryBtn.active = true;
                 this._updating = false;
                 this._canRetry = true;
                 break;
-            case jsb.EventAssetsManager.ERROR_UPDATING:
+            case native.EventAssetsManager.ERROR_UPDATING:
                 this.panel.info.string = 'Asset update error: ' + event.getAssetId() + ', ' + event.getMessage();
                 break;
-            case jsb.EventAssetsManager.ERROR_DECOMPRESS:
+            case native.EventAssetsManager.ERROR_DECOMPRESS:
                 this.panel.info.string = event.getMessage();
                 break;
             default:
@@ -229,7 +228,7 @@ export class HotUpdate extends Component {
             this._am.setEventCallback(null!);
             this._updateListener = null;
             // Prepend the manifest's search path
-            var searchPaths = jsb.fileUtils.getSearchPaths();
+            var searchPaths = native.fileUtils.getSearchPaths();
             var newPaths = this._am.getLocalManifest().getSearchPaths();
             console.log(JSON.stringify(newPaths));
             Array.prototype.unshift.apply(searchPaths, newPaths);
@@ -237,7 +236,7 @@ export class HotUpdate extends Component {
             // please refer to samples/js-tests/main.js for detailed usage.
             // !!! Re-add the search paths in main.js is very important, otherwise, new scripts won't take effect.
             localStorage.setItem('HotUpdateSearchPaths', JSON.stringify(searchPaths));
-            jsb.fileUtils.setSearchPaths(searchPaths);
+            native.fileUtils.setSearchPaths(searchPaths);
 
             // restart game.
             setTimeout(() => {
@@ -247,8 +246,8 @@ export class HotUpdate extends Component {
     }
 
     loadCustomManifest() {
-        if (this._am.getState() === jsb.AssetsManager.State.UNINITED) {
-            var manifest = new jsb.Manifest(customManifestStr, this._storagePath);
+        if (this._am.getState() === native.AssetsManager.State.UNINITED) {
+            var manifest = new native.Manifest(customManifestStr, this._storagePath);
             this._am.loadLocalManifest(manifest, this._storagePath);
             this.panel.info.string = 'Using custom manifest';
         }
@@ -269,7 +268,7 @@ export class HotUpdate extends Component {
             this.panel.info.string = 'Checking or updating ...';
             return;
         }
-        if (this._am.getState() === jsb.AssetsManager.State.UNINITED) {
+        if (this._am.getState() === native.AssetsManager.State.UNINITED) {
             var url = this.manifestUrl.nativeUrl;
             this._am.loadLocalManifest(url);
         }
@@ -287,7 +286,7 @@ export class HotUpdate extends Component {
         if (this._am && !this._updating) {
             this._am.setEventCallback(this.updateCb.bind(this));
 
-            if (this._am.getState() === jsb.AssetsManager.State.UNINITED) {
+            if (this._am.getState() === native.AssetsManager.State.UNINITED) {
                 var url = this.manifestUrl.nativeUrl;
                 this._am.loadLocalManifest(url);
             }
@@ -311,7 +310,7 @@ export class HotUpdate extends Component {
         if (!jsb) {
             return;
         }
-        this._storagePath = ((jsb.fileUtils ? jsb.fileUtils.getWritablePath() : '/') + 'blackjack-remote-asset');
+        this._storagePath = ((native.fileUtils ? native.fileUtils.getWritablePath() : '/') + 'blackjack-remote-asset');
         console.log('Storage path for remote asset : ' + this._storagePath);
 
         // Setup your own version compare handler, versionA and B is versions in string
@@ -341,12 +340,12 @@ export class HotUpdate extends Component {
         };
 
         // Init with empty manifest url for testing custom manifest
-        this._am = new jsb.AssetsManager('', this._storagePath, this.versionCompareHandle);
+        this._am = new native.AssetsManager('', this._storagePath, this.versionCompareHandle);
 
         var panel = this.panel;
         // Setup the verification callback, but we don't have md5 check function yet, so only print some message
         // Return true if the verification passed, otherwise return false
-        this._am.setVerifyCallback(function (path: string, asset: any) {
+        this._am.setVerifyCallback(function (path: string, asset: any){
             // When asset is compressed, we don't need to check its md5, because zip file have been deleted.
             var compressed = asset.compressed;
             // Retrieve the correct md5 value.
